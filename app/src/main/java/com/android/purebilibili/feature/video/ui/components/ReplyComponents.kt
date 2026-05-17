@@ -383,11 +383,20 @@ internal fun resolveReplyContentUrlNavigationUrl(
     rawToken: String,
     url: ReplyContentUrl
 ): String {
+    // 动态/图文链接的 app_url_schema 偶尔会被服务端下发成 bilibili://video/{动态ID}。
+    // 先保留可解析为动态的 Web URL，避免把动态 ID 当视频 aid 打开。
+    listOf(url.url, rawToken).firstOrNull(::isReplyDynamicNavigationUrl)?.let { return it }
     return listOf(
         url.appUrlSchema,
         url.url,
         rawToken
     ).firstOrNull { it.isNotBlank() }.orEmpty()
+}
+
+private fun isReplyDynamicNavigationUrl(value: String): Boolean {
+    val target = value.trim().takeIf { it.isNotEmpty() } ?: return false
+    val parsed = BilibiliUrlParser.parse(target)
+    return parsed.getVideoId() == null && parsed.getDynamicTargetId() != null
 }
 
 internal fun resolveReplyContentUrlDisplayText(

@@ -373,6 +373,23 @@ class ReplyComponentsPolicyTest {
     }
 
     @Test
+    fun `resolveReplyContentUrlNavigationUrl prefers dynamic web url over misleading video schema`() {
+        val url = ReplyContentUrl(
+            title = "动态",
+            url = "https://t.bilibili.com/1199344045210468386",
+            appUrlSchema = "bilibili://video/1199344045210468386"
+        )
+
+        assertEquals(
+            "https://t.bilibili.com/1199344045210468386",
+            resolveReplyContentUrlNavigationUrl(
+                rawToken = "https://t.bilibili.com/1199344045210468386",
+                url = url
+            )
+        )
+    }
+
+    @Test
     fun `buildRichCommentAnnotatedString accepts server url prefix icon`() {
         val annotated = buildRichCommentAnnotatedString(
             text = "看看 https://b23.tv/demo",
