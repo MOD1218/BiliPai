@@ -913,7 +913,10 @@ class DynamicViewModel(application: Application) : AndroidViewModel(application)
                     }
                 }
 
-                val selected = selectPreferredDynamicCommentAttempt(attempts = attempts)
+                val selected = selectPreferredDynamicCommentAttempt(
+                    attempts = attempts,
+                    expectedCount = fallbackCount
+                )
                 if (selected != null) {
                     _selectedCommentTarget.value = selected.target
                     _comments.value = selected.replies
