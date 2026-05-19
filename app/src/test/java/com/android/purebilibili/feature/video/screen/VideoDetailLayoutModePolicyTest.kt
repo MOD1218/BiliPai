@@ -467,6 +467,70 @@ class VideoDetailLayoutModePolicyTest {
     }
 
     @Test
+    fun phoneAutoRotateStabilization_keepsSameCandidateUntilDelayExpires() {
+        val pending = resolvePhoneAutoRotatePendingTarget(
+            current = null,
+            candidateOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE,
+            nowMs = 1_000L
+        )
+
+        assertEquals(
+            pending,
+            resolvePhoneAutoRotatePendingTarget(
+                current = pending,
+                candidateOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE,
+                nowMs = 1_500L
+            )
+        )
+        assertEquals(null, resolveStablePhoneAutoRotateTarget(pending, nowMs = 1_999L))
+        assertEquals(
+            ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE,
+            resolveStablePhoneAutoRotateTarget(pending, nowMs = 2_000L)
+        )
+    }
+
+    @Test
+    fun phoneAutoRotateStabilization_cancelsLandscapeCandidateWhenBackToPortraitOrUnknown() {
+        val pending = PhoneAutoRotatePendingTarget(
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE,
+            requestedAtMs = 1_000L
+        )
+
+        assertEquals(
+            null,
+            resolvePhoneAutoRotatePendingTarget(
+                current = pending,
+                candidateOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT,
+                nowMs = 1_300L
+            )
+        )
+        assertEquals(
+            null,
+            resolvePhoneAutoRotatePendingTarget(
+                current = pending,
+                candidateOrientation = null,
+                nowMs = 1_300L
+            )
+        )
+    }
+
+    @Test
+    fun phoneAutoRotateStabilization_resetsWhenLandscapeSideChanges() {
+        val pending = PhoneAutoRotatePendingTarget(
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE,
+            requestedAtMs = 1_000L
+        )
+        val next = resolvePhoneAutoRotatePendingTarget(
+            current = pending,
+            candidateOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE,
+            nowMs = 1_300L
+        )
+
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, next?.requestedOrientation)
+        assertEquals(1_300L, next?.requestedAtMs)
+    }
+
+    @Test
     fun phoneOrientationPolicy_autoRotateFullscreen_preservesExactLandscapeSide() {
         assertEquals(
             ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE,
