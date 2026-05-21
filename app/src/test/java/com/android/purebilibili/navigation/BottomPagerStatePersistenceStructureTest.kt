@@ -23,6 +23,15 @@ class BottomPagerStatePersistenceStructureTest {
         assertFalse(source.contains("VerticalPager("))
     }
 
+    @Test
+    fun `main bottom pager keeps continuous scroll and tracks transition start page`() {
+        val source = loadSource("app/src/main/java/com/android/purebilibili/navigation/MainBottomPagerState.kt")
+
+        assertTrue(source.contains("navigationStartPage"))
+        assertTrue(source.contains("pagerState.animateScrollBy("))
+        assertFalse(source.contains("shouldUseDirectBottomPagerJump("))
+    }
+
     private fun loadSource(path: String): String {
         val normalizedPath = path.removePrefix("app/")
         val sourceFile = listOf(

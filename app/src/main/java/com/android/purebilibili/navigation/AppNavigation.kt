@@ -1065,7 +1065,12 @@ fun AppNavigation(
                             HorizontalPager(
                                 modifier = Modifier.fillMaxSize(),
                                 state = bottomPagerState,
-                                beyondViewportPageCount = resolveBottomPagerBeyondViewportPageCount(bottomPagerContentReady),
+                                beyondViewportPageCount = resolveBottomPagerBeyondViewportPageCount(
+                                    contentReady = bottomPagerContentReady,
+                                    isNavigating = mainBottomPagerState.isNavigating,
+                                    currentPage = bottomPagerState.currentPage,
+                                    selectedPage = mainBottomPagerState.selectedPage
+                                ),
                                 userScrollEnabled = shouldEnableBottomPagerUserScroll()
                             ) { page ->
                                 val item = visibleBottomBarItems.getOrNull(page) ?: BottomNavItem.HOME
@@ -1075,7 +1080,8 @@ fun AppNavigation(
                                         page = page,
                                         currentPage = bottomPagerState.currentPage,
                                         selectedPage = mainBottomPagerState.selectedPage,
-                                        contentReady = bottomPagerContentReady
+                                        isNavigating = mainBottomPagerState.isNavigating,
+                                        navigationStartPage = mainBottomPagerState.navigationStartPage
                                     )
                                 ) {
                                     val pageKey = bottomPagerNavKeyForItem(item)
