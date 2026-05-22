@@ -68,7 +68,6 @@ import com.android.purebilibili.core.ui.transition.resolveHomeVideoSharedTransit
 import com.android.purebilibili.core.ui.transition.resolveHomeVideoSharedTransitionMotionSpec
 import com.android.purebilibili.core.ui.transition.resolveVideoSharedTransitionOwnership
 import com.android.purebilibili.core.ui.transition.shouldEnableVideoCoverSharedTransition
-import com.android.purebilibili.core.ui.transition.videoCardReturnRebound
 import com.android.purebilibili.core.ui.transition.videoCardShellSharedElementKey
 import com.android.purebilibili.feature.home.resolveHomeCardEnterAnimationEnabledAtMount
 import com.android.purebilibili.feature.home.resolveHomeCardInfoSurfaceAppearance
@@ -475,10 +474,6 @@ fun ElegantVideoCard(
         Column(
             modifier = cardContainerModifier
                 .then(cardShellModifier)
-                .videoCardReturnRebound(
-                    bvid = video.bvid,
-                    sourceRoute = effectiveSharedElementSourceRoute
-                )
         ) {
             val metadataSharedEnabled = sharedTransitionOwnership.useMetadataSharedBounds
         

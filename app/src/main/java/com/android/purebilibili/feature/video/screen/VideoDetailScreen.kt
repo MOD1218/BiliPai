@@ -30,7 +30,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.EnterExitState
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -40,7 +39,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.activity.compose.BackHandler
@@ -168,7 +166,6 @@ import com.android.purebilibili.core.ui.LocalAnimatedVisibilityScope
 import com.android.purebilibili.core.ui.transition.resolveHomeVideoSharedTransitionCornerSpec
 import com.android.purebilibili.core.ui.transition.resolveHomeVideoSharedTransitionMotionSpec
 import com.android.purebilibili.core.ui.transition.resolveVideoCardSharedTransitionEasing
-import com.android.purebilibili.core.ui.transition.resolveVideoDetailContentRevealMotion
 import com.android.purebilibili.core.ui.rememberAppChevronUpIcon
 import com.android.purebilibili.core.ui.rememberAppCollectionIcon
 import com.android.purebilibili.core.ui.rememberAppDownloadIcon
@@ -958,12 +955,6 @@ fun VideoDetailScreen(
         )
     val motionSpec = remember(transitionEnterDurationMillis) {
         resolveVideoDetailMotionSpec(transitionEnterDurationMillis)
-    }
-    val detailContentRevealMotion = remember(sourceRouteForSharedElement, transitionEnabled) {
-        resolveVideoDetailContentRevealMotion(
-            sourceRoute = sourceRouteForSharedElement,
-            transitionEnabled = transitionEnabled
-        )
     }
     val homeSharedTransitionMotionSpec = remember(sourceRouteForSharedElement, transitionEnabled) {
         resolveHomeVideoSharedTransitionMotionSpec(
@@ -3244,32 +3235,8 @@ fun VideoDetailScreen(
                                         ) {
                                             // [性能优化] 延迟显示下方内容，优先保证进场动画流畅
                                             // 配合 isTransitionFinished 状态
-                                            val detailContentRevealSlideOffsetPx = with(LocalDensity.current) {
-                                                detailContentRevealMotion.slideOffsetDp.dp.roundToPx()
-                                            }
-                                            val detailContentRevealEnter = if (detailContentRevealMotion.enabled) {
-                                                val contentRevealTween = tween<Float>(
-                                                    durationMillis = detailContentRevealMotion.durationMillis,
-                                                    delayMillis = detailContentRevealMotion.delayMillis,
-                                                    easing = FastOutSlowInEasing
-                                                )
-                                                fadeIn(animationSpec = contentRevealTween) +
-                                                    slideInVertically(
-                                                        animationSpec = tween(
-                                                            durationMillis = detailContentRevealMotion.durationMillis,
-                                                            delayMillis = detailContentRevealMotion.delayMillis,
-                                                            easing = FastOutSlowInEasing
-                                                        )
-                                                    ) {
-                                                        detailContentRevealSlideOffsetPx
-                                                    } +
-                                                    scaleIn(
-                                                        animationSpec = contentRevealTween,
-                                                        initialScale = detailContentRevealMotion.initialScale
-                                                    )
-                                            } else {
+                                            val detailContentRevealEnter =
                                                 fadeIn(tween(motionSpec.contentRevealFadeDurationMillis))
-                                            }
                                             androidx.compose.animation.AnimatedVisibility(
                                                 visible = isTransitionFinished,
                                                 enter = detailContentRevealEnter

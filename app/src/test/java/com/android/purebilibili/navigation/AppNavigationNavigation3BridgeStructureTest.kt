@@ -34,7 +34,6 @@ class AppNavigationNavigation3BridgeStructureTest {
         assertTrue(source.contains("navigation3ReturnSession"))
         assertTrue(source.contains("resolveBiliPaiNavSourceMetadata"))
         assertTrue(source.contains("CardPositionManager.lastClickedVideoSourceKey == navigation3ReturnSession.lastVideoSourceKey"))
-        assertTrue(source.contains("LocalVideoCardReturnTransitionState provides VideoCardReturnTransitionState"))
         assertTrue(source.contains("matchedVisibleCardRoute"))
         assertTrue(source.contains("navigation3ReturnSession.markReturning"))
         assertTrue(source.contains("navigation3ReturnSession.isQuickReturnFromDetail"))
@@ -45,7 +44,6 @@ class AppNavigationNavigation3BridgeStructureTest {
     fun sharedElementDisabledDoesNotExposeVideoReturnSharedReadyState() {
         val source = appNavigationSource()
 
-        assertTrue(source.contains("sharedTransitionReady = cardTransitionEnabled &&"))
         assertTrue(source.contains("if (cardTransitionEnabled) {"))
         assertTrue(source.contains("navigation3ReturnSession.markReturning(SystemClock.uptimeMillis())"))
     }

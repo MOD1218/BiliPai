@@ -44,7 +44,6 @@ class VideoDetailScreenMethodSizeStructureTest {
 
         assertFalse(source.contains("resolveVideoDetailEnterSettleSpec("))
         assertFalse(source.contains(".videoDetailEnterSettle("))
-        assertTrue(source.contains("resolveVideoDetailContentRevealMotion("))
     }
 
     private fun loadSource(path: String): String {

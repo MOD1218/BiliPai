@@ -81,9 +81,7 @@ import com.android.purebilibili.core.ui.ProvideAnimatedVisibilityScope
 import com.android.purebilibili.core.ui.SharedTransitionProvider
 import com.android.purebilibili.core.ui.LocalAnimatedVisibilityScope
 import com.android.purebilibili.core.ui.LocalSharedTransitionScope
-import com.android.purebilibili.core.ui.transition.LocalVideoCardReturnTransitionState
 import com.android.purebilibili.core.ui.transition.LocalVideoCardSharedElementSourceRoute
-import com.android.purebilibili.core.ui.transition.VideoCardReturnTransitionState
 import com.android.purebilibili.data.model.response.BgmInfo
 
 import androidx.compose.ui.zIndex
@@ -1082,16 +1080,7 @@ fun AppNavigation(
                     key: BiliPaiNavKey,
                     isBottomPagerPageActive: Boolean = true
                 ) {
-                    CompositionLocalProvider(
-                        LocalVideoCardReturnTransitionState provides VideoCardReturnTransitionState(
-                            sourceKey = navigation3ReturnSession.lastVideoSourceKey,
-                            sourceRoute = navigation3ReturnSession.lastVideoSourceRoute,
-                            isReturningFromDetail = navigation3ReturnSession.isReturningFromDetail,
-                            sharedTransitionReady = cardTransitionEnabled &&
-                                navigation3SourceMetadata.sharedTransitionReady
-                        )
-                    ) {
-                        when (resolveBiliPaiNavEntryContentRole(key)) {
+                    when (resolveBiliPaiNavEntryContentRole(key)) {
                         BiliPaiNavEntryContentRole.MAIN_HOST -> {
                             HorizontalPager(
                                 modifier = Modifier.fillMaxSize(),
@@ -2143,7 +2132,6 @@ fun AppNavigation(
                                 )
                             }
                         }
-                    }
                     }
 
                 BiliPaiNavDisplayHost(

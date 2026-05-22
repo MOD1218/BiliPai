@@ -86,40 +86,6 @@ class VideoSharedTransitionPolicyTest {
     }
 
     @Test
-    fun returnReboundDisabledEvenForMatchingVisibleSourceCard() {
-        assertFalse(
-            shouldPlayVideoCardReturnRebound(
-                cardBvid = "BV1",
-                cardSourceRoute = "history",
-                returningSourceKey = "history:BV1",
-                returningSourceRoute = "history",
-                isReturningFromDetail = true,
-                sharedTransitionReady = true
-            )
-        )
-        assertFalse(
-            shouldPlayVideoCardReturnRebound(
-                cardBvid = "BV2",
-                cardSourceRoute = "history",
-                returningSourceKey = "history:BV1",
-                returningSourceRoute = "history",
-                isReturningFromDetail = true,
-                sharedTransitionReady = true
-            )
-        )
-        assertFalse(
-            shouldPlayVideoCardReturnRebound(
-                cardBvid = "BV1",
-                cardSourceRoute = null,
-                returningSourceKey = "history:BV1",
-                returningSourceRoute = "history",
-                isReturningFromDetail = true,
-                sharedTransitionReady = true
-            )
-        )
-    }
-
-    @Test
     fun nonHomeVideoTransition_keepsMetadataSharedBoundsWhenAvailable() {
         val policy = resolveVideoSharedTransitionOwnership(
             sourceRoute = "search",
@@ -129,32 +95,6 @@ class VideoSharedTransitionPolicyTest {
 
         assertTrue(policy.useCoverSharedBounds)
         assertTrue(policy.useMetadataSharedBounds)
-    }
-
-    @Test
-    fun detailContentReveal_disabledForHomeSharedTransitionShellMode() {
-        // shell sharedBounds 接管整体 morph，详情内容不再单独 fade/slide。
-        val motion = resolveVideoDetailContentRevealMotion(
-            sourceRoute = "home",
-            transitionEnabled = true
-        )
-
-        assertFalse(motion.enabled)
-        assertEquals(0, motion.delayMillis)
-        assertEquals(0, motion.durationMillis)
-        assertEquals(0, motion.slideOffsetDp)
-        assertEquals(1f, motion.initialScale, 0.0001f)
-    }
-
-    @Test
-    fun detailContentReveal_disabledForAnySourceRouteUnderShellMode() {
-        // 非首页源（search/dynamic 等）也走 shell sharedBounds，同样不允许二级 reveal。
-        val motion = resolveVideoDetailContentRevealMotion(
-            sourceRoute = "search",
-            transitionEnabled = true
-        )
-
-        assertFalse(motion.enabled)
     }
 
     @Test
@@ -186,16 +126,6 @@ class VideoSharedTransitionPolicyTest {
     }
 
     @Test
-    fun returnReboundSpec_staysDisabledWhenRequested() {
-        val rebound = resolveVideoCardReturnReboundSpec(enabled = true)
-
-        assertFalse(rebound.enabled)
-        assertEquals(0, rebound.durationMillis)
-        assertEquals(1f, rebound.startScale, 0.0001f)
-        assertEquals(0f, rebound.startTranslationYDp, 0.0001f)
-    }
-
-    @Test
     fun homeSharedTransitionCornerSpec_softlyConvergesFromCardToPlayer() {
         val corner = resolveHomeVideoSharedTransitionCornerSpec(
             sourceRoute = "home",
@@ -205,19 +135,6 @@ class VideoSharedTransitionPolicyTest {
         assertTrue(corner.enabled)
         assertEquals(16, corner.startCornerDp)
         assertEquals(12, corner.endCornerDp)
-    }
-
-    @Test
-    fun detailContentReveal_disabledWithoutSharedTransition() {
-        val motion = resolveVideoDetailContentRevealMotion(
-            sourceRoute = "home",
-            transitionEnabled = false
-        )
-
-        assertFalse(motion.enabled)
-        assertEquals(0, motion.delayMillis)
-        assertEquals(0, motion.slideOffsetDp)
-        assertEquals(1f, motion.initialScale, 0.0001f)
     }
 
     @Test

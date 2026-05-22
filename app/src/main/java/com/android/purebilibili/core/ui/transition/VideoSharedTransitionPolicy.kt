@@ -24,14 +24,6 @@ internal data class VideoSharedTransitionOwnership(
     val useMetadataSharedBounds: Boolean
 )
 
-internal data class VideoDetailContentRevealMotion(
-    val enabled: Boolean,
-    val delayMillis: Int,
-    val durationMillis: Int,
-    val slideOffsetDp: Int,
-    val initialScale: Float
-)
-
 internal data class VideoSharedTransitionMotionSpec(
     val enabled: Boolean,
     val durationMillis: Int,
@@ -46,16 +38,6 @@ internal data class VideoSharedCornerSpec(
     val enabled: Boolean,
     val startCornerDp: Int,
     val endCornerDp: Int
-)
-
-internal data class VideoCardReturnReboundSpec(
-    val enabled: Boolean,
-    val durationMillis: Int,
-    val startScale: Float,
-    val startTranslationYDp: Float,
-    val dampingRatio: Float,
-    val stiffness: Float,
-    val easing: Easing
 )
 
 internal fun resolveVideoSharedTransitionProfile(): VideoSharedTransitionProfile {
@@ -171,46 +153,4 @@ internal fun resolveHomeVideoSharedTransitionCornerSpec(
             endCornerDp = 0
         )
     }
-}
-
-internal fun resolveVideoDetailContentRevealMotion(
-    sourceRoute: String?,
-    transitionEnabled: Boolean
-): VideoDetailContentRevealMotion {
-    // shell sharedBounds 接管整张卡片 ↔ 详情页的整体 morph；
-    // 详情内容不再单独做 fade/slide，避免与共享元素形变抢戏导致撕裂。
-    // 非共享元素路径（无 sourceRoute / 禁用过渡）也无需 reveal —— 由调用方自身的 fallback 转场处理。
-    return VideoDetailContentRevealMotion(
-        enabled = false,
-        delayMillis = 0,
-        durationMillis = 0,
-        slideOffsetDp = 0,
-        initialScale = 1f
-    )
-}
-
-internal fun shouldPlayVideoCardReturnRebound(
-    cardBvid: String,
-    cardSourceRoute: String?,
-    returningSourceKey: String?,
-    returningSourceRoute: String?,
-    isReturningFromDetail: Boolean,
-    sharedTransitionReady: Boolean
-): Boolean {
-    // 共享元素已经负责落点回收；额外回弹会在历史等列表返回末尾造成二次跳动。
-    return false
-}
-
-internal fun resolveVideoCardReturnReboundSpec(
-    enabled: Boolean
-): VideoCardReturnReboundSpec {
-    return VideoCardReturnReboundSpec(
-        enabled = false,
-        durationMillis = 0,
-        startScale = 1f,
-        startTranslationYDp = 0f,
-        dampingRatio = 1f,
-        stiffness = 0f,
-        easing = VIDEO_CARD_IOS_LIKE_EASE_OUT
-    )
 }
