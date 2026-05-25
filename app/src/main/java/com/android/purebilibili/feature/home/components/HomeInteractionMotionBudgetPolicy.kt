@@ -100,6 +100,16 @@ internal fun resolveTopTabIndicatorRenderPosition(
     )
 }
 
+internal fun resolveTopTabSelectedContentPosition(
+    selectedIndex: Int,
+    pagerCurrentPage: Int?,
+    pagerTargetPage: Int?,
+    pagerCurrentPageOffsetFraction: Float?,
+    pagerIsScrolling: Boolean
+): Float {
+    return selectedIndex.coerceAtLeast(0).toFloat()
+}
+
 internal fun resolveTopTabFollowScrollTarget(
     indicatorPosition: Float,
     itemWidthPx: Float,
@@ -183,6 +193,25 @@ internal fun resolveIosTopTabCapsuleTranslationPx(
 ): Float {
     if (itemWidthPx <= 0f) return contentPaddingPx
     return contentPaddingPx + absolutePagerPosition.coerceAtLeast(0f) * itemWidthPx - rowScrollOffsetPx
+}
+
+internal fun resolveIosTopTabCapsuleTargetTranslationPx(
+    measuredSelectedItemLeftPx: Float?,
+    absolutePagerPosition: Float,
+    itemWidthPx: Float,
+    rowScrollOffsetPx: Float,
+    contentPaddingPx: Float = 0f
+): Float {
+    val measuredLeft = measuredSelectedItemLeftPx
+    if (measuredLeft != null && !measuredLeft.isNaN()) {
+        return measuredLeft
+    }
+    return resolveIosTopTabCapsuleTranslationPx(
+        absolutePagerPosition = absolutePagerPosition,
+        itemWidthPx = itemWidthPx,
+        rowScrollOffsetPx = rowScrollOffsetPx,
+        contentPaddingPx = contentPaddingPx
+    )
 }
 
 internal fun shouldDrawLightweightTopTabItemContainer(

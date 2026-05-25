@@ -261,6 +261,20 @@ class HomeInteractionMotionBudgetPolicyTest {
     }
 
     @Test
+    fun topTabSelectedContentPosition_staysOnSelectedTabDuringPagerSwipe() {
+        assertEquals(
+            0f,
+            resolveTopTabSelectedContentPosition(
+                selectedIndex = 0,
+                pagerCurrentPage = 0,
+                pagerTargetPage = 1,
+                pagerCurrentPageOffsetFraction = 0.35f,
+                pagerIsScrolling = true
+            )
+        )
+    }
+
+    @Test
     fun topTabIndicatorRenderPosition_prefersSettledPagerPageWhenIdle() {
         assertEquals(
             2f,
@@ -338,6 +352,21 @@ class HomeInteractionMotionBudgetPolicyTest {
                 rowScrollOffsetPx = 50f,
                 indicatorWidthPx = 28f,
                 contentPaddingPx = 6f
+            ),
+            0.001f
+        )
+    }
+
+    @Test
+    fun iosTopTabCapsuleTranslation_prefersMeasuredSelectedItemLeft() {
+        assertEquals(
+            184f,
+            resolveIosTopTabCapsuleTargetTranslationPx(
+                measuredSelectedItemLeftPx = 184f,
+                absolutePagerPosition = 0f,
+                itemWidthPx = 160f,
+                rowScrollOffsetPx = 0f,
+                contentPaddingPx = 2f
             ),
             0.001f
         )

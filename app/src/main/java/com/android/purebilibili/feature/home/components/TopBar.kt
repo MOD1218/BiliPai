@@ -52,7 +52,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
@@ -671,6 +673,8 @@ private fun LightweightHomeTopTabs(
         )
     }
     val listState = rememberLazyListState()
+    var tabViewportLeftInWindowPx by remember { mutableFloatStateOf(Float.NaN) }
+    var selectedItemLeftInWindowPx by remember { mutableFloatStateOf(Float.NaN) }
     val currentPosition by remember(pagerState, selectedIndex) {
         derivedStateOf {
             resolveTopTabIndicatorRenderPosition(
@@ -682,8 +686,20 @@ private fun LightweightHomeTopTabs(
             )
         }
     }
+    val selectedContentPosition by remember(pagerState, selectedIndex) {
+        derivedStateOf {
+            resolveTopTabSelectedContentPosition(
+                selectedIndex = selectedIndex,
+                pagerCurrentPage = pagerState?.currentPage,
+                pagerTargetPage = pagerState?.targetPage,
+                pagerCurrentPageOffsetFraction = pagerState?.currentPageOffsetFraction,
+                pagerIsScrolling = pagerState?.isScrollInProgress == true
+            )
+        }
+    }
 
     LaunchedEffect(selectedIndex, categories.size) {
+        selectedItemLeftInWindowPx = Float.NaN
         if (categories.isNotEmpty()) {
             listState.animateScrollToItem(selectedIndex.coerceIn(0, categories.lastIndex))
         }
@@ -741,11 +757,30 @@ private fun LightweightHomeTopTabs(
         val shouldUseMovingIosCapsule = effectiveRenderer == HomeTopTabRenderer.IOS &&
             !skinPlainStyle &&
             !hasSkinStickerIcons
-        val iosCapsuleTargetTranslationXPx by remember(currentPosition, itemWidth, density, rowScrollOffsetPx) {
+        val measuredSelectedItemLeftPx by remember(shouldUseMovingIosCapsule) {
+            derivedStateOf {
+                if (!shouldUseMovingIosCapsule ||
+                    tabViewportLeftInWindowPx.isNaN() ||
+                    selectedItemLeftInWindowPx.isNaN()
+                ) {
+                    null
+                } else {
+                    selectedItemLeftInWindowPx - tabViewportLeftInWindowPx
+                }
+            }
+        }
+        val iosCapsuleTargetTranslationXPx by remember(
+            selectedContentPosition,
+            measuredSelectedItemLeftPx,
+            itemWidth,
+            density,
+            rowScrollOffsetPx
+        ) {
             derivedStateOf {
                 with(density) {
-                    resolveIosTopTabCapsuleTranslationPx(
-                        absolutePagerPosition = currentPosition,
+                    resolveIosTopTabCapsuleTargetTranslationPx(
+                        measuredSelectedItemLeftPx = measuredSelectedItemLeftPx,
+                        absolutePagerPosition = selectedContentPosition,
                         itemWidthPx = itemWidth.toPx(),
                         rowScrollOffsetPx = rowScrollOffsetPx,
                         contentPaddingPx = 2.dp.toPx()
@@ -777,6 +812,9 @@ private fun LightweightHomeTopTabs(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
+                    .onGloballyPositioned { coordinates ->
+                        tabViewportLeftInWindowPx = coordinates.boundsInWindow().left
+                    }
             ) {
                 if (shouldUseMovingIosCapsule) {
                     val capsuleShape = resolveSharedBottomBarCapsuleShape()
@@ -811,12 +849,24 @@ private fun LightweightHomeTopTabs(
                         key = { index, category -> categoryKeys.getOrNull(index) ?: category }
                     ) { index, category ->
                         val categoryKey = categoryKeys.getOrNull(index) ?: category
-                        val selectionFraction = (1f - abs(currentPosition - index.toFloat())).coerceIn(0f, 1f)
+                        val contentPosition = if (effectiveRenderer == HomeTopTabRenderer.IOS) {
+                            selectedContentPosition
+                        } else {
+                            currentPosition
+                        }
+                        val selectionFraction = (1f - abs(contentPosition - index.toFloat())).coerceIn(0f, 1f)
                         val drawItemContainer = shouldDrawLightweightTopTabItemContainer(
                             renderer = effectiveRenderer,
                             skinPlainStyle = skinPlainStyle,
                             hasSkinStickerIcon = hasSkinStickerIcons
                         )
+                        val measuredItemModifier = if (shouldUseMovingIosCapsule && index == selectedIndex) {
+                            Modifier.onGloballyPositioned { coordinates ->
+                                selectedItemLeftInWindowPx = coordinates.boundsInWindow().left
+                            }
+                        } else {
+                            Modifier
+                        }
                         LightweightTopTabItem(
                             renderer = effectiveRenderer,
                             category = category,
@@ -832,6 +882,7 @@ private fun LightweightHomeTopTabs(
                             drawContainer = drawItemContainer,
                             skinIconPaths = topTabSkinIconPaths[categoryKey.trim().uppercase()],
                             hasSkinStickerIcon = hasSkinStickerIcons,
+                            modifier = measuredItemModifier,
                             onClick = {
                                 performHomeTopBarTap(haptic = haptic, onClick = {
                                     when (resolveTopTabClickAction(index, selectedIndex)) {
@@ -928,6 +979,7 @@ private fun LightweightTopTabItem(
     drawContainer: Boolean = true,
     skinIconPaths: TopTabSkinIconPaths? = null,
     hasSkinStickerIcon: Boolean = false,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     val uiPreset = LocalUiPreset.current
@@ -981,7 +1033,7 @@ private fun LightweightTopTabItem(
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .width(itemWidth)
             .fillMaxHeight()
             .padding(
