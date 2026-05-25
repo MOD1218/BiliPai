@@ -7,6 +7,7 @@ import androidx.navigation3.ui.NavDisplay
 
 private const val BILI_PAI_NAV_ROUTE_BASE_METADATA_KEY = "biliPaiNavRouteBase"
 private const val VIDEO_ROUTE_BASE = "video"
+private const val SPACE_ROUTE_BASE = "space"
 private val CARD_RETURN_TARGET_ROUTE_BASES = setOf(
     "home",
     "dynamic",
@@ -140,6 +141,17 @@ internal fun resolveBiliPaiNavEntryForwardRouteTransition(
     toRoute: String?,
     visibleBottomBarRoutes: Set<String>
 ): BiliPaiNavRouteTransition {
+    val normalizedFromRoute = normalizeBiliPaiNavEntryRouteBase(fromRoute)
+    val normalizedToRoute = normalizeBiliPaiNavEntryRouteBase(toRoute)
+    if (
+        isSpaceRouteBase(normalizedToRoute) &&
+        isMainHostOrVisibleBottomRoute(
+            routeBase = normalizedFromRoute,
+            visibleBottomBarRoutes = visibleBottomBarRoutes
+        )
+    ) {
+        return BiliPaiNavRouteTransition.SPACE_FORWARD
+    }
     return defaultTransition
 }
 
@@ -222,6 +234,20 @@ private fun normalizeBiliPaiNavEntryRouteBase(route: String?): String? {
 
 private fun isCardReturnTargetRouteBase(routeBase: String): Boolean {
     return routeBase in CARD_RETURN_TARGET_ROUTE_BASES
+}
+
+private fun isSpaceRouteBase(routeBase: String?): Boolean {
+    return routeBase == SPACE_ROUTE_BASE || routeBase?.startsWith("$SPACE_ROUTE_BASE/") == true
+}
+
+private fun isMainHostOrVisibleBottomRoute(
+    routeBase: String?,
+    visibleBottomBarRoutes: Set<String>
+): Boolean {
+    val visibleBottomRouteBases = visibleBottomBarRoutes
+        .mapNotNull(::normalizeBiliPaiNavEntryRouteBase)
+        .toSet()
+    return routeBase == BiliPaiNavKey.MainHost.routeBase || routeBase in visibleBottomRouteBases
 }
 
 private fun resolveCardDisabledVideoForwardTransition(

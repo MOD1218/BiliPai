@@ -12,6 +12,7 @@ import androidx.compose.animation.togetherWith
 
 private const val NAV3_FALLBACK_FADE_MILLIS = 180
 private const val NAV3_DISABLED_VIDEO_DIRECTION_MILLIS = 220
+private const val NAV3_SPACE_FORWARD_MILLIS = 220
 internal fun resolveBiliPaiNavContentTransform(
     routeTransition: BiliPaiNavRouteTransition
 ): ContentTransform {
@@ -26,6 +27,8 @@ internal fun resolveBiliPaiNavContentTransform(
             disabledVideoDirectionReturnTransform(directionSign = -1)
         BiliPaiNavRouteTransition.CARD_DISABLED_VIDEO_RETURN_TO_RIGHT ->
             disabledVideoDirectionReturnTransform(directionSign = 1)
+        BiliPaiNavRouteTransition.SPACE_FORWARD ->
+            spaceForwardTransform()
         BiliPaiNavRouteTransition.CLASSIC_CARD,
         BiliPaiNavRouteTransition.FALLBACK ->
             fadeIn(animationSpec = tween(NAV3_FALLBACK_FADE_MILLIS)) togetherWith
@@ -52,6 +55,15 @@ private fun disabledVideoDirectionForwardTransform(directionSign: Int): ContentT
             initialOffsetX = { width -> directionSign * width / 4 }
         ) + fadeIn(animationSpec = tween(NAV3_DISABLED_VIDEO_DIRECTION_MILLIS))
     ) togetherWith fadeOut(animationSpec = tween(NAV3_DISABLED_VIDEO_DIRECTION_MILLIS))
+}
+
+private fun spaceForwardTransform(): ContentTransform {
+    return (
+        slideInHorizontally(
+            animationSpec = tween(NAV3_SPACE_FORWARD_MILLIS),
+            initialOffsetX = { width -> width / 8 }
+        ) + fadeIn(animationSpec = tween(NAV3_SPACE_FORWARD_MILLIS))
+    ) togetherWith fadeOut(animationSpec = tween(NAV3_FALLBACK_FADE_MILLIS))
 }
 
 private fun disabledVideoDirectionReturnTransform(directionSign: Int): ContentTransform {

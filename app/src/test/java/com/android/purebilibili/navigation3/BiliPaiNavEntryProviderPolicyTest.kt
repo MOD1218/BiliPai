@@ -131,6 +131,26 @@ class BiliPaiNavEntryProviderPolicyTest {
     }
 
     @Test
+    fun mainHostForwardToSpaceUsesSpaceForwardTransition() {
+        val visibleRoutes = setOf(
+            ScreenRoutes.Home.route,
+            ScreenRoutes.Dynamic.route,
+            ScreenRoutes.History.route,
+            ScreenRoutes.Profile.route
+        )
+
+        assertEquals(
+            BiliPaiNavRouteTransition.SPACE_FORWARD,
+            resolveBiliPaiNavEntryForwardRouteTransition(
+                defaultTransition = BiliPaiNavRouteTransition.FALLBACK,
+                fromRoute = BiliPaiNavKey.MainHost.routeBase,
+                toRoute = ScreenRoutes.Space.route,
+                visibleBottomBarRoutes = visibleRoutes
+            )
+        )
+    }
+
+    @Test
     fun homeVideoPushWithoutRecordedBoundsKeepsForwardFallback() {
         val transitions = resolveBiliPaiNavEntryRouteTransitions(
             key = BiliPaiNavKey.VideoDetail(bvid = "BV1", sourceRoute = "home"),

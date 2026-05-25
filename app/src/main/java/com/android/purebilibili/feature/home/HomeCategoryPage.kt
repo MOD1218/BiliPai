@@ -102,6 +102,7 @@ internal fun HomeCategoryPageContent(
     dissolvingVideos: Set<String>,
     followingMids: Set<Long>,
     onVideoClick: (HomeVideoClickRequest) -> Unit,
+    onUpClick: (Long) -> Unit = {},
     onLiveClick: (Long, String, String) -> Unit,
     onLoadMore: () -> Unit,
     onDismissVideo: (String) -> Unit,
@@ -363,6 +364,7 @@ internal fun HomeCategoryPageContent(
                                         showUpBadge = showUpBadges,
                                         showDurationBadge = showDurationBadges,
                                         showOnlineCount = showOnlineCount,
+                                        onUpClick = onUpClick,
                                         showPublishTime = true,
                                         onDismiss = { onDismissVideo(video.bvid) },
                                         onLongClick = if (isDynamicDetailCard) null else ({ longPressCallback(video) }),
@@ -402,6 +404,7 @@ internal fun HomeCategoryPageContent(
                                         showUpBadge = showUpBadges,
                                         showDurationBadge = showDurationBadges,
                                         showOnlineCount = showOnlineCount,
+                                        onUpClick = onUpClick,
                                         onDismiss = { onDismissVideo(video.bvid) },
                                         onWatchLater = if (isDynamicDetailCard) null else ({
                                             onWatchLater(video.bvid, resolveWatchLaterAid(video))

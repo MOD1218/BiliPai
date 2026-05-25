@@ -1392,6 +1392,7 @@ fun HomeScreen(
                                  val onTodayWatchCollapsedChange = remember(viewModel) { { collapsed: Boolean -> viewModel.setTodayWatchCollapsed(collapsed) } }
                                  val onTodayWatchRefresh = remember(viewModel) { { viewModel.refreshTodayWatchOnly() } }
                                  val onTodayWatchUpClick = remember(onSpaceClick) { { mid: Long -> onSpaceClick(mid) } }
+                                 val onHomeFeedUpClick = remember(onSpaceClick) { { mid: Long -> onSpaceClick(mid) } }
                                  val onPopularSubCategoryChange = remember(viewModel) {
                                      { subCategory: PopularSubCategory -> viewModel.switchPopularSubCategory(subCategory) }
                                  }
@@ -1408,6 +1409,7 @@ fun HomeScreen(
                                      dissolvingVideos = state.dissolvingVideos,
                                      followingMids = state.followingMids,
                                      onVideoClick = wrappedOnVideoClick,
+                                     onUpClick = onHomeFeedUpClick,
                                      onLiveClick = onLiveClickCallback,
                                      onLoadMore = onLoadMoreCallback,
                                      onDismissVideo = onDismissVideoCallback,

@@ -2,6 +2,7 @@
 package com.android.purebilibili.feature.home.components.cards
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -94,6 +95,7 @@ fun StoryVideoCard(
     upFollowerCount: Int? = null,
     upVideoCount: Int? = null,
     onDismiss: (() -> Unit)? = null,    //  [新增] 删除/过滤回调（长按触发）
+    onUpClick: ((Long) -> Unit)? = null,
     onLongClick: ((VideoItem) -> Unit)? = null, // [修复] 长按预览回调
     onClick: (String, Long) -> Unit
 ) {
@@ -462,6 +464,10 @@ fun StoryVideoCard(
                         }
                     )
                 }
+            }
+            val upClickMid = video.owner.mid.takeIf { it > 0L && onUpClick != null }
+            if (upClickMid != null) {
+                upNameModifier = upNameModifier.clickable { onUpClick?.invoke(upClickMid) }
             }
             
             UpBadgeName(
