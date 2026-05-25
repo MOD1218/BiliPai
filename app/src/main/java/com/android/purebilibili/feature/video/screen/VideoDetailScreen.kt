@@ -1992,6 +1992,43 @@ fun VideoDetailScreen(
             player.removeListener(listener)
         }
     }
+    val hasCurrentVideoEnded by produceState(
+        initialValue = playerState.player.playbackState == Player.STATE_ENDED,
+        key1 = playerState.player,
+        key2 = currentBvid,
+        key3 = currentBvidCid
+    ) {
+        val player = playerState.player
+
+        fun updateEndedState(playbackState: Int = player.playbackState) {
+            value = playbackState == Player.STATE_ENDED
+        }
+
+        updateEndedState()
+        val listener = object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                updateEndedState(playbackState)
+            }
+
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                if (isPlaying) {
+                    value = false
+                } else {
+                    updateEndedState()
+                }
+            }
+
+            override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                if (playWhenReady && player.playbackState != Player.STATE_ENDED) {
+                    value = false
+                }
+            }
+        }
+        player.addListener(listener)
+        awaitDispose {
+            player.removeListener(listener)
+        }
+    }
     val subtitleAutoPreference by com.android.purebilibili.core.store.SettingsManager
         .getSubtitleAutoPreference(context)
         .collectAsStateWithLifecycle(
@@ -2859,7 +2896,8 @@ fun VideoDetailScreen(
                     val inlinePortraitScrollEnabled = shouldEnableInlinePortraitScrollTransform(
                         collapseMode = portraitPlayerCollapseMode,
                         selectedTabIndex = selectedVideoContentTabIndex,
-                        isVerticalVideo = isVerticalVideo
+                        isVerticalVideo = isVerticalVideo,
+                        hasCurrentVideoEnded = hasCurrentVideoEnded
                     )
                     var introFirstVisibleItemIndex by remember { mutableIntStateOf(0) }
                     var introFirstVisibleItemScrollOffset by remember { mutableIntStateOf(0) }
@@ -2870,7 +2908,8 @@ fun VideoDetailScreen(
                             isPortraitFullscreen = isPortraitFullscreen,
                             isCommentThreadVisible = subReplyState.visible,
                             collapseMode = portraitPlayerCollapseMode,
-                            isVerticalVideo = isVerticalVideo
+                            isVerticalVideo = isVerticalVideo,
+                            hasCurrentVideoEnded = hasCurrentVideoEnded
                         )
                     val compactInlinePlayerForIntroScroll =
                         shouldUseCompactInlinePortraitPlayerForIntroScroll(
@@ -2880,7 +2919,8 @@ fun VideoDetailScreen(
                             firstVisibleItemIndex = introFirstVisibleItemIndex,
                             firstVisibleItemScrollOffset = introFirstVisibleItemScrollOffset,
                             collapseMode = portraitPlayerCollapseMode,
-                            isVerticalVideo = isVerticalVideo
+                            isVerticalVideo = isVerticalVideo,
+                            hasCurrentVideoEnded = hasCurrentVideoEnded
                         )
                     
                     // 📏 [Collapsing Player] 上滑隐藏播放器逻辑

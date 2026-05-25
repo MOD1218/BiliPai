@@ -207,6 +207,66 @@ class PortraitDetailPresentationPolicyTest {
     }
 
     @Test
+    fun inlinePortraitPlayer_endedOnlyKeepsCommentTabExpandedWhilePlaying() {
+        assertFalse(
+            shouldEnableInlinePortraitScrollTransform(
+                collapseMode = PortraitPlayerCollapseMode.ENDED_ONLY,
+                selectedTabIndex = 1,
+                isVerticalVideo = false,
+                hasCurrentVideoEnded = false
+            )
+        )
+        assertFalse(
+            shouldUseCompactInlinePortraitPlayerForCommentTab(
+                useOfficialInlinePortraitDetailExperience = true,
+                selectedTabIndex = 1,
+                isPortraitFullscreen = false,
+                collapseMode = PortraitPlayerCollapseMode.ENDED_ONLY,
+                isVerticalVideo = false,
+                hasCurrentVideoEnded = false
+            )
+        )
+    }
+
+    @Test
+    fun inlinePortraitPlayer_endedOnlyAllowsCommentScrollCollapseAfterPlaybackEnded() {
+        assertTrue(
+            shouldEnableInlinePortraitScrollTransform(
+                collapseMode = PortraitPlayerCollapseMode.ENDED_ONLY,
+                selectedTabIndex = 1,
+                isVerticalVideo = false,
+                hasCurrentVideoEnded = true
+            )
+        )
+        assertFalse(
+            shouldUseCompactInlinePortraitPlayerForCommentTab(
+                useOfficialInlinePortraitDetailExperience = true,
+                selectedTabIndex = 1,
+                isPortraitFullscreen = false,
+                collapseMode = PortraitPlayerCollapseMode.ENDED_ONLY,
+                isVerticalVideo = false,
+                hasCurrentVideoEnded = true
+            )
+        )
+    }
+
+    @Test
+    fun inlinePortraitPlayer_endedOnlyKeepsIntroScrollCollapseAvailable() {
+        assertTrue(
+            shouldUseCompactInlinePortraitPlayerForIntroScroll(
+                useOfficialInlinePortraitDetailExperience = true,
+                selectedTabIndex = 0,
+                isPortraitFullscreen = false,
+                firstVisibleItemIndex = 1,
+                firstVisibleItemScrollOffset = 0,
+                collapseMode = PortraitPlayerCollapseMode.ENDED_ONLY,
+                isVerticalVideo = false,
+                hasCurrentVideoEnded = false
+            )
+        )
+    }
+
+    @Test
     fun inlinePortraitPlayer_compactsWhenIntroHasScrolledDown() {
         assertTrue(
             shouldUseCompactInlinePortraitPlayerForIntroScroll(

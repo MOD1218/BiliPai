@@ -129,6 +129,23 @@ class PlayerInteractionSettingsMappingPolicyTest {
     }
 
     @Test
+    fun endedOnlyPortraitCollapseModePreference_keepsSavedUserChoice() {
+        assertEquals(
+            PortraitPlayerCollapseMode.ENDED_ONLY,
+            SettingsManager.resolvePortraitPlayerCollapseModePreference(
+                rawMode = PortraitPlayerCollapseMode.ENDED_ONLY.value,
+                legacySwipeHide = false
+            )
+        )
+        assertTrue(
+            SettingsManager.resolveSwipeHidePlayerEnabledPreference(
+                rawMode = PortraitPlayerCollapseMode.ENDED_ONLY.value,
+                legacySwipeHide = false
+            )
+        )
+    }
+
+    @Test
     fun invalidTabletCommentPanelWidthPresetFallsBackToStandard() {
         val prefs = mutablePreferencesOf(
             intPreferencesKey("tablet_comment_panel_width_preset") to 99
