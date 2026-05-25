@@ -93,6 +93,7 @@ report.md
 !CHANGELOG.md
 !docs/
 docs/*
+!docs/GOOGLE_CAST_PLUGIN.md
 !docs/images/
 !docs/images/screenshot*.png
 !docs/wiki/
