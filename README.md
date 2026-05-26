@@ -15,7 +15,7 @@
 </p>
 
 <p>
-  <img src="https://img.shields.io/badge/Version-8.4.1-007AFF?style=flat-square&labelColor=ffffff" alt="Version 8.4.1" />
+  <img src="https://img.shields.io/badge/Version-8.4.2-007AFF?style=flat-square&labelColor=ffffff" alt="Version 8.4.2" />
   <img src="https://img.shields.io/badge/Android-8.0%2B-34C759?style=flat-square&logo=android&logoColor=white" alt="Android 8.0+" />
   <img src="https://img.shields.io/badge/Kotlin-100%25-7F52FF?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin" />
   <img src="https://img.shields.io/badge/License-GPL--3.0-FF3B30?style=flat-square" alt="GPL-3.0" />
@@ -37,7 +37,7 @@
   </a>
 </p>
 
-<sub>README 更新：2026-05-25 · 当前构建版本以 app/build.gradle.kts 为准 · 发布记录以 <a href="CHANGELOG.md">CHANGELOG.md</a> 为准</sub>
+<sub>README 更新：2026-05-26 · 当前构建版本以 app/build.gradle.kts 为准 · 发布记录以 <a href="CHANGELOG.md">CHANGELOG.md</a> 为准</sub>
 
 </div>
 
@@ -181,13 +181,15 @@ cd BiliPai
 
 ## 最近更新
 
-当前仓库版本号已更新到 `8.4.1 / versionCode 207`。公开发布说明请以 [CHANGELOG.md](CHANGELOG.md) 为准；最新完整记录为 `v8.4.1`：
+当前仓库版本号已更新到 `8.4.2 / versionCode 208`。公开发布说明请以 [CHANGELOG.md](CHANGELOG.md) 为准；最新完整记录为 `v8.4.2`：
 
-- 回滚应用内全局图标库设置，恢复更稳定的统一语义图标路径，减少设置复杂度。
-- 清理预测性返回死链路，收紧视频共享元素返回和 Navigation3 入口，降低返回错位、黑屏和 stale metadata 风险。
-- 修复直播弹幕重连与刷新空屏、评论 gRPC 特殊字符解码、关注并三连误取关、首页 UP 头像跳转空间。
-- 修复关注页刷新、首页下拉刷新、多 P 外部队列跳转、小窗横屏全屏方向抖动和播完后评论收起播放器策略。
-- 优化 iOS 顶部胶囊跟随位置，并让底部弹窗、评论面板、对话框、侧边抽屉按展示进度调整遮罩、透明度和模糊预算。
+- 新增 Google Cast / DLNA 投屏插件化能力，PR #409 由 **@lekoOwO** 贡献；投屏路由、媒体加载、播放控制和设备展示策略测试同步补齐。
+- 新增播放器媒体分片缓存，并接入播放缓存读取与 seek 诊断，清理长期暴露的缓存统计。
+- 修复初见推荐匿名化范围和匿名推荐刷新索引，减少刷新后“暂无新内容”的误判。
+- 修正暂停时播放器缩小策略、视频详情操作按钮动态取色，以及详情返回首页和关闭共享元素后的方向动效。
+- 修复番剧影视页 `season_id = 0` 导致 Lazy key 重复闪退；索引页下滑后自动收起顶部筛选区，并新增一键返回顶部按钮。
+- 修复色彩标准选项重复显示。
+- 已知问题：部分用户反映底栏消失，目前仍在排查中，后续会尽快修复。
 
 ## 路线图
 

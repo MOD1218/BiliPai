@@ -5,11 +5,11 @@
 </p>
 
 <p align="center">
-  <sub>Last updated: 2026-05-25 · Synced to v8.4.1 (source of truth: <a href="CHANGELOG.md">CHANGELOG</a> + code)</sub>
+  <sub>Last updated: 2026-05-26 · Synced to v8.4.2 (source of truth: <a href="CHANGELOG.md">CHANGELOG</a> + code)</sub>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-8.4.1-fb7299?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/Version-8.4.2-fb7299?style=flat-square" alt="Version">
   <img src="https://img.shields.io/github/stars/jay3-yy/BiliPai?style=flat-square&color=yellow" alt="Stars">
   <img src="https://img.shields.io/github/forks/jay3-yy/BiliPai?style=flat-square&color=green" alt="Forks">
   <img src="https://img.shields.io/github/last-commit/jay3-yy/BiliPai?style=flat-square&color=purple" alt="Last Commit">
@@ -435,13 +435,15 @@ A lightweight plugin format requiring **no coding**, just a simple JSON file to 
 
 See full changelog: [CHANGELOG.md](CHANGELOG.md)
 
-### Latest (v8.4.1 · 2026-05-25)
+### Latest (v8.4.2 · 2026-05-26)
 
-- Bumped the app to `8.4.1` with `versionCode` `207`.
-- Rolled back the in-app global icon-library setting and restored the simpler semantic icon path.
-- Cleaned up dead predictive-back code, tightened video shared-element return ownership, and improved Navigation3 entry handling for home-to-space jumps.
-- Fixed live danmaku reconnection and refresh blank states, comment gRPC special-character decoding, follow-and-triple command handling, feed refresh paths, external multi-part playback jumps, and mini-player landscape orientation jitter.
-- Improved iOS top-tab pill tracking and scaled overlay scrims, surface alpha, and blur budget by presentation progress for sheets, dialogs, comment panels, and the side drawer.
+- Bumped the app to `8.4.2` with `versionCode` `208`.
+- Added Google Cast / DLNA casting through the plugin API. PR #409 was contributed by **@lekoOwO**.
+- Added playback media segment caching and seek diagnostics, while cleaning up user-facing cache statistics.
+- Fixed first-run recommendation anonymization scope and anonymous feed refresh indexes.
+- Improved paused-player collapse behavior, dynamic color for video detail action buttons, and video-detail return direction transitions.
+- Fixed the Bangumi/Cinema duplicate Lazy key crash, added automatic top-filter collapse on scroll, and added a one-tap back-to-top button.
+- Known issue: some users have reported the bottom bar disappearing. This is still under investigation and will be fixed as soon as possible.
 
 ---
 
