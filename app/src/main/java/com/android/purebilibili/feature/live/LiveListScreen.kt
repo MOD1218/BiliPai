@@ -121,9 +121,8 @@ class LiveListViewModel(application: Application) : AndroidViewModel(application
 
     private suspend fun loadRecommendLive() {
         try {
-            val response = NetworkModule.api.getLiveList(parentAreaId = 0, page = 1, pageSize = 30)
-            if (response.code == 0 && response.data != null) {
-                val items = response.data.getAllRooms().map { room ->
+            LiveRepository.getRecommendedLiveRooms().onSuccess { rooms ->
+                val items = rooms.map { room ->
                     LiveRoomItem(
                         roomId = room.roomid,
                         title = room.title,

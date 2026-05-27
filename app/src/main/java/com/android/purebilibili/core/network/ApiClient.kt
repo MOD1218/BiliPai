@@ -294,6 +294,12 @@ interface BilibiliApi {
         @Query("page_size") pageSize: Int = 30,
         @Query("sort_type") sortType: String = "online"  // 按人气排序
     ): LiveResponse
+
+    @GET("https://api.live.bilibili.com/xlive/web-interface/v1/webMain/getMoreRecList")
+    suspend fun getLiveRecommendList(
+        @Query("platform") platform: String = "web",
+        @Query("web_location") webLocation: String = "333.1007"
+    ): LiveRecommendResponse
     
     //  [新增] 获取关注的直播 - 需要登录
     @GET("https://api.live.bilibili.com/xlive/web-ucenter/user/following")
@@ -338,6 +344,17 @@ interface BilibiliApi {
     @GET("https://api.live.bilibili.com/xlive/web-room/v1/dM/gethistory")
     suspend fun getLiveDanmakuHistory(
         @Query("roomid") roomId: Long
+    ): ResponseBody
+
+    @GET("https://api.live.bilibili.com/xlive/web-room/v1/dM/GetDMConfigByGroup")
+    suspend fun getLiveDanmakuConfig(
+        @Query("room_id") roomId: Long,
+        @Query("web_location") webLocation: String = "444.8"
+    ): ResponseBody
+
+    @GET("https://live-trace.bilibili.com/xlive/rdata-interface/v1/heartbeat/webHeartBeat")
+    suspend fun reportLiveHeartbeat(
+        @QueryMap params: Map<String, String>
     ): ResponseBody
     
     //  [新增] 获取直播弹幕 WebSocket 信息

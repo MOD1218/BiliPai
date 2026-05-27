@@ -70,6 +70,22 @@ class LiveCategorySegmentedControlStructureTest {
         assertFalse(source.contains("var isChatVisible by remember { mutableStateOf(true) }"))
     }
 
+    @Test
+    fun `live send sheet uses danmaku permission and lifecycle controls heartbeat`() {
+        val screenSource = loadSource(
+            "app/src/main/java/com/android/purebilibili/feature/live/LivePlayerScreen.kt"
+        )
+        val sheetSource = loadSource(
+            "app/src/main/java/com/android/purebilibili/feature/live/components/LiveSendDanmakuSheet.kt"
+        )
+
+        assertTrue(screenSource.contains("permission = successState?.danmakuPermission"))
+        assertTrue(screenSource.contains("viewModel.pauseLiveHeartbeat()"))
+        assertTrue(screenSource.contains("viewModel.resumeLiveHeartbeatIfNeeded()"))
+        assertTrue(sheetSource.contains("permission: LiveDanmakuPermission"))
+        assertTrue(sheetSource.contains("permission.canSend"))
+    }
+
     private fun loadSource(path: String): String {
         val normalizedPath = path.removePrefix("app/")
         val sourceFile = listOf(

@@ -549,6 +549,7 @@ fun LivePlayerScreen(
                     )
                     if (shouldPausePlayback) {
                         exoPlayer.pause()
+                        viewModel.pauseLiveHeartbeat()
                         CrashReporter.markLivePlaybackStage("lifecycle_pause")
                     } else {
                         CrashReporter.markLivePlaybackStage("lifecycle_pause_keep_playing")
@@ -586,6 +587,7 @@ fun LivePlayerScreen(
                         exoPlayer.play()
                         Logger.d(TAG, "▶️ ON_RESUME live playback kicked after surface recovery")
                     }
+                    viewModel.resumeLiveHeartbeatIfNeeded()
                     CrashReporter.markLivePlaybackStage("lifecycle_resume")
                 }
                 else -> {}
@@ -606,6 +608,7 @@ fun LivePlayerScreen(
             }
             activity?.window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            viewModel.pauseLiveHeartbeat()
         }
     }
     
@@ -1160,7 +1163,8 @@ fun LivePlayerScreen(
             onSend = { message ->
                 viewModel.sendDanmaku(message)
                 showSendDanmakuSheet = false
-            }
+            },
+            permission = successState?.danmakuPermission ?: com.android.purebilibili.data.repository.LiveDanmakuPermission()
         )
     }
 }
