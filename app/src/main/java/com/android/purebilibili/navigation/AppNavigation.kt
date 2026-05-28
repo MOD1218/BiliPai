@@ -967,7 +967,6 @@ fun AppNavigation(
                 homeFeedScrollInProgressState
         ) {
             fun markNavigation3VideoReturnBeforeBackAction(targetKey: BiliPaiNavKey?) {
-                if (!cardTransitionEnabled) return
                 val fromRoute = navigation3BackStack.lastOrNull()?.toLegacyRoute()
                 val targetRoute = targetKey?.toLegacyRoute()
                 if (isVideoDetailRoute(fromRoute) && isVideoCardReturnTargetRoute(targetRoute)) {
@@ -1448,10 +1447,8 @@ fun AppNavigation(
                                 isReturningFromDetail = navigation3ReturnSession.isReturningFromDetail,
                                 isQuickReturningFromDetail = navigation3ReturnSession.isQuickReturnFromDetail,
                                 onMarkReturningFromDetail = {
-                                    if (cardTransitionEnabled) {
-                                        navigation3ReturnSession =
-                                            navigation3ReturnSession.markReturning(SystemClock.uptimeMillis())
-                                    }
+                                    navigation3ReturnSession =
+                                        navigation3ReturnSession.markReturning(SystemClock.uptimeMillis())
                                 },
                                 onClearReturningFromDetail = {
                                     navigation3ReturnSession = navigation3ReturnSession.clearReturning()
@@ -1465,18 +1462,14 @@ fun AppNavigation(
                                 transitionEnterDurationMillis = navMotionSpec.slowFadeDurationMillis,
                                 transitionMaxBlurRadiusPx = navMotionSpec.maxBackdropBlurRadius,
                                 onBack = {
-                                    if (cardTransitionEnabled) {
-                                        navigation3ReturnSession =
-                                            navigation3ReturnSession.markReturning(SystemClock.uptimeMillis())
-                                    }
+                                    navigation3ReturnSession =
+                                        navigation3ReturnSession.markReturning(SystemClock.uptimeMillis())
                                     miniPlayerManager?.markLeavingByNavigation(expectedBvid = videoKey.bvid)
                                     navigation3BackStack = popBiliPaiNavKey(navigation3BackStack)
                                 },
                                 onHomeClick = {
-                                    if (cardTransitionEnabled) {
-                                        navigation3ReturnSession =
-                                            navigation3ReturnSession.markReturning(SystemClock.uptimeMillis())
-                                    }
+                                    navigation3ReturnSession =
+                                        navigation3ReturnSession.markReturning(SystemClock.uptimeMillis())
                                     miniPlayerManager?.markLeavingByNavigation(expectedBvid = videoKey.bvid)
                                     pushNavigation3Route(ScreenRoutes.Home.route)
                                 },

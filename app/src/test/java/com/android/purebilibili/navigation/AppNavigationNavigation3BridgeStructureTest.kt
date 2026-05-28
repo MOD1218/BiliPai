@@ -41,11 +41,20 @@ class AppNavigationNavigation3BridgeStructureTest {
     }
 
     @Test
-    fun sharedElementDisabledDoesNotExposeVideoReturnSharedReadyState() {
+    fun sharedElementDisabledStillMarksVideoReturnState() {
         val source = appNavigationSource()
+        val backMarker = source
+            .substringAfter("fun markNavigation3VideoReturnBeforeBackAction")
+            .substringBefore("val performSystemBackAction")
+        val videoDetailBranch = source
+            .substringAfter("BiliPaiNavEntryContentRole.VIDEO_DETAIL ->")
+            .substringBefore("BiliPaiNavEntryContentRole.ARTICLE_DETAIL ->")
 
-        assertTrue(source.contains("if (cardTransitionEnabled) {"))
-        assertTrue(source.contains("navigation3ReturnSession.markReturning(SystemClock.uptimeMillis())"))
+        assertFalse(backMarker.contains("if (!cardTransitionEnabled) return"))
+        assertTrue(videoDetailBranch.contains("onMarkReturningFromDetail = {"))
+        assertFalse(videoDetailBranch.contains("onMarkReturningFromDetail = {\n                                    if (cardTransitionEnabled)"))
+        assertFalse(videoDetailBranch.contains("onBack = {\n                                    if (cardTransitionEnabled)"))
+        assertFalse(videoDetailBranch.contains("onHomeClick = {\n                                    if (cardTransitionEnabled)"))
     }
 
     @Test
