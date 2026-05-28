@@ -3,6 +3,7 @@
 package com.android.purebilibili.feature.settings
 
 import android.os.Build
+import android.os.SystemClock
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,10 +32,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.purebilibili.R
@@ -53,7 +56,9 @@ import com.android.purebilibili.core.ui.blur.shouldAllowHomeChromeLiquidGlass
 import com.android.purebilibili.core.ui.globalWallpaperAwareChromeColor
 import com.android.purebilibili.core.ui.rememberAppBackIcon
 import com.android.purebilibili.core.ui.rememberAppSparklesIcon
+import com.android.purebilibili.core.util.HapticType
 import com.android.purebilibili.core.util.LocalWindowSizeClass
+import com.android.purebilibili.core.util.rememberHapticFeedback
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import com.android.purebilibili.core.ui.components.*
@@ -1651,19 +1656,40 @@ private fun Md3CustomColorPickerDialog(
     onConfirm: (String) -> Unit
 ) {
     val controller = rememberColorPickerController()
+    val haptic = rememberHapticFeedback()
     var pendingHex by remember(initialHex) { mutableStateOf(normalizeMd3CustomColorHex(initialHex)) }
+    var lastSelectionHapticAtMs by remember { mutableLongStateOf(0L) }
     val pendingColor = remember(pendingHex) { parseMd3CustomColorHex(pendingHex) }
     val invalidInput = normalizeMd3CustomColorHex(pendingHex) != pendingHex.uppercase()
+    val sliderPositions = remember(pendingColor) { resolveMd3ColorPickerSliderPositions(pendingColor) }
+
+    fun emitSelectionHapticIfNeeded() {
+        val nowMs = SystemClock.elapsedRealtime()
+        if (shouldEmitMd3ColorPickerSelectionHaptic(lastSelectionHapticAtMs, nowMs)) {
+            haptic(HapticType.SELECTION)
+            lastSelectionHapticAtMs = nowMs
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = { onConfirm(normalizeMd3CustomColorHex(pendingHex)) }) {
+            TextButton(
+                onClick = {
+                    haptic(HapticType.LIGHT)
+                    onConfirm(normalizeMd3CustomColorHex(pendingHex))
+                }
+            ) {
                 Text("确认")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = {
+                    haptic(HapticType.LIGHT)
+                    onDismiss()
+                }
+            ) {
                 Text("取消")
             }
         },
@@ -1692,31 +1718,51 @@ private fun Md3CustomColorPickerDialog(
                         .height(220.dp),
                     controller = controller,
                     initialColor = pendingColor,
+                    onStart = { emitSelectionHapticIfNeeded() },
                     onColorChanged = { envelope ->
                         if (envelope.fromUser) {
-                            pendingHex = formatMd3CustomColorHex(envelope.color)
+                            val nextHex = formatMd3CustomColorHex(envelope.color)
+                            if (nextHex != pendingHex) {
+                                pendingHex = nextHex
+                                emitSelectionHapticIfNeeded()
+                            }
                         }
                     }
                 )
 
-                HueSlider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(28.dp),
-                    controller = controller
-                )
-                SaturationSlider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(28.dp),
-                    controller = controller
-                )
-                BrightnessSlider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(28.dp),
-                    controller = controller
-                )
+                Md3ColorPickerSliderFrame(position = sliderPositions.hue) {
+                    HueSlider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(resolveMd3ColorPickerSliderLayout().trackHeight),
+                        controller = controller,
+                        wheelRadius = 0.dp,
+                        wheelAlpha = 0f,
+                        onStart = { emitSelectionHapticIfNeeded() }
+                    )
+                }
+                Md3ColorPickerSliderFrame(position = sliderPositions.saturation) {
+                    SaturationSlider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(resolveMd3ColorPickerSliderLayout().trackHeight),
+                        controller = controller,
+                        wheelRadius = 0.dp,
+                        wheelAlpha = 0f,
+                        onStart = { emitSelectionHapticIfNeeded() }
+                    )
+                }
+                Md3ColorPickerSliderFrame(position = sliderPositions.brightness) {
+                    BrightnessSlider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(resolveMd3ColorPickerSliderLayout().trackHeight),
+                        controller = controller,
+                        wheelRadius = 0.dp,
+                        wheelAlpha = 0f,
+                        onStart = { emitSelectionHapticIfNeeded() }
+                    )
+                }
 
                 OutlinedTextField(
                     value = pendingHex,
@@ -1752,13 +1798,95 @@ private fun Md3CustomColorPickerDialog(
                                     },
                                     shape = CircleShape
                                 )
-                                .clickable { pendingHex = hex }
+                                .clickable {
+                                    pendingHex = hex
+                                    haptic(HapticType.SELECTION)
+                                }
                         )
                     }
                 }
             }
         }
     )
+}
+
+internal data class Md3ColorPickerSliderLayout(
+    val trackHeight: Dp,
+    val frameHeight: Dp,
+    val thumbRadius: Dp,
+    val horizontalPadding: Dp
+)
+
+internal fun resolveMd3ColorPickerSliderLayout(): Md3ColorPickerSliderLayout =
+    Md3ColorPickerSliderLayout(
+        trackHeight = 28.dp,
+        frameHeight = 36.dp,
+        thumbRadius = 14.dp,
+        horizontalPadding = 14.dp
+    )
+
+private const val MD3_COLOR_PICKER_HAPTIC_MIN_INTERVAL_MS = 72L
+
+internal fun shouldEmitMd3ColorPickerSelectionHaptic(
+    lastFeedbackAtMs: Long,
+    nowMs: Long,
+    minIntervalMs: Long = MD3_COLOR_PICKER_HAPTIC_MIN_INTERVAL_MS
+): Boolean {
+    return lastFeedbackAtMs <= 0L || nowMs - lastFeedbackAtMs >= minIntervalMs
+}
+
+private data class Md3ColorPickerSliderPositions(
+    val hue: Float,
+    val saturation: Float,
+    val brightness: Float
+)
+
+private fun resolveMd3ColorPickerSliderPositions(color: Color): Md3ColorPickerSliderPositions {
+    val hsv = FloatArray(3)
+    android.graphics.Color.colorToHSV(color.toArgb(), hsv)
+    return Md3ColorPickerSliderPositions(
+        hue = (hsv[0] / 360f).coerceIn(0f, 1f),
+        saturation = hsv[1].coerceIn(0f, 1f),
+        brightness = hsv[2].coerceIn(0f, 1f)
+    )
+}
+
+@Composable
+private fun Md3ColorPickerSliderFrame(
+    position: Float,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    val layout = resolveMd3ColorPickerSliderLayout()
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(layout.frameHeight)
+    ) {
+        val thumbDiameter = layout.thumbRadius * 2
+        val thumbTravelWidth = if (maxWidth > thumbDiameter) maxWidth - thumbDiameter else 0.dp
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(horizontal = layout.horizontalPadding)
+                .fillMaxWidth()
+                .height(layout.trackHeight)
+        ) {
+            content()
+        }
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .offset(x = thumbTravelWidth * position.coerceIn(0f, 1f))
+                .size(thumbDiameter)
+                .background(Color.White, CircleShape)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f),
+                    shape = CircleShape
+                )
+        )
+    }
 }
 
 @Composable
