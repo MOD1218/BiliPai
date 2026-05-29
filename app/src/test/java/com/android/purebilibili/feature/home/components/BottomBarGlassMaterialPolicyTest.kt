@@ -127,7 +127,7 @@ class BottomBarGlassMaterialPolicyTest {
     }
 
     @Test
-    fun `ios26 scroll uses neutral lift not theme tint`() {
+    fun `ios26 scroll does not add a foreground tint`() {
         val idle = resolveBottomBarGlassMaterialSpec(
             preset = BottomBarLiquidGlassPreset.IOS26_REFINED,
             isDarkTheme = false, isScrolling = false, glassEnabled = true,
@@ -139,11 +139,8 @@ class BottomBarGlassMaterialPolicyTest {
             motionProgress = 0.5f, pressProgress = 0.2f
         )
 
-        assertTrue(scrolling.foregroundTint.alpha > idle.foregroundTint.alpha)
-        assertEquals(Color.White.red, scrolling.foregroundTint.red, 0.001f)
-        assertEquals(Color.White.green, scrolling.foregroundTint.green, 0.001f)
-        assertEquals(Color.White.blue, scrolling.foregroundTint.blue, 0.001f)
-        assertEquals(0.08f, scrolling.foregroundTint.alpha, 0.002f)
+        assertEquals(idle.foregroundTint.alpha, scrolling.foregroundTint.alpha, 0.001f)
+        assertEquals(Color.Transparent, scrolling.foregroundTint)
         assertEquals(idle.shellShader!!.thicknessDp, scrolling.shellShader!!.thicknessDp)
         assertEquals(
             resolveBottomBarEffectiveBackdropPresetProgress(
@@ -158,7 +155,7 @@ class BottomBarGlassMaterialPolicyTest {
     }
 
     @Test
-    fun `ios26 scroll tint stays neutral in dark theme`() {
+    fun `ios26 scroll tint stays transparent in dark theme`() {
         val darkScrolling = resolveBottomBarGlassMaterialSpec(
             preset = BottomBarLiquidGlassPreset.IOS26_REFINED,
             isDarkTheme = true,
@@ -168,14 +165,20 @@ class BottomBarGlassMaterialPolicyTest {
             pressProgress = 0f
         )
 
-        assertEquals(Color.White.red, darkScrolling.foregroundTint.red, 0.001f)
-        assertEquals(Color.White.green, darkScrolling.foregroundTint.green, 0.001f)
-        assertEquals(Color.White.blue, darkScrolling.foregroundTint.blue, 0.001f)
-        assertEquals(0.08f, darkScrolling.foregroundTint.alpha, 0.002f)
+        assertEquals(Color.Transparent, darkScrolling.foregroundTint)
     }
 
     @Test
-    fun `ios26 scroll material accepts fractional progress to avoid stop flash`() {
+    fun `ios26 scroll progress does not change shell brightness`() {
+        val idle = resolveBottomBarGlassMaterialSpec(
+            preset = BottomBarLiquidGlassPreset.IOS26_REFINED,
+            isDarkTheme = false,
+            isScrolling = false,
+            scrollProgress = 0f,
+            glassEnabled = true,
+            motionProgress = 0f,
+            pressProgress = 0f
+        )
         val settling = resolveBottomBarGlassMaterialSpec(
             preset = BottomBarLiquidGlassPreset.IOS26_REFINED,
             isDarkTheme = false,
@@ -186,9 +189,9 @@ class BottomBarGlassMaterialPolicyTest {
             pressProgress = 0f
         )
 
-        assertEquals(6.5f, settling.blurRadiusDp!!, 0.001f)
-        assertEquals(0.04f, settling.foregroundTint.alpha, 0.002f)
-        assertEquals(1.25f, settling.highlightWidthScale, 0.001f)
+        assertEquals(idle.blurRadiusDp!!, settling.blurRadiusDp!!, 0.001f)
+        assertEquals(idle.foregroundTint, settling.foregroundTint)
+        assertEquals(idle.highlightWidthScale, settling.highlightWidthScale, 0.001f)
     }
 
     @Test

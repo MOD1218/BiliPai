@@ -55,7 +55,6 @@ internal fun resolveBottomBarGlassMaterialSpec(
     return when (preset) {
         BottomBarLiquidGlassPreset.BILIPAI_TUNED -> bilipaiTunedBottomBarGlassMaterial()
         BottomBarLiquidGlassPreset.IOS26_REFINED -> ios26BottomBarGlassMaterial(
-            scrollProgress = scrollProgress,
             motionProgress = motionProgress,
             pressProgress = pressProgress
         )
@@ -96,25 +95,21 @@ internal fun resolveBottomBarMaterialScrollAnimationDurationMillis(
 ): Int = if (isScrolling) 140 else 420
 
 private fun ios26BottomBarGlassMaterial(
-    scrollProgress: Float,
     motionProgress: Float,
     pressProgress: Float
 ): BottomBarGlassMaterialSpec {
-    val clampedScrollProgress = scrollProgress.coerceIn(0f, 1f)
     val activity = maxOf(
-        clampedScrollProgress,
         motionProgress.coerceIn(0f, 1f) * 0.45f,
         pressProgress.coerceIn(0f, 1f) * 0.35f
     )
-    // iOS26 的颜色应该来自 backdrop 采样；滚动时只加中性提亮，避免主题色镀膜和封面不匹配。
-    val brightnessAlpha = lerp(0f, 0.08f, clampedScrollProgress)
+    // iOS26 的颜色来自 backdrop 采样；壳层不再跟随滚动切换明暗，避免停稳时肉眼可见闪烁。
     return BottomBarGlassMaterialSpec(
         blurRadiusDp = lerp(7f, 6f, activity),
         vibrancy = false,
         shellRefractionHeightDp = 0f,
         shellRefractionAmountDp = 0f,
         shellChromaticAberration = false,
-        foregroundTint = Color.White.copy(alpha = brightnessAlpha),
+        foregroundTint = Color.Transparent,
         highlightWidthScale = lerp(1.2f, 1.3f, activity),
         shadowAlphaScale = 0.72f,
         innerRimGlow = BottomBarInnerRimGlowSpec(radiusDp = 5f, alpha = 0.09f),
