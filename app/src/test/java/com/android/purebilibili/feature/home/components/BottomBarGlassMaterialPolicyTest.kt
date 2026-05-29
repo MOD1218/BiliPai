@@ -169,29 +169,33 @@ class BottomBarGlassMaterialPolicyTest {
     }
 
     @Test
-    fun `ios26 scroll progress does not change shell brightness`() {
-        val idle = resolveBottomBarGlassMaterialSpec(
+    fun `ios26 scroll progress lifts rim glow monotonically without touching backdrop`() {
+        fun specAt(scrollProgress: Float) = resolveBottomBarGlassMaterialSpec(
             preset = BottomBarLiquidGlassPreset.IOS26_REFINED,
             isDarkTheme = false,
             isScrolling = false,
-            scrollProgress = 0f,
+            scrollProgress = scrollProgress,
             glassEnabled = true,
             motionProgress = 0f,
             pressProgress = 0f
         )
-        val settling = resolveBottomBarGlassMaterialSpec(
-            preset = BottomBarLiquidGlassPreset.IOS26_REFINED,
-            isDarkTheme = false,
-            isScrolling = false,
-            scrollProgress = 0.5f,
-            glassEnabled = true,
-            motionProgress = 0f,
-            pressProgress = 0f
-        )
+        val idle = specAt(0f)
+        val mid = specAt(0.5f)
+        val full = specAt(1f)
+        val idleAlpha = idle.innerRimGlow!!.alpha
+        val midAlpha = mid.innerRimGlow!!.alpha
+        val fullAlpha = full.innerRimGlow!!.alpha
 
-        assertEquals(idle.blurRadiusDp!!, settling.blurRadiusDp!!, 0.001f)
-        assertEquals(idle.foregroundTint, settling.foregroundTint)
-        assertEquals(idle.highlightWidthScale, settling.highlightWidthScale, 0.001f)
+        // 提亮只走内圈辉光，且随 scrollProgress 单调递增 —— 单向变化即不可能明暗交替。
+        assertEquals(0.09f, idleAlpha, 0.001f)
+        assertTrue(midAlpha > idleAlpha)
+        assertTrue(fullAlpha > midAlpha)
+        assertEquals(0.16f, fullAlpha, 0.001f)
+
+        // 提亮不碰 backdrop 相关属性（blur / 前景着色 / 高光宽度），故内容明暗不会被放大。
+        assertEquals(idle.blurRadiusDp!!, full.blurRadiusDp!!, 0.001f)
+        assertEquals(idle.foregroundTint, full.foregroundTint)
+        assertEquals(idle.highlightWidthScale, full.highlightWidthScale, 0.001f)
     }
 
     @Test
