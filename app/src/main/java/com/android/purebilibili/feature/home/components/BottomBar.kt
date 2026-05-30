@@ -3297,7 +3297,20 @@ private fun KernelSuAlignedBottomBar(
                     val rawCaptureWidth = dockWidth
                     val captureHorizontalOverscan = rawCaptureWidth *
                         ((refractionMotionProfile.exportCaptureWidthScale - 1f) / 2f).coerceAtLeast(0f)
-                    val captureWidth = rawCaptureWidth + captureHorizontalOverscan * 2f
+                    // 参考 Kyant0/AndroidLiquidGlass 的 LiquidBottomTabs：指示器采样的参考壳体按整条栏全宽录制。
+                    // BiliPai 把搜索拆成独立胶囊后，dock 自身的圆角右端帽落在 dock 与搜索之间的间隙里；指示器移到
+                    // 最右项时把这个孤立端帽折射出来，形成"第二个右边缘"（左侧端帽与真实左缘重合所以无碍，与"只有右侧出问题"吻合）。
+                    // 这里把不可见的参考壳体向右延伸到整条栏最右端（穿过搜索区），右端帽随之移到末项之外，最右项指示器
+                    // 只折射到平整玻璃。捕获层左缘与内部 item 行位置都不变 → 指示器采样对齐不受影响；可见 dock/搜索胶囊
+                    // 单独绘制 → 可见圆角不变。
+                    // 搜索开启时直接延伸穿过搜索区；关闭时 dock 即整条栏，仍需把端帽推出末项的折射半径
+                    // （端帽弧≈ shellHeight/2，外加指示器透镜伸展量），否则最右项依旧会折射出 dock 右端帽。
+                    val captureTrailingExtent = if (searchEnabled) {
+                        launchAdjustedSearchGap + searchWidth
+                    } else {
+                        shellHeight / 2f + 24.dp
+                    }
+                    val captureWidth = rawCaptureWidth + captureHorizontalOverscan * 2f + captureTrailingExtent
                     Box(
                         modifier = Modifier
                             .width(captureWidth)
