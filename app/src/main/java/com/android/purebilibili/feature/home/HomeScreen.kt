@@ -930,32 +930,7 @@ fun HomeScreen(
             delay(restoreDelayMs)
         }
         isHomeContentInteractionRestored = true
-    }
-
-    //  共享元素动画完成后恢复底栏，并清理首页视频导航态，避免顶部标签页长期停在隐藏态。
-    //  仅作用于“返回详情”路径：返回开始时登记待恢复标记，待返回动画完成（isReturningFromVideoDetail 归零）后再恢复。
-    //  否则点击视频前进导航时（isReturningFromVideoDetail 始终为 false），该 Effect 会把刚隐藏的底栏立即恢复，
-    //  造成底栏出现→隐藏→出现的抖动，并因提前清零 isVideoNavigating 干扰顶部标签页的隐藏/恢复时序。
-    var pendingBottomBarRestoreAfterReturn by remember { mutableStateOf(false) }
-    LaunchedEffect(isReturningFromVideoDetail) {
-        if (isReturningFromVideoDetail) pendingBottomBarRestoreAfterReturn = true
-    }
-    LaunchedEffect(
-        isReturningFromVideoDetail,
-        isVideoNavigating,
-        pendingBottomBarRestoreAfterReturn
-    ) {
-        if (!shouldRestoreHomeBottomBarAfterVideoReturn(
-                isReturningFromDetail = isReturningFromVideoDetail,
-                isVideoNavigating = isVideoNavigating,
-                pendingBottomBarRestoreAfterReturn = pendingBottomBarRestoreAfterReturn
-            )
-        ) {
-            return@LaunchedEffect
-        }
-        setBottomBarVisible(true)
         isVideoNavigating = false
-        pendingBottomBarRestoreAfterReturn = false
     }
     
     //  [新增] 滚动方向检测状态（用于上滑隐藏模式）

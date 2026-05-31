@@ -769,39 +769,16 @@ fun AppNavigation(
         // 1. 永久隐藏模式 -> 始终隐藏
         // 2. 始终显示模式 -> 始终显示
         // 3. 上滑隐藏模式 -> 由子页面通过 LocalSetBottomBarVisible 控制，初始为 true
-        var suppressBottomBarHideRequestsUntilMillis by remember {
-            androidx.compose.runtime.mutableLongStateOf(0L)
-        }
-        var hadDeferredBottomBarReveal by remember { mutableStateOf(false) }
-        
         // 根据模式强制重置状态（防止模式切换后状态卡死）
         LaunchedEffect(bottomBarVisibilityMode) {
             isBottomBarVisible = true
         }
 
-        // 切回可显示底栏的主入口时恢复底栏；如果刚结束详情返回延迟，
-        // 短时间忽略首页滚动监听的隐藏请求，避免恢复后立刻被旧偏移再次隐藏。
-        LaunchedEffect(currentRoute, isBottomBarDestination, shouldDeferBottomBarReveal) {
-            if (shouldDeferBottomBarReveal) {
-                hadDeferredBottomBarReveal = true
-                return@LaunchedEffect
-            }
+        // 进入视频前隐藏，回到底栏目的地立即恢复；动画挂载交给 AnimatedVisibility 处理。
+        LaunchedEffect(currentRoute, activeBottomTabRoute, isBottomBarDestination) {
             if (isBottomBarDestination) {
                 isBottomBarVisible = true
-                if (
-                    shouldSuppressBottomBarHideAfterDeferredReveal(
-                        hadDeferredReveal = hadDeferredBottomBarReveal,
-                        isBottomBarDestination = isBottomBarDestination,
-                        shouldDeferReveal = shouldDeferBottomBarReveal
-                    )
-                ) {
-                    suppressBottomBarHideRequestsUntilMillis =
-                        SystemClock.uptimeMillis() + resolveVideoReturnBottomBarHideSuppressionMs(
-                            cardTransitionEnabled = cardTransitionEnabled
-                        )
-                }
             }
-            hadDeferredBottomBarReveal = false
         }
         
         // 最终决定是否显示：
@@ -816,41 +793,9 @@ fun AppNavigation(
 
         val setBottomBarVisible: (Boolean) -> Unit = remember {
             bottomBarSetter@{ visible: Boolean ->
-                if (
-                    !visible &&
-                    SystemClock.uptimeMillis() < suppressBottomBarHideRequestsUntilMillis
-                ) {
-                    return@bottomBarSetter
-                }
                 if (isBottomBarVisible != visible) {
                     isBottomBarVisible = visible
                 }
-            }
-        }
-        LaunchedEffect(
-            navigation3ReturnSession.isReturningFromDetail,
-            navigation3ReturnSession.isQuickReturnFromDetail,
-            activeBottomTabRoute,
-            cardTransitionEnabled
-        ) {
-            if (
-                shouldAutoReleaseBottomBarRevealOnVideoReturn(
-                    isReturningFromDetail = navigation3ReturnSession.isReturningFromDetail,
-                    activeBottomTabRoute = activeBottomTabRoute
-                )
-            ) {
-                kotlinx.coroutines.delay(
-                    resolveVideoReturnBottomBarRestoreDelayMs(
-                        cardTransitionEnabled = cardTransitionEnabled,
-                        isQuickReturnFromDetail = navigation3ReturnSession.isQuickReturnFromDetail
-                    )
-                )
-                isBottomBarVisible = true
-                suppressBottomBarHideRequestsUntilMillis =
-                    SystemClock.uptimeMillis() + resolveVideoReturnBottomBarHideSuppressionMs(
-                        cardTransitionEnabled = cardTransitionEnabled
-                    )
-                navigation3ReturnSession = navigation3ReturnSession.clearReturning()
             }
         }
 

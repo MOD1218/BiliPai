@@ -1,7 +1,6 @@
 package com.android.purebilibili.navigation
 
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -48,8 +47,8 @@ class AppNavigationPlaybackPolicyTest {
     }
 
     @Test
-    fun returningToHomeWithCardTransition_shouldDeferBottomBarReveal() {
-        assertTrue(
+    fun returningToHomeWithCardTransition_shouldNotDeferBottomBarReveal() {
+        assertFalse(
             shouldDeferBottomBarRevealOnVideoReturn(
                 isReturningFromDetail = true,
                 activeBottomTabRoute = ScreenRoutes.Home.route,
@@ -59,8 +58,8 @@ class AppNavigationPlaybackPolicyTest {
     }
 
     @Test
-    fun returningToMainHostHomeTabWithCardTransition_shouldDeferBottomBarReveal() {
-        assertTrue(
+    fun returningToMainHostHomeTabWithCardTransition_shouldNotDeferBottomBarReveal() {
+        assertFalse(
             shouldDeferBottomBarRevealOnVideoReturn(
                 isReturningFromDetail = true,
                 activeBottomTabRoute = ScreenRoutes.Home.route,
@@ -70,28 +69,12 @@ class AppNavigationPlaybackPolicyTest {
     }
 
     @Test
-    fun returningToMainHostNonHomeTab_shouldDeferBottomBarReveal() {
-        assertTrue(
+    fun returningToMainHostNonHomeTab_shouldNotDeferBottomBarReveal() {
+        assertFalse(
             shouldDeferBottomBarRevealOnVideoReturn(
                 isReturningFromDetail = true,
                 activeBottomTabRoute = ScreenRoutes.Dynamic.route,
                 cardTransitionEnabled = true
-            )
-        )
-    }
-
-    @Test
-    fun returningToNonHomeCardTarget_shouldAutoReleaseBottomBarReveal() {
-        assertTrue(
-            shouldAutoReleaseBottomBarRevealOnVideoReturn(
-                isReturningFromDetail = true,
-                activeBottomTabRoute = ScreenRoutes.Dynamic.route
-            )
-        )
-        assertFalse(
-            shouldAutoReleaseBottomBarRevealOnVideoReturn(
-                isReturningFromDetail = true,
-                activeBottomTabRoute = ScreenRoutes.Home.route
             )
         )
     }
@@ -125,75 +108,6 @@ class AppNavigationPlaybackPolicyTest {
                 isReturningFromDetail = true,
                 activeBottomTabRoute = VideoRoute.route,
                 cardTransitionEnabled = true
-            )
-        )
-    }
-
-    @Test
-    fun videoReturnBottomBarRestoreDelay_isImmediateForAppNavigationRelease() {
-        assertEquals(
-            0L,
-            resolveVideoReturnBottomBarRestoreDelayMs(
-                cardTransitionEnabled = false,
-                isQuickReturnFromDetail = false
-            )
-        )
-        assertEquals(
-            0L,
-            resolveVideoReturnBottomBarRestoreDelayMs(
-                cardTransitionEnabled = true,
-                isQuickReturnFromDetail = true
-            )
-        )
-        assertEquals(
-            0L,
-            resolveVideoReturnBottomBarRestoreDelayMs(
-                cardTransitionEnabled = true,
-                isQuickReturnFromDetail = false
-            )
-        )
-    }
-
-    @Test
-    fun videoReturnBottomBarHideSuppression_matchesHomeNavigationResetTiming() {
-        assertEquals(
-            80L,
-            resolveVideoReturnBottomBarHideSuppressionMs(cardTransitionEnabled = false)
-        )
-        assertEquals(
-            200L,
-            resolveVideoReturnBottomBarHideSuppressionMs(cardTransitionEnabled = true)
-        )
-    }
-
-    @Test
-    fun bottomBarHideSuppression_runsOnlyWhenDeferredRevealFinishesOnDestination() {
-        assertTrue(
-            shouldSuppressBottomBarHideAfterDeferredReveal(
-                hadDeferredReveal = true,
-                isBottomBarDestination = true,
-                shouldDeferReveal = false
-            )
-        )
-        assertFalse(
-            shouldSuppressBottomBarHideAfterDeferredReveal(
-                hadDeferredReveal = false,
-                isBottomBarDestination = true,
-                shouldDeferReveal = false
-            )
-        )
-        assertFalse(
-            shouldSuppressBottomBarHideAfterDeferredReveal(
-                hadDeferredReveal = true,
-                isBottomBarDestination = false,
-                shouldDeferReveal = false
-            )
-        )
-        assertFalse(
-            shouldSuppressBottomBarHideAfterDeferredReveal(
-                hadDeferredReveal = true,
-                isBottomBarDestination = true,
-                shouldDeferReveal = true
             )
         )
     }

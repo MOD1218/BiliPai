@@ -18,39 +18,7 @@ internal fun shouldDeferBottomBarRevealOnVideoReturn(
     activeBottomTabRoute: String?,
     cardTransitionEnabled: Boolean
 ): Boolean {
-    // 仅在共享缩放路径下延迟显示底栏；card 关闭（横向滑动）时内容连同底栏整体滑入，不应延后弹出。
-    if (!cardTransitionEnabled) return false
-    if (!isReturningFromDetail) return false
-    return isVideoCardReturnTargetRoute(activeBottomTabRoute)
-}
-
-internal fun shouldAutoReleaseBottomBarRevealOnVideoReturn(
-    isReturningFromDetail: Boolean,
-    activeBottomTabRoute: String?
-): Boolean {
-    if (!isReturningFromDetail) return false
-    // 首页由 HomeScreen 动画完成 LaunchedEffect 恢复底栏，不在 AppNavigation 层面计时
-    if (activeBottomTabRoute == ScreenRoutes.Home.route) return false
-    return isVideoCardReturnTargetRoute(activeBottomTabRoute)
-}
-
-internal fun resolveVideoReturnBottomBarRestoreDelayMs(
-    cardTransitionEnabled: Boolean,
-    isQuickReturnFromDetail: Boolean
-): Long = 0L
-
-internal fun resolveVideoReturnBottomBarHideSuppressionMs(
-    cardTransitionEnabled: Boolean
-): Long {
-    return if (cardTransitionEnabled) 200L else 80L
-}
-
-internal fun shouldSuppressBottomBarHideAfterDeferredReveal(
-    hadDeferredReveal: Boolean,
-    isBottomBarDestination: Boolean,
-    shouldDeferReveal: Boolean
-): Boolean {
-    return hadDeferredReveal && isBottomBarDestination && !shouldDeferReveal
+    return false
 }
 
 internal fun shouldPrimeBottomBarHiddenBeforeVideoNavigation(

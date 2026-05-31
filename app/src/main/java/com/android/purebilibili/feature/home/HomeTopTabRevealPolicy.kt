@@ -18,13 +18,3 @@ fun resolveHomeTopTabsVisible(
     if (isReturningFromDetail) return true
     return !isDelayedForCardSettle && !isForwardNavigatingToDetail
 }
-
-fun shouldRestoreHomeBottomBarAfterVideoReturn(
-    isReturningFromDetail: Boolean,
-    isVideoNavigating: Boolean,
-    pendingBottomBarRestoreAfterReturn: Boolean
-): Boolean {
-    return !isReturningFromDetail &&
-        isVideoNavigating &&
-        pendingBottomBarRestoreAfterReturn
-}
