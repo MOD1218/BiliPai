@@ -2559,7 +2559,8 @@ private fun SpaceHomeVideoCard(
                         bounds = bounds,
                         screenWidth = screenWidthPx,
                         screenHeight = screenHeightPx,
-                        density = densityValue
+                        density = densityValue,
+                        sourceCornerDp = 14
                     )
                 }
                 onClick()
@@ -2702,7 +2703,8 @@ private fun SpaceAggregateMediaCard(
                         bounds = bounds,
                         screenWidth = screenWidthPx,
                         screenHeight = screenHeightPx,
-                        density = densityValue
+                        density = densityValue,
+                        sourceCornerDp = 14
                     )
                 }
                 onClick()
@@ -2852,7 +2854,8 @@ private fun SpaceTopVideoCard(
                         bounds = bounds,
                         screenWidth = screenWidthPx,
                         screenHeight = screenHeightPx,
-                        density = densityValue
+                        density = densityValue,
+                        sourceCornerDp = 12
                     )
                 }
                 onClick()
@@ -3020,7 +3023,8 @@ private fun SpaceArchiveListItemRow(
                         bounds = bounds,
                         screenWidth = screenWidthPx,
                         screenHeight = screenHeightPx,
-                        density = densityValue
+                        density = densityValue,
+                        sourceCornerDp = 12
                     )
                 }
                 onClick()

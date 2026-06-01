@@ -89,6 +89,7 @@ import androidx.compose.animation.slideOutVertically
 import io.github.alexzhirkevich.cupertino.icons.filled.PlayCircle
 import io.github.alexzhirkevich.cupertino.icons.filled.BubbleLeft
 import com.android.purebilibili.feature.home.resolveHomeCardEnterAnimationEnabledAtMount
+import kotlin.math.roundToInt
 
 /**
  * 沉浸式视频卡片 (Cinematic Mode)
@@ -155,7 +156,8 @@ fun CinematicVideoCard(
                 bounds = bounds,
                 screenWidth = screenWidthPx,
                 screenHeight = screenHeightPx,
-                density = densityValue
+                density = densityValue,
+                sourceCornerDp = cardCornerRadius.value.roundToInt()
             )
         }
         onClick(video.bvid, 0)

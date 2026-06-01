@@ -169,7 +169,8 @@ fun RelatedVideoItem(
                 bounds = bounds,
                 screenWidth = screenWidthPx,
                 screenHeight = screenHeightPx,
-                density = densityValue
+                density = densityValue,
+                sourceCornerDp = 12
             )
         }
         onClick()

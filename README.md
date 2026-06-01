@@ -15,7 +15,7 @@
 </p>
 
 <p>
-  <img src="https://img.shields.io/badge/Version-9.0.0-007AFF?style=flat-square&labelColor=ffffff" alt="Version 9.0.0" />
+  <img src="https://img.shields.io/badge/Version-9.0.1-007AFF?style=flat-square&labelColor=ffffff" alt="Version 9.0.1" />
   <img src="https://img.shields.io/badge/Android-8.0%2B-34C759?style=flat-square&logo=android&logoColor=white" alt="Android 8.0+" />
   <img src="https://img.shields.io/badge/Kotlin-100%25-7F52FF?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin" />
   <img src="https://img.shields.io/badge/License-GPL--3.0-FF3B30?style=flat-square" alt="GPL-3.0" />
@@ -182,18 +182,13 @@ cd BiliPai
 
 ## 最近更新
 
-当前仓库版本号已更新到 `9.0.0 / versionCode 213`。公开发布说明请以 [CHANGELOG.md](CHANGELOG.md) 为准；最新完整记录为 `v9.0.0`：
+当前仓库版本号已更新到 `9.0.1 / versionCode 214`。公开发布说明请以 [CHANGELOG.md](CHANGELOG.md) 为准；最新完整记录为 `v9.0.1`：
 
-- 补齐直播互动与横屏发送能力，直播观看中的输入、发送和横屏操作更完整。
-- 评论输入支持 `@` 好友，动态评论楼层可自动展开，并修复小站评论跳转。
-- 新增和扩展首页顶部布局、折叠与六标签分页策略，顶部显示更可调。
-- 打磨顶部标签、分区侧栏和底栏指示器复用，修复液态玻璃折射、指示器漂移、拖动和返回状态问题。
-- 修复首页视频返回时顶栏复位、底栏重复隐藏、底栏收尾和延迟恢复问题。
-- 增强离线下载与断点续传稳定性，修复离线播放器弹幕与进度条体验。
-- 完善番剧影视 API 功能，并修复追更合集入口与详情链路。
-- 修复 MD3 下拉刷新被视频卡片遮挡和上提不跟手的问题。
-- 修复顶部胶囊标签点按切换时出现矩形点击态的问题。
-- 六一儿童节快乐，也提前祝高考学子高考顺利。
+- 视频卡片进入/退出详情页的共享元素动画统一走视觉策略，减少卡片、封面和播放器之间的形态跳变。
+- 分区、动态、稍后再看、空间、相关视频和首页视频卡片统一记录来源圆角，返回收尾时圆角不再突然弹回。
+- 手动封面、立即播放、普通横屏播放器、横屏全屏和竖屏/autoPortrait 场景各自使用稳定目标。
+- 竖屏视频返回时强制由封面 sharedBounds 接管后再回到卡片，避免播放器视口和卡片裁剪互相抢动画。
+- 横屏全屏过渡期间目标圆角收敛到 0dp，减少全屏黑底边缘残留卡片圆角。
 
 ## 路线图
 

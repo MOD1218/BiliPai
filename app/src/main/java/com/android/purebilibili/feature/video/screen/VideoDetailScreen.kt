@@ -164,9 +164,12 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.android.purebilibili.core.ui.LocalSharedTransitionScope
 import com.android.purebilibili.core.ui.LocalAnimatedVisibilityScope
-import com.android.purebilibili.core.ui.transition.resolveHomeVideoSharedTransitionCornerSpec
+import com.android.purebilibili.core.ui.transition.VideoSharedTransitionPlaybackIntent
+import com.android.purebilibili.core.ui.transition.VideoSharedTransitionTargetMode
 import com.android.purebilibili.core.ui.transition.resolveVideoCardSharedTransitionMotionSpec
 import com.android.purebilibili.core.ui.transition.resolveVideoCardSharedTransitionEasing
+import com.android.purebilibili.core.ui.transition.resolveVideoSharedTransitionSourceCornerDp
+import com.android.purebilibili.core.ui.transition.resolveVideoSharedTransitionVisualSpec
 import com.android.purebilibili.core.ui.transition.shouldEnableVideoCoverSharedTransition
 import com.android.purebilibili.core.ui.rememberAppChevronUpIcon
 import com.android.purebilibili.core.ui.rememberAppCollectionIcon
@@ -1099,11 +1102,16 @@ fun VideoDetailScreen(
             transitionEnabled = transitionEnabled
         )
     }
-    val homeSharedTransitionCornerSpec = remember(sourceRouteForSharedElement, transitionEnabled) {
-        resolveHomeVideoSharedTransitionCornerSpec(
-            sourceRoute = sourceRouteForSharedElement,
-            transitionEnabled = transitionEnabled
-        )
+    val sharedTransitionSourceCornerDp = remember(sourceRouteForSharedElement) {
+        CardPositionManager.lastClickedVideoSourceCornerDp
+            ?: resolveVideoSharedTransitionSourceCornerDp(sourceRouteForSharedElement)
+    }
+    val videoSharedPlaybackIntent = remember(context, startAudioFromRoute) {
+        if (!startAudioFromRoute && !com.android.purebilibili.core.store.SettingsManager.getAutoPlaySync(context)) {
+            VideoSharedTransitionPlaybackIntent.CoverFirst
+        } else {
+            VideoSharedTransitionPlaybackIntent.ImmediatePlayback
+        }
     }
     val routeSheetMotion = remember(sourceRouteForSharedElement, transitionEnabled) {
         resolveVideoDetailRouteSheetMotion(
@@ -2278,6 +2286,29 @@ fun VideoDetailScreen(
     
     // 📱 [优化] 竖屏视频检测已移至 VideoPlayerState 集中管理
     val isVerticalVideo by playerState.isVerticalVideo.collectAsStateWithLifecycle()
+    val activeVideoSharedTransitionVisualSpec = remember(
+        sourceRouteForSharedElement,
+        sharedTransitionSourceCornerDp,
+        videoSharedPlaybackIntent,
+        startInFullscreen,
+        autoEnterPortraitFromRoute,
+        initialVerticalFromRoute,
+        isVerticalVideo,
+        forceCoverOnlyForReturn,
+        isReturningFromDetail,
+        isExitTransitionInProgress
+    ) {
+        resolveVideoSharedTransitionVisualSpec(
+            sourceRoute = sourceRouteForSharedElement,
+            sourceCornerDp = sharedTransitionSourceCornerDp,
+            playbackIntent = videoSharedPlaybackIntent,
+            fullscreen = startInFullscreen,
+            autoPortrait = autoEnterPortraitFromRoute,
+            initialVertical = initialVerticalFromRoute,
+            isVerticalVideo = isVerticalVideo,
+            isReturning = forceCoverOnlyForReturn || isReturningFromDetail || isExitTransitionInProgress
+        )
+    }
     LaunchedEffect(
         autoRotateEnabled,
         systemAutoRotateEnabled,
@@ -3225,7 +3256,10 @@ fun VideoDetailScreen(
                             transitionEnabled = transitionEnabled,
                             hasSharedTransitionScope = sharedTransitionScope != null,
                             hasAnimatedVisibilityScope = animatedVisibilityScope != null
-                        ) && !forceCoverOnlyForReturn
+                        ) &&
+                        activeVideoSharedTransitionVisualSpec.useCoverSharedBounds &&
+                        activeVideoSharedTransitionVisualSpec.targetMode != VideoSharedTransitionTargetMode.InlineCover &&
+                        !forceCoverOnlyForReturn
                     ) {
                         with(requireNotNull(sharedTransitionScope)) {
                             Modifier
@@ -3248,13 +3282,7 @@ fun VideoDetailScreen(
                                         }
                                     },
                                     clipInOverlayDuringTransition = OverlayClip(
-                                        RoundedCornerShape(
-                                            if (homeSharedTransitionCornerSpec.enabled) {
-                                                homeSharedTransitionCornerSpec.endCornerDp.dp
-                                            } else {
-                                                12.dp
-                                            }
-                                        )
+                                        RoundedCornerShape(activeVideoSharedTransitionVisualSpec.targetCornerDp.dp)
                                     )
                                 )
                         }

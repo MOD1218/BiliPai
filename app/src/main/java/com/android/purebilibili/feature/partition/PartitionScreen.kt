@@ -72,8 +72,8 @@ import com.android.purebilibili.core.store.SettingsManager
 import com.android.purebilibili.core.store.resolveEffectiveLiquidGlassEnabled
 import com.android.purebilibili.core.theme.LocalUiPreset
 import com.android.purebilibili.core.ui.transition.LocalVideoCardSharedElementSourceRoute
-import com.android.purebilibili.core.ui.transition.resolveHomeVideoSharedTransitionCornerSpec
 import com.android.purebilibili.core.ui.transition.resolveVideoCardSharedTransitionMotionSpec
+import com.android.purebilibili.core.ui.transition.resolveVideoSharedTransitionVisualSpec
 import com.android.purebilibili.core.ui.transition.shouldEnableVideoCoverSharedTransition
 import com.android.purebilibili.core.ui.transition.videoCoverSharedElementKey
 import com.android.purebilibili.core.util.CardPositionManager
@@ -877,20 +877,14 @@ private fun PartitionVideoRow(
             transitionEnabled = true
         )
     }
-    val sharedTransitionCornerSpec = remember(sharedElementSourceRoute) {
-        resolveHomeVideoSharedTransitionCornerSpec(
+    val sharedTransitionVisualSpec = remember(sharedElementSourceRoute) {
+        resolveVideoSharedTransitionVisualSpec(
             sourceRoute = sharedElementSourceRoute,
-            transitionEnabled = true
+            sourceCornerDp = 10
         )
     }
-    val coverShape = remember(sharedTransitionCornerSpec) {
-        RoundedCornerShape(
-            if (sharedTransitionCornerSpec.enabled) {
-                sharedTransitionCornerSpec.startCornerDp.dp
-            } else {
-                10.dp
-            }
-        )
+    val coverShape = remember(sharedTransitionVisualSpec) {
+        RoundedCornerShape(sharedTransitionVisualSpec.sourceCornerDp.dp)
     }
     val coverModifier = if (coverSharedEnabled) {
         with(requireNotNull(sharedTransitionScope)) {
@@ -922,7 +916,8 @@ private fun PartitionVideoRow(
                 bounds = bounds,
                 screenWidth = screenWidthPx,
                 screenHeight = screenHeightPx,
-                density = density.density
+                density = density.density,
+                sourceCornerDp = sharedTransitionVisualSpec.sourceCornerDp
             )
         }
         onClick()

@@ -747,7 +747,7 @@ internal fun shouldFillPlayerViewportForManualStartCover(
     isVerticalVideo: Boolean = false
 ): Boolean {
     if (forceCoverDuringReturnAnimation) return false
-    return shouldKeepCoverForManualStart || isVerticalVideo
+    return isVerticalVideo
 }
 
 internal enum class ManualStartPlayButtonAnchor {
@@ -889,12 +889,28 @@ internal fun shouldEnableForcedReturnCoverSharedBounds(
     hasAnimatedVisibilityScope: Boolean,
     sourceRoute: String?
 ): Boolean {
+    return shouldEnableCoverOverlaySharedBounds(
+        useCoverOverlaySharedBounds = forceCoverDuringReturnAnimation,
+        transitionEnabled = transitionEnabled,
+        hasSharedTransitionScope = hasSharedTransitionScope,
+        hasAnimatedVisibilityScope = hasAnimatedVisibilityScope,
+        sourceRoute = sourceRoute
+    )
+}
+
+internal fun shouldEnableCoverOverlaySharedBounds(
+    useCoverOverlaySharedBounds: Boolean,
+    transitionEnabled: Boolean,
+    hasSharedTransitionScope: Boolean,
+    hasAnimatedVisibilityScope: Boolean,
+    sourceRoute: String?
+): Boolean {
     val sourceRouteBase = sourceRoute?.substringBefore("?")
-    // 返回阶段播放器容器会让出 sharedBounds，由强制封面承接同一个 cover key，
-    // 避免详情页视频画面与首页封面在退出期间各自跑一段动画。
+    // 返回阶段或手动封面阶段由封面承接同一个 cover key，
+    // 避免播放器画面和封面各自跑一段动画。
     val allowBySourceRoute = sourceRouteBase == null ||
         com.android.purebilibili.navigation.isVideoCardReturnTargetRoute(sourceRouteBase)
-    return forceCoverDuringReturnAnimation &&
+    return useCoverOverlaySharedBounds &&
         transitionEnabled &&
         hasSharedTransitionScope &&
         hasAnimatedVisibilityScope &&

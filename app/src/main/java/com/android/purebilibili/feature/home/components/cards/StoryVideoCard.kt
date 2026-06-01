@@ -62,6 +62,7 @@ import com.android.purebilibili.feature.video.ui.section.resolvePublishTimeRowTe
 import com.android.purebilibili.feature.video.ui.section.shouldEmphasizePrecisePublishTime
 import io.github.alexzhirkevich.cupertino.icons.CupertinoIcons
 import io.github.alexzhirkevich.cupertino.icons.outlined.*
+import kotlin.math.roundToInt
 
 /**
  *  故事卡片 - 影院海报风格
@@ -179,7 +180,8 @@ fun StoryVideoCard(
                 bounds = bounds,
                 screenWidth = screenWidthPx,
                 screenHeight = screenHeightPx,
-                isSingleColumn = !transitionEnabled
+                isSingleColumn = !transitionEnabled,
+                sourceCornerDp = cardCornerRadius.value.roundToInt()
             )
         }
         onClick(video.bvid, 0)

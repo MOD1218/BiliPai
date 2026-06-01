@@ -32,10 +32,10 @@ class VideoDetailScreenMethodSizeStructureTest {
             .substringBefore("//  播放器容器包含状态栏高度")
 
         assertTrue(source.contains("resolveVideoCardSharedTransitionMotionSpec("))
-        assertTrue(source.contains("resolveHomeVideoSharedTransitionCornerSpec("))
+        assertTrue(source.contains("resolveVideoSharedTransitionVisualSpec("))
         assertTrue(playerContainerSource.contains("homeSharedTransitionMotionSpec.enabled"))
         assertTrue(playerContainerSource.contains("durationMillis = homeSharedTransitionMotionSpec.durationMillis"))
-        assertTrue(playerContainerSource.contains("homeSharedTransitionCornerSpec.endCornerDp.dp"))
+        assertTrue(playerContainerSource.contains("activeVideoSharedTransitionVisualSpec.targetCornerDp.dp"))
     }
 
     @Test

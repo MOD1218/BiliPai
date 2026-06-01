@@ -36,6 +36,9 @@ object CardPositionManager {
 
     var lastClickedVideoSourceKey: String? = null
         private set
+
+    var lastClickedVideoSourceCornerDp: Int? = null
+        private set
     
     /**
      *  是否是单列卡片（故事卡片）
@@ -75,6 +78,7 @@ object CardPositionManager {
         bottomBarHeightDp: Float = 80f  //  底部导航栏默认高度
     ) {
         lastClickedVideoSourceKey = null
+        lastClickedVideoSourceCornerDp = null
         lastClickedCardBounds = bounds
         lastScreenDensity = density
         isSingleColumnCard = isSingleColumn
@@ -107,7 +111,8 @@ object CardPositionManager {
         screenHeight: Float,
         isSingleColumn: Boolean = false,
         density: Float = 3f,
-        bottomBarHeightDp: Float = 80f
+        bottomBarHeightDp: Float = 80f,
+        sourceCornerDp: Int? = null
     ) {
         recordCardPosition(
             bounds = bounds,
@@ -124,6 +129,7 @@ object CardPositionManager {
         } else {
             null
         }
+        lastClickedVideoSourceCornerDp = sourceCornerDp?.coerceAtLeast(0)
     }
     
     /**
@@ -133,6 +139,7 @@ object CardPositionManager {
         lastClickedCardBounds = null
         lastClickedCardCenter = null
         lastClickedVideoSourceKey = null
+        lastClickedVideoSourceCornerDp = null
     }
     
     /**

@@ -5,11 +5,11 @@
 </p>
 
 <p align="center">
-  <sub>Last updated: 2026-06-01 · Synced to v9.0.0 (source of truth: <a href="CHANGELOG.md">CHANGELOG</a> + code)</sub>
+  <sub>Last updated: 2026-06-01 · Synced to v9.0.1 (source of truth: <a href="CHANGELOG.md">CHANGELOG</a> + code)</sub>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-9.0.0-fb7299?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/Version-9.0.1-fb7299?style=flat-square" alt="Version">
   <img src="https://img.shields.io/github/stars/jay3-yy/BiliPai?style=flat-square&color=yellow" alt="Stars">
   <img src="https://img.shields.io/github/forks/jay3-yy/BiliPai?style=flat-square&color=green" alt="Forks">
   <img src="https://img.shields.io/github/last-commit/jay3-yy/BiliPai?style=flat-square&color=purple" alt="Last Commit">
@@ -436,19 +436,14 @@ A lightweight plugin format requiring **no coding**, just a simple JSON file to 
 
 See full changelog: [CHANGELOG.md](CHANGELOG.md)
 
-### Latest (v9.0.0 · 2026-06-01)
+### Latest (v9.0.1 · 2026-06-01)
 
-- Bumped the app to `9.0.0` with `versionCode` `213`.
-- Completed live interaction and landscape send support.
-- Added comment `@` friend input, automatic dynamic-comment floor expansion, and fixed mini-site comment navigation.
-- Expanded home top layout, collapse, six-tab paging, and top-tab style settings.
-- Polished the top-tab, partition-rail, and bottom-bar indicator reuse path, including liquid-glass refraction, drag, alignment, and return-state fixes.
-- Fixed home video-return top chrome reset, repeated bottom-bar hiding, bottom-bar finishing, and delayed restore issues.
-- Improved offline download and resume stability, and fixed offline player danmaku/progress-bar behavior.
-- Expanded bangumi/movie API coverage and fixed collection entry/detail navigation.
-- Fixed MD3 pull-to-refresh being covered by video cards and made pull-back motion follow the finger.
-- Fixed rectangular click feedback around capsule-shaped top tabs.
-- Happy Children's Day, and early best wishes to students taking the gaokao.
+- Bumped the app to `9.0.1` with `versionCode` `214`.
+- Unified video shared-element transition visuals across card, cover, and player targets.
+- Reused source card corner radii for home, partition, dynamic, watch-later, space, and related-video entries.
+- Added stable transition targets for cover-first, immediate playback, inline player, landscape fullscreen, and portrait/autoPortrait flows.
+- Forced portrait-video returns through cover sharedBounds before landing back on the source card.
+- Collapsed fullscreen landscape transition corners to `0dp` to avoid card-corner residue on black player edges.
 
 ---
 

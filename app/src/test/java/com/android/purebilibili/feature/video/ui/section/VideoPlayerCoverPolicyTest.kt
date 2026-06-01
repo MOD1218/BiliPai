@@ -29,6 +29,28 @@ class VideoPlayerCoverPolicyTest {
     }
 
     @Test
+    fun horizontalManualStartCover_keepsInlineCoverContainer() {
+        assertFalse(
+            shouldFillPlayerViewportForManualStartCover(
+                shouldKeepCoverForManualStart = true,
+                forceCoverDuringReturnAnimation = false,
+                isVerticalVideo = false
+            )
+        )
+    }
+
+    @Test
+    fun verticalManualStartCover_canFillViewport() {
+        assertTrue(
+            shouldFillPlayerViewportForManualStartCover(
+                shouldKeepCoverForManualStart = true,
+                forceCoverDuringReturnAnimation = false,
+                isVerticalVideo = true
+            )
+        )
+    }
+
+    @Test
     fun forcedReturnCoverSharedBounds_keepsHomeCoverKeyMatchedDuringReturn() {
         // 返回阶段播放器容器会让出 sharedBounds，强制封面必须承接同一个 cover key。
         assertTrue(
@@ -67,6 +89,28 @@ class VideoPlayerCoverPolicyTest {
         }
         assertTrue(shouldUseReturnLandingMotionForForcedReturnCover(true))
         assertFalse(shouldUseReturnLandingMotionForForcedReturnCover(false))
+    }
+
+    @Test
+    fun coverFirstOverlaySharedBounds_usesSameCardRouteGuardAsReturn() {
+        assertTrue(
+            shouldEnableCoverOverlaySharedBounds(
+                useCoverOverlaySharedBounds = true,
+                transitionEnabled = true,
+                hasSharedTransitionScope = true,
+                hasAnimatedVisibilityScope = true,
+                sourceRoute = "partition"
+            )
+        )
+        assertFalse(
+            shouldEnableCoverOverlaySharedBounds(
+                useCoverOverlaySharedBounds = true,
+                transitionEnabled = true,
+                hasSharedTransitionScope = true,
+                hasAnimatedVisibilityScope = true,
+                sourceRoute = "settings"
+            )
+        )
     }
 
     @Test

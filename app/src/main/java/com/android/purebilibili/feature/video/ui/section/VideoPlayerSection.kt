@@ -122,7 +122,12 @@ import com.android.purebilibili.core.store.SettingsManager
 import com.android.purebilibili.core.ui.performance.TrackJankStateFlag
 import com.android.purebilibili.core.ui.performance.TrackJankStateValue
 import com.android.purebilibili.core.ui.blur.unifiedBlur
+import com.android.purebilibili.core.ui.transition.VideoSharedTransitionPlaybackIntent
+import com.android.purebilibili.core.ui.transition.VideoSharedTransitionTargetMode
 import com.android.purebilibili.core.ui.transition.VIDEO_SHARED_COVER_ASPECT_RATIO
+import com.android.purebilibili.core.ui.transition.resolveVideoSharedTransitionSourceCornerDp
+import com.android.purebilibili.core.ui.transition.resolveVideoSharedTransitionVisualSpec
+import com.android.purebilibili.core.util.CardPositionManager
 import com.android.purebilibili.core.util.FormatUtils
 import com.android.purebilibili.core.util.HapticType
 import com.android.purebilibili.core.util.Logger
@@ -2527,7 +2532,7 @@ fun VideoPlayerSection(
     val enableManualStartCoverOverlay = shouldEnableManualStartCoverOverlay(
         shouldKeepCoverForManualStart = keepCoverForManualStart
     )
-    val fillPlayerViewportForManualStartCover = shouldFillPlayerViewportForManualStartCover(
+    val baseFillPlayerViewportForManualStartCover = shouldFillPlayerViewportForManualStartCover(
         shouldKeepCoverForManualStart = keepCoverForManualStart,
         forceCoverDuringReturnAnimation = forceCoverDuringReturnAnimation,
         isVerticalVideo = isVerticalVideo
@@ -2559,12 +2564,44 @@ fun VideoPlayerSection(
         }
     }
 
-    val coverMotionSpec = remember(forceCoverDuringReturnAnimation) {
-        resolveVideoPlayerCoverMotionSpec(forceCoverDuringReturnAnimation)
+    val videoSharedTransitionVisualSpec = remember(
+        sourceRouteForSharedElement,
+        forceCoverDuringReturnAnimation,
+        keepCoverForManualStart,
+        playerState.player.currentPosition,
+        isFullscreen,
+        isPortraitFullscreen,
+        isVerticalVideo,
+        context
+    ) {
+        val coverFirstBySetting = !SettingsManager.getAutoPlaySync(context) &&
+            playerState.player.currentPosition <= 0L
+        resolveVideoSharedTransitionVisualSpec(
+            sourceRoute = sourceRouteForSharedElement,
+            sourceCornerDp = CardPositionManager.lastClickedVideoSourceCornerDp
+                ?: resolveVideoSharedTransitionSourceCornerDp(sourceRouteForSharedElement),
+            playbackIntent = if (keepCoverForManualStart || coverFirstBySetting) {
+                VideoSharedTransitionPlaybackIntent.CoverFirst
+            } else {
+                VideoSharedTransitionPlaybackIntent.ImmediatePlayback
+            },
+            fullscreen = isFullscreen && !isPortraitFullscreen,
+            autoPortrait = isPortraitFullscreen,
+            initialVertical = isPortraitFullscreen,
+            isVerticalVideo = isVerticalVideo,
+            isReturning = forceCoverDuringReturnAnimation
+        )
+    }
+    val fillPlayerViewportForManualStartCover =
+        baseFillPlayerViewportForManualStartCover || videoSharedTransitionVisualSpec.fillTargetViewport
+    val suppressCoverFade = forceCoverDuringReturnAnimation || videoSharedTransitionVisualSpec.suppressCoverFade
+    val coverMotionSpec = remember(suppressCoverFade) {
+        resolveVideoPlayerCoverMotionSpec(suppressCoverFade)
     }
     val disableCoverFadeAnimation = !coverMotionSpec.shouldAnimateFade
-    val forceReturnCoverSharedBoundsEnabled = shouldEnableForcedReturnCoverSharedBounds(
-        forceCoverDuringReturnAnimation = forceCoverDuringReturnAnimation,
+    val coverOverlaySharedBoundsEnabled = shouldEnableCoverOverlaySharedBounds(
+        useCoverOverlaySharedBounds = forceCoverDuringReturnAnimation ||
+            videoSharedTransitionVisualSpec.targetMode == VideoSharedTransitionTargetMode.InlineCover,
         transitionEnabled = transitionEnabled,
         hasSharedTransitionScope = sharedTransitionScope != null,
         hasAnimatedVisibilityScope = animatedVisibilityScope != null,
@@ -2597,8 +2634,8 @@ fun VideoPlayerSection(
         },
         modifier = Modifier.zIndex(100f) // 返回中强制封面时，确保封面压住所有播放器层
     ) {
-        val coverCardShape = RoundedCornerShape(12.dp)
-        val forcedReturnCoverModifier = if (forceReturnCoverSharedBoundsEnabled) {
+        val coverCardShape = RoundedCornerShape(videoSharedTransitionVisualSpec.targetCornerDp.dp)
+        val sharedCoverOverlayModifier = if (coverOverlaySharedBoundsEnabled) {
             with(requireNotNull(sharedTransitionScope)) {
                 Modifier.sharedBounds(
                     sharedContentState = rememberSharedContentState(
@@ -2618,11 +2655,11 @@ fun VideoPlayerSection(
 
         Box(modifier = Modifier.fillMaxSize()) {
             val coverContainerModifier = if (fillPlayerViewportForManualStartCover) {
-                Modifier
+                sharedCoverOverlayModifier
                     .matchParentSize()
                     .background(Color.Black)
             } else {
-                forcedReturnCoverModifier
+                sharedCoverOverlayModifier
                     .align(Alignment.TopCenter)
                     .fillMaxWidth()
                     .aspectRatio(VIDEO_SHARED_COVER_ASPECT_RATIO)

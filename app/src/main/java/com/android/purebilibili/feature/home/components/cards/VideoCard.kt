@@ -65,9 +65,9 @@ import com.android.purebilibili.core.ui.components.UpBadgeName
 import com.android.purebilibili.core.ui.components.resolveUpStatsText
 import com.android.purebilibili.core.ui.transition.LocalVideoCardSharedElementSourceRoute
 import com.android.purebilibili.core.ui.transition.VIDEO_SHARED_COVER_ASPECT_RATIO
-import com.android.purebilibili.core.ui.transition.resolveHomeVideoSharedTransitionCornerSpec
 import com.android.purebilibili.core.ui.transition.resolveVideoCardSharedTransitionMotionSpec
 import com.android.purebilibili.core.ui.transition.resolveVideoSharedTransitionOwnership
+import com.android.purebilibili.core.ui.transition.resolveVideoSharedTransitionVisualSpec
 import com.android.purebilibili.core.ui.transition.shouldEnableVideoCoverSharedTransition
 import com.android.purebilibili.core.ui.transition.videoCoverSharedElementKey
 import com.android.purebilibili.feature.home.resolveHomeCardEnterAnimationEnabledAtMount
@@ -81,6 +81,7 @@ import com.android.purebilibili.feature.video.ui.section.shouldEmphasizePreciseP
 
 // 显式导入 collectAsState 以避免 ambiguity 或 missing reference
 import androidx.compose.runtime.collectAsState
+import kotlin.math.roundToInt
 
 internal fun shouldOpenLongPressMenu(
     hasPreviewAction: Boolean,
@@ -379,7 +380,8 @@ fun ElegantVideoCard(
                 bounds = bounds,
                 screenWidth = screenWidthPx,
                 screenHeight = screenHeightPx,
-                density = densityValue
+                density = densityValue,
+                sourceCornerDp = cardCornerRadius.value.roundToInt()
             )
         }
         onClick(video.bvid, video.cid)
@@ -429,10 +431,14 @@ fun ElegantVideoCard(
                 transitionEnabled = transitionEnabled
             )
         }
-        val homeSharedTransitionCornerSpec = remember(effectiveSharedElementSourceRoute, transitionEnabled) {
-            resolveHomeVideoSharedTransitionCornerSpec(
+        val homeSharedTransitionVisualSpec = remember(
+            effectiveSharedElementSourceRoute,
+            transitionEnabled,
+            cardCornerRadius
+        ) {
+            resolveVideoSharedTransitionVisualSpec(
                 sourceRoute = effectiveSharedElementSourceRoute,
-                transitionEnabled = transitionEnabled
+                sourceCornerDp = cardCornerRadius.value.roundToInt()
             )
         }
         val useCoverOnlySharedBounds = coverSharedEnabled && !effectiveSharedElementSourceRoute.isNullOrBlank()
@@ -460,7 +466,7 @@ fun ElegantVideoCard(
         val coverShape = remember(
             cardCornerRadius,
             infoSurfaceAppearance.useTintedSurface,
-            homeSharedTransitionCornerSpec
+            homeSharedTransitionVisualSpec
         ) {
             if (infoSurfaceAppearance.useTintedSurface) {
                 RoundedCornerShape(
@@ -470,13 +476,7 @@ fun ElegantVideoCard(
                     bottomEnd = 0.dp
                 )
             } else {
-                RoundedCornerShape(
-                    if (homeSharedTransitionCornerSpec.enabled) {
-                        homeSharedTransitionCornerSpec.startCornerDp.dp
-                    } else {
-                        cardCornerRadius
-                    }
-                )
+                RoundedCornerShape(homeSharedTransitionVisualSpec.sourceCornerDp.dp)
             }
         }
 

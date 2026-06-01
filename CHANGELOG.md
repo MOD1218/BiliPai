@@ -1,5 +1,28 @@
 # Changelog
 
+## v9.0.1 (2026-06-01)
+
+### 版本信息
+- 版本号从 `9.0.0` 升级到 `9.0.1`，`versionCode` 升级到 `214`。
+- 本次重点修复视频共享元素进入/退出详情页的观感一致性，让封面、播放器、横屏全屏和竖屏播放器都有稳定动画落点。
+
+### 更新内容
+- **共享元素视觉策略统一**：新增视频共享元素视觉策略，统一计算目标模式、来源圆角、目标圆角、是否铺满播放器视口、是否使用封面 sharedBounds 和是否压制封面 fade。
+- **多入口卡片圆角统一**：首页、分区、动态、稍后再看、空间页和相关视频入口都会记录来源卡片圆角，返回时复用同一个 rounded shape，修复分区视频返回收尾阶段圆角弹跳。
+- **点击意图适配**：区分立即播放和先停在封面两类入口意图，手动封面优先落到封面容器，立即播放优先落到播放器区域。
+- **横竖屏目标固定**：普通横屏、横屏全屏、竖屏/autoPortrait 分别使用对应目标形态；横屏全屏过渡期间圆角收敛到 `0dp`，竖屏返回时先切回封面 sharedBounds 再回卡片。
+- **详情页承接统一**：视频详情播放器 sharedBounds 与返回封面 sharedBounds 复用同一份 target spec，减少播放器、封面和目标卡片之间的裁剪/圆角切换。
+
+### 已知问题
+- 本次已通过策略与结构测试覆盖主要路径，但仍建议用真机录屏确认首页立即播放、分区返回、手动封面、竖屏 autoPortrait 和横屏 fullscreen 的实际视觉收尾。
+
+### 验证
+- `./gradlew :app:testDebugUnitTest --tests 'com.android.purebilibili.core.ui.transition.VideoSharedTransitionPolicyTest'`
+- `./gradlew :app:testDebugUnitTest --tests 'com.android.purebilibili.feature.video.ui.section.VideoPlayerCoverPolicyTest'`
+- `./gradlew :app:testDebugUnitTest --tests 'com.android.purebilibili.navigation3.*'`
+- `./gradlew --no-daemon :app:testDebugUnitTest --tests 'com.android.purebilibili.feature.video.screen.VideoDetailScreenMethodSizeStructureTest' --tests 'com.android.purebilibili.feature.home.HomeHeroFlyoutStructureTest'`
+- `./gradlew --no-daemon :app:compileDebugKotlin`
+
 ## v9.0.0 (2026-06-01)
 
 ### 版本信息

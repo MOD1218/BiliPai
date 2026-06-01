@@ -42,6 +42,7 @@ import com.android.purebilibili.core.ui.LocalAnimatedVisibilityScope
 import com.android.purebilibili.core.ui.LocalSharedTransitionScope
 import com.android.purebilibili.core.ui.transition.LocalVideoCardSharedElementSourceRoute
 import com.android.purebilibili.core.ui.transition.resolveVideoCardSharedTransitionMotionSpec
+import com.android.purebilibili.core.ui.transition.resolveVideoSharedTransitionVisualSpec
 import com.android.purebilibili.core.ui.transition.videoCoverSharedElementKey
 import com.android.purebilibili.core.ui.transition.videoTitleSharedElementKey
 import com.android.purebilibili.core.util.CardPositionManager
@@ -86,7 +87,8 @@ fun VideoCardLarge(
                 bounds = bounds,
                 screenWidth = screenWidthPx,
                 screenHeight = screenHeightPx,
-                density = density.density
+                density = density.density,
+                sourceCornerDp = 10
             )
         }
         onClick()
@@ -116,7 +118,13 @@ fun VideoCardLarge(
     } else {
         sharedElementKey
     }
-    val coverShape = RoundedCornerShape(10.dp)
+    val sharedTransitionVisualSpec = remember(sourceRoute) {
+        resolveVideoSharedTransitionVisualSpec(
+            sourceRoute = sourceRoute,
+            sourceCornerDp = 10
+        )
+    }
+    val coverShape = RoundedCornerShape(sharedTransitionVisualSpec.sourceCornerDp.dp)
     val coverModifier = if (effectiveSharedElementKey != null && sharedTransitionScope != null && animatedVisibilityScope != null) {
         with(sharedTransitionScope) {
             Modifier.sharedBounds(

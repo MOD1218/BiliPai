@@ -142,4 +142,89 @@ class VideoSharedTransitionPolicyTest {
     fun sharedCoverAspectRatio_defaultsToHomeCardSixteenByTen() {
         assertEquals(1.6f, VIDEO_SHARED_COVER_ASPECT_RATIO, 0.0001f)
     }
+
+    @Test
+    fun sharedTransitionVisualSpec_coverFirst_anchorsToInlineCover() {
+        val spec = resolveVideoSharedTransitionVisualSpec(
+            sourceRoute = "home",
+            sourceCornerDp = 12,
+            playbackIntent = VideoSharedTransitionPlaybackIntent.CoverFirst,
+            fullscreen = false,
+            autoPortrait = false,
+            initialVertical = false,
+            isVerticalVideo = false,
+            isReturning = false
+        )
+
+        assertEquals(VideoSharedTransitionTargetMode.InlineCover, spec.targetMode)
+        assertEquals(12, spec.sourceCornerDp)
+        assertEquals(12, spec.targetCornerDp)
+        assertFalse(spec.fillTargetViewport)
+        assertTrue(spec.useCoverSharedBounds)
+        assertFalse(spec.suppressCoverFade)
+    }
+
+    @Test
+    fun sharedTransitionVisualSpec_immediateLandscapeFullscreen_usesSquareViewport() {
+        val spec = resolveVideoSharedTransitionVisualSpec(
+            sourceRoute = "partition",
+            sourceCornerDp = 10,
+            playbackIntent = VideoSharedTransitionPlaybackIntent.ImmediatePlayback,
+            fullscreen = true,
+            autoPortrait = false,
+            initialVertical = false,
+            isVerticalVideo = false,
+            isReturning = false
+        )
+
+        assertEquals(VideoSharedTransitionTargetMode.LandscapeFullscreen, spec.targetMode)
+        assertEquals(10, spec.sourceCornerDp)
+        assertEquals(0, spec.targetCornerDp)
+        assertTrue(spec.fillTargetViewport)
+    }
+
+    @Test
+    fun sharedTransitionVisualSpec_portraitRoute_usesPortraitViewport() {
+        val spec = resolveVideoSharedTransitionVisualSpec(
+            sourceRoute = "home",
+            sourceCornerDp = 12,
+            playbackIntent = VideoSharedTransitionPlaybackIntent.ImmediatePlayback,
+            fullscreen = false,
+            autoPortrait = true,
+            initialVertical = true,
+            isVerticalVideo = true,
+            isReturning = false
+        )
+
+        assertEquals(VideoSharedTransitionTargetMode.PortraitFullscreen, spec.targetMode)
+        assertEquals(0, spec.targetCornerDp)
+        assertTrue(spec.fillTargetViewport)
+    }
+
+    @Test
+    fun sharedTransitionVisualSpec_returnConvergesToRecordedCardCorner() {
+        val spec = resolveVideoSharedTransitionVisualSpec(
+            sourceRoute = "watch_later",
+            sourceCornerDp = 8,
+            playbackIntent = VideoSharedTransitionPlaybackIntent.ImmediatePlayback,
+            fullscreen = true,
+            autoPortrait = true,
+            initialVertical = true,
+            isVerticalVideo = true,
+            isReturning = true
+        )
+
+        assertEquals(VideoSharedTransitionTargetMode.InlineCover, spec.targetMode)
+        assertEquals(8, spec.targetCornerDp)
+        assertFalse(spec.fillTargetViewport)
+        assertTrue(spec.suppressCoverFade)
+    }
+
+    @Test
+    fun sharedTransitionSourceCorner_mapsKnownNonHomeSources() {
+        assertEquals(10, resolveVideoSharedTransitionSourceCornerDp("dynamic", fallbackCornerDp = 12))
+        assertEquals(8, resolveVideoSharedTransitionSourceCornerDp("watch_later", fallbackCornerDp = 12))
+        assertEquals(12, resolveVideoSharedTransitionSourceCornerDp("history", fallbackCornerDp = 12))
+        assertEquals(12, resolveVideoSharedTransitionSourceCornerDp("partition?from=tab", fallbackCornerDp = 12))
+    }
 }

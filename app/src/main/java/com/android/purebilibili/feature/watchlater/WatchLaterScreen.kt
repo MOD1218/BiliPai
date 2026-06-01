@@ -59,6 +59,7 @@ import com.android.purebilibili.core.network.NetworkModule
 import com.android.purebilibili.core.store.SettingsManager
 import com.android.purebilibili.core.ui.transition.LocalVideoCardSharedElementSourceRoute
 import com.android.purebilibili.core.ui.transition.resolveVideoCardSharedTransitionMotionSpec
+import com.android.purebilibili.core.ui.transition.resolveVideoSharedTransitionVisualSpec
 import com.android.purebilibili.core.ui.transition.videoCoverSharedElementKey
 import com.android.purebilibili.core.ui.transition.videoTitleSharedElementKey
 import com.android.purebilibili.core.ui.transition.videoUpNameSharedElementKey
@@ -946,13 +947,20 @@ private fun WatchLaterVideoCard(
                     sourceRoute = sourceRoute,
                     bounds = bounds,
                     screenWidth = screenWidthPx,
-                    screenHeight = screenHeightPx
+                    screenHeight = screenHeightPx,
+                    sourceCornerDp = 8
                 )
             }
         }
         onClick()
     }
-    val coverShape = RoundedCornerShape(8.dp)
+    val sharedTransitionVisualSpec = remember(sourceRoute, transitionEnabled) {
+        resolveVideoSharedTransitionVisualSpec(
+            sourceRoute = sourceRoute,
+            sourceCornerDp = 8
+        )
+    }
+    val coverShape = RoundedCornerShape(sharedTransitionVisualSpec.sourceCornerDp.dp)
     val coverModifier = if (sharedElementReady) {
         with(requireNotNull(sharedTransitionScope)) {
             Modifier.sharedBounds(

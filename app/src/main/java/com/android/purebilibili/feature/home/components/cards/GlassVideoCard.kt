@@ -58,6 +58,7 @@ import com.android.purebilibili.core.ui.transition.VIDEO_SHARED_COVER_ASPECT_RAT
 import com.android.purebilibili.core.ui.transition.resolveVideoCardSharedTransitionMotionSpec
 import com.android.purebilibili.core.ui.transition.videoCoverSharedElementKey
 import com.android.purebilibili.feature.home.resolveHomeCardEnterAnimationEnabledAtMount
+import kotlin.math.roundToInt
 import com.android.purebilibili.feature.home.rememberHomeGlassPillColors
 import com.android.purebilibili.feature.home.resolveHomeGlassCoverPillBaseColor
 
@@ -172,7 +173,8 @@ fun GlassVideoCard(
                 sourceRoute = effectiveSharedElementSourceRoute,
                 bounds = bounds,
                 screenWidth = screenWidthPx,
-                screenHeight = screenHeightPx
+                screenHeight = screenHeightPx,
+                sourceCornerDp = cardCornerRadius.value.roundToInt()
             )
         }
         onClick(video.bvid, 0)
