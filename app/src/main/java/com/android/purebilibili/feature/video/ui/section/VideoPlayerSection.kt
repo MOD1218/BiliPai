@@ -2244,18 +2244,43 @@ fun VideoPlayerSection(
         val persistedRenderedFirstFrame = remember(debugInfo.firstFrame) {
             debugInfo.firstFrame.equals("rendered", ignoreCase = true)
         }
+        val autoPlayOnOpenEnabled = remember(context) {
+            SettingsManager.getClickToPlaySync(context)
+        }
+        var hasManualStartPlaybackIntent by remember(bvid) {
+            mutableStateOf(
+                playerState.player.mediaItemCount > 0 &&
+                    (playerState.player.playWhenReady || playerState.player.isPlaying)
+            )
+        }
+        LaunchedEffect(uiState, playerState.player.playWhenReady, playerState.player.isPlaying) {
+            if (
+                playerState.player.mediaItemCount > 0 &&
+                (playerState.player.playWhenReady || playerState.player.isPlaying)
+            ) {
+                hasManualStartPlaybackIntent = true
+            }
+        }
+        val playFromManualStartCover = {
+            hasManualStartPlaybackIntent = true
+            playPlayerFromUserAction(playerState.player)
+        }
         val coverBootstrapState = remember(
             bvid,
             forceCoverDuringReturnAnimation,
             persistedRenderedFirstFrame,
             playerState.player.playWhenReady,
-            playerState.player.currentPosition
+            playerState.player.currentPosition,
+            autoPlayOnOpenEnabled,
+            hasManualStartPlaybackIntent
         ) {
             resolveVideoPlayerCoverBootstrapState(
                 forceCoverDuringReturnAnimation = forceCoverDuringReturnAnimation,
                 shouldKeepCoverForManualStart = shouldKeepCoverForManualStart(
                     playWhenReady = playerState.player.playWhenReady,
-                    currentPositionMs = playerState.player.currentPosition
+                    currentPositionMs = playerState.player.currentPosition,
+                    autoPlayEnabled = autoPlayOnOpenEnabled,
+                    hasManualStartPlaybackIntent = hasManualStartPlaybackIntent
                 ),
                 hasPersistedRenderedFirstFrame = persistedRenderedFirstFrame
             )
@@ -2268,7 +2293,9 @@ fun VideoPlayerSection(
         }
         val keepCoverForManualStart = shouldKeepCoverForManualStart(
             playWhenReady = playerState.player.playWhenReady,
-            currentPositionMs = playerState.player.currentPosition
+            currentPositionMs = playerState.player.currentPosition,
+            autoPlayEnabled = autoPlayOnOpenEnabled,
+            hasManualStartPlaybackIntent = hasManualStartPlaybackIntent
         )
         val revealMotionSpec = remember {
             resolveVideoPlayerRevealMotionSpec()
@@ -2565,10 +2592,10 @@ fun VideoPlayerSection(
         isFullscreen,
         isPortraitFullscreen,
         isVerticalVideo,
-        context
+        autoPlayOnOpenEnabled,
+        hasManualStartPlaybackIntent
     ) {
-        val coverFirstBySetting = !SettingsManager.getClickToPlaySync(context) &&
-            playerState.player.currentPosition <= 0L
+        val coverFirstBySetting = !autoPlayOnOpenEnabled && !hasManualStartPlaybackIntent
         resolveVideoSharedTransitionVisualSpec(
             sourceRoute = sourceRouteForSharedElement,
             sourceCornerDp = CardPositionManager.lastClickedVideoSourceCornerDp
@@ -2616,7 +2643,7 @@ fun VideoPlayerSection(
     )
 
     AnimatedVisibility(
-        visible = showCover && currentCoverUrl.isNotEmpty(),
+        visible = showCover && (currentCoverUrl.isNotEmpty() || entryPresentationSpec.showManualStartPlayButton),
         enter = if (disableCoverFadeAnimation) {
             EnterTransition.None
         } else {
@@ -2664,24 +2691,31 @@ fun VideoPlayerSection(
             Box(
                 modifier = coverContainerModifier
                     .clickable(enabled = entryPresentationSpec.enableManualStartCoverOverlay) {
-                        playPlayerFromUserAction(playerState.player)
+                        playFromManualStartCover()
                     }
             ) {
-                AsyncImage(
-                    model = coil.request.ImageRequest.Builder(LocalContext.current)
-                        .data(currentCoverUrl)
-                        // [关键] 尝试使用首页卡片的缓存 Key 作为占位，实现无缝过渡
-                        // 假设首页卡片使用的是普通模式 ("n")
-                        .placeholderMemoryCacheKey("cover_${bvid}_n")
-                        .crossfade(shouldEnableCoverImageCrossfade(forceCoverDuringReturnAnimation))
-                        .build(),
-                    contentDescription = null,
-                    contentScale = when (entryPresentationSpec.coverContentScaleMode) {
-                        VideoPlayerCoverContentScaleMode.Crop -> ContentScale.Crop
-                        VideoPlayerCoverContentScaleMode.Fit -> ContentScale.Fit
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
+                if (currentCoverUrl.isNotEmpty()) {
+                    AsyncImage(
+                        model = coil.request.ImageRequest.Builder(LocalContext.current)
+                            .data(currentCoverUrl)
+                            // 入口封面优先复用首页卡片缓存，避免手动起播时短暂露出播放器底层。
+                            .placeholderMemoryCacheKey("cover_${bvid}_n")
+                            .crossfade(shouldEnableCoverImageCrossfade(forceCoverDuringReturnAnimation))
+                            .build(),
+                        contentDescription = null,
+                        contentScale = when (entryPresentationSpec.coverContentScaleMode) {
+                            VideoPlayerCoverContentScaleMode.Crop -> ContentScale.Crop
+                            VideoPlayerCoverContentScaleMode.Fit -> ContentScale.Fit
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                    )
+                }
 
                 if (entryPresentationSpec.showManualStartPlayButton) {
                     if (manualStartPlayButtonLayoutSpec.showCoverScrim) {
@@ -2713,7 +2747,7 @@ fun VideoPlayerSection(
                                 height = manualStartPlayButtonLayoutSpec.iconHeightDp.dp
                             )
                             .clickable {
-                                playPlayerFromUserAction(playerState.player)
+                                playFromManualStartCover()
                             },
                     ) {
                         if (manualStartPlayButtonLayoutSpec.showTopDecorations) {

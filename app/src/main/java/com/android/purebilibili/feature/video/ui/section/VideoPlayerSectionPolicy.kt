@@ -724,9 +724,13 @@ internal fun shouldStartSmoothCoverReveal(
 
 internal fun shouldKeepCoverForManualStart(
     playWhenReady: Boolean,
-    currentPositionMs: Long
+    currentPositionMs: Long,
+    autoPlayEnabled: Boolean = true,
+    hasManualStartPlaybackIntent: Boolean = false
 ): Boolean {
-    return !playWhenReady && currentPositionMs <= 0L
+    if (!autoPlayEnabled && !hasManualStartPlaybackIntent) return true
+    if (playWhenReady) return false
+    return currentPositionMs <= 0L
 }
 
 internal fun shouldShowManualStartPlayButton(

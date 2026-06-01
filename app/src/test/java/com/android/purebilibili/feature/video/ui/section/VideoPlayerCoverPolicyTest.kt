@@ -53,6 +53,54 @@ class VideoPlayerCoverPolicyTest {
     }
 
     @Test
+    fun manualStartCover_staysVisibleForSavedProgressBeforeUserPlay() {
+        assertTrue(
+            shouldKeepCoverForManualStart(
+                playWhenReady = false,
+                currentPositionMs = 98_000L,
+                autoPlayEnabled = false,
+                hasManualStartPlaybackIntent = false
+            )
+        )
+    }
+
+    @Test
+    fun manualStartCover_staysVisibleBeforeLoadResetsFreshPlayerFlag() {
+        assertTrue(
+            shouldKeepCoverForManualStart(
+                playWhenReady = true,
+                currentPositionMs = 0L,
+                autoPlayEnabled = false,
+                hasManualStartPlaybackIntent = false
+            )
+        )
+    }
+
+    @Test
+    fun manualStartCover_hidesAfterUserPlayIntentEvenWithSavedProgress() {
+        assertFalse(
+            shouldKeepCoverForManualStart(
+                playWhenReady = false,
+                currentPositionMs = 98_000L,
+                autoPlayEnabled = false,
+                hasManualStartPlaybackIntent = true
+            )
+        )
+    }
+
+    @Test
+    fun manualStartCover_hidesWhenAutoPlayOverrideStartsPlayback() {
+        assertFalse(
+            shouldKeepCoverForManualStart(
+                playWhenReady = true,
+                currentPositionMs = 0L,
+                autoPlayEnabled = false,
+                hasManualStartPlaybackIntent = true
+            )
+        )
+    }
+
+    @Test
     fun horizontalManualStartCover_usesCoverSharedBoundsWithoutViewportFill() {
         val spec = resolveVideoPlayerEntryPresentationSpec(
             shouldKeepCoverForManualStart = true,
