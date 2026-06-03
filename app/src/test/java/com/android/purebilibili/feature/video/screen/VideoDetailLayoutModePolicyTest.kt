@@ -310,6 +310,21 @@ class VideoDetailLayoutModePolicyTest {
     }
 
     @Test
+    fun phoneOrientationPolicy_tabletFullscreen_respectsConfiguredHorizontalMode() {
+        assertEquals(
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE,
+            resolvePhoneVideoRequestedOrientation(
+                autoRotateEnabled = true,
+                systemAutoRotateEnabled = false,
+                fullscreenMode = FullscreenMode.HORIZONTAL,
+                isCompactDevice = false,
+                isOrientationDrivenFullscreen = false,
+                isFullscreenMode = true
+            )
+        )
+    }
+
+    @Test
     fun phoneOrientationPolicy_autoRotateEnabled_defaultsToPortraitUntilSensorRequestsLandscape() {
         assertEquals(
             ActivityInfo.SCREEN_ORIENTATION_PORTRAIT,

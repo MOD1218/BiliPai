@@ -5498,7 +5498,14 @@ internal fun resolvePhoneVideoRequestedOrientation(
         return null
     }
     if (!shouldApplyPhoneAutoRotatePolicy(isCompactDevice)) {
-        return ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        return if (isFullscreenMode || manualFullscreenRequested) {
+            resolvePhoneFullscreenEnterOrientation(
+                fullscreenMode = fullscreenMode,
+                isVerticalVideo = isVerticalVideo
+            )
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
     }
     if (fullscreenMode == com.android.purebilibili.core.store.FullscreenMode.NONE) {
         return null
