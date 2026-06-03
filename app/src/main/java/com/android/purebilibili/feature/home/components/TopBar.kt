@@ -635,7 +635,9 @@ internal fun Modifier.homeTopBottomBarMatchedSurface(
     motionTier: MotionTier,
     isTransitionRunning: Boolean,
     forceLowBlurBudget: Boolean,
-    drawShellLens: Boolean = true
+    drawShellLens: Boolean = true,
+    isScrolling: Boolean = false,
+    materialScrollProgress: Float = if (isScrolling) 1f else 0f
 ): Modifier = composed {
     val isGlassEnabled = renderMode == HomeTopChromeRenderMode.LIQUID_GLASS_BACKDROP ||
         renderMode == HomeTopChromeRenderMode.LIQUID_GLASS_HAZE
@@ -662,7 +664,9 @@ internal fun Modifier.homeTopBottomBarMatchedSurface(
         motionTier = motionTier,
         isTransitionRunning = isTransitionRunning,
         forceLowBlurBudget = forceLowBlurBudget,
-        liquidGlassPreset = liquidGlassPreset
+        liquidGlassPreset = liquidGlassPreset,
+        isScrolling = isScrolling,
+        materialScrollProgress = materialScrollProgress
     )
 }
 

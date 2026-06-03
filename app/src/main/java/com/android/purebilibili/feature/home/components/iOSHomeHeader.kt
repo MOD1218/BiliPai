@@ -108,7 +108,9 @@ internal data class HomeTopSearchRefractionLayerPolicy(
     val useExportedBackdrop: Boolean,
     val overlayAlpha: Float,
     val visibleContentAlpha: Float,
-    val exportTranslationMultiplier: Float
+    val exportTranslationMultiplier: Float,
+    val drawShellLens: Boolean,
+    val materialScrollProgress: Float
 )
 
 internal data class HomeTopLinkedBottomBarAppearance(
@@ -239,6 +241,14 @@ internal fun resolveHomeTopChromeLiquidGlassEnabled(
     return resolvedHomeSettings.isTopBarLiquidGlassEnabled
 }
 
+internal fun resolveHomeTopSearchLiquidGlassEnabled(
+    homeSettings: HomeSettings?,
+    uiPreset: UiPreset
+): Boolean {
+    val resolvedHomeSettings = homeSettings ?: HomeSettings()
+    return resolvedHomeSettings.isHomeSearchLiquidGlassEnabled
+}
+
 internal fun resolveHomeTopChromeMaterialMode(
     isHeaderBlurEnabled: Boolean,
     isBottomBarBlurEnabled: Boolean,
@@ -279,13 +289,27 @@ internal fun resolveHomeTopSearchRefractionLayerPolicy(
     isScrolling: Boolean,
     isTransitionRunning: Boolean
 ): HomeTopSearchRefractionLayerPolicy {
+    val isLiquidGlassMode = renderMode == HomeTopChromeRenderMode.LIQUID_GLASS_BACKDROP ||
+        renderMode == HomeTopChromeRenderMode.LIQUID_GLASS_HAZE
+    val normalizedRevealFraction = searchRevealFraction.coerceIn(0f, 1f)
+    val isSearchSliding = normalizedRevealFraction > 0f && normalizedRevealFraction < 1f
+    val applySlidingLens = isLiquidGlassMode &&
+        hasBackdrop &&
+        (isSearchSliding || isScrolling || isTransitionRunning)
+    val materialScrollProgress = when {
+        isSearchSliding -> (1f - normalizedRevealFraction).coerceIn(0f, 1f)
+        applySlidingLens -> 1f
+        else -> 0f
+    }
     return HomeTopSearchRefractionLayerPolicy(
-        // 搜索胶囊本身已经绘制玻璃外壳；额外导出折射层会形成第二个同尺寸胶囊。
+        // 搜索胶囊静止时保持单层；上下滑动时只打开 surface 镜片，避免常驻双重高光。
         captureContentLayer = false,
         useExportedBackdrop = false,
         overlayAlpha = 0f,
         visibleContentAlpha = 1f,
-        exportTranslationMultiplier = 0f
+        exportTranslationMultiplier = 0f,
+        drawShellLens = applySlidingLens,
+        materialScrollProgress = materialScrollProgress
     )
 }
 
@@ -1614,6 +1638,18 @@ fun iOSHomeHeader(
     )
     val isGlassEnabled = topChromeMaterialMode == TopTabMaterialMode.LIQUID_GLASS
     val isTopChromeBlurEnabled = topChromeMaterialMode != TopTabMaterialMode.PLAIN
+    val searchLiquidGlassEnabled = resolveHomeTopSearchLiquidGlassEnabled(
+        homeSettings = homeSettings,
+        uiPreset = uiPreset
+    )
+    val searchChromeMaterialMode = resolveHomeTopChromeMaterialMode(
+        isHeaderBlurEnabled = isHeaderBlurEnabled,
+        isBottomBarBlurEnabled = linkedBottomBarAppearance.blurEnabled,
+        isLiquidGlassEnabled = searchLiquidGlassEnabled,
+        androidNativeVariant = androidNativeVariant
+    )
+    val isSearchGlassEnabled = searchChromeMaterialMode == TopTabMaterialMode.LIQUID_GLASS
+    val isSearchBlurEnabled = searchChromeMaterialMode != TopTabMaterialMode.PLAIN
 
     //  读取当前模糊强度以确定背景透明度
     val blurIntensity = currentUnifiedBlurIntensity()
@@ -1713,8 +1749,8 @@ fun iOSHomeHeader(
     }
     val rawSearchPillColors = tuneHomeTopGlassColors(
         colors = rememberHomeGlassPillColors(
-            glassEnabled = isGlassEnabled,
-            blurEnabled = isTopChromeBlurEnabled,
+            glassEnabled = isSearchGlassEnabled,
+            blurEnabled = isSearchBlurEnabled,
             emphasized = true,
             baseColor = AppSurfaceTokens.cardContainer()
         ),
@@ -1723,13 +1759,13 @@ fun iOSHomeHeader(
     )
     val searchPillColors = remember(
         rawSearchPillColors,
-        isGlassEnabled,
-        isTopChromeBlurEnabled,
+        isSearchGlassEnabled,
+        isSearchBlurEnabled,
         blurIntensity,
         uiPreset,
         androidNativeVariant
     ) {
-        val resolved = if (!isGlassEnabled && isTopChromeBlurEnabled) {
+        val resolved = if (!isSearchGlassEnabled && isSearchBlurEnabled) {
             resolveHomeTopBlurContainerColors(
                 colors = rawSearchPillColors,
                 surfaceColor = surfaceColor,
@@ -1742,7 +1778,7 @@ fun iOSHomeHeader(
             uiPreset = uiPreset,
             androidNativeVariant = androidNativeVariant,
             emphasized = true,
-            blurEnabled = !isGlassEnabled && isTopChromeBlurEnabled,
+            blurEnabled = !isSearchGlassEnabled && isSearchBlurEnabled,
             fallbackColors = resolved,
             surfaceContainerColor = surfaceContainerColor,
             surfaceContainerHighColor = surfaceContainerHighColor,
@@ -1768,10 +1804,10 @@ fun iOSHomeHeader(
             rawTabChromeColors
         }
     }
-    val searchPillStyle = remember(isGlassEnabled, isTopChromeBlurEnabled) {
+    val searchPillStyle = remember(isSearchGlassEnabled, isSearchBlurEnabled) {
         resolveHomeGlassPillStyle(
-            glassEnabled = isGlassEnabled,
-            blurEnabled = isTopChromeBlurEnabled,
+            glassEnabled = isSearchGlassEnabled,
+            blurEnabled = isSearchBlurEnabled,
             emphasized = true
         )
     }
@@ -1817,8 +1853,15 @@ fun iOSHomeHeader(
         uiPreset = uiPreset,
         useUnifiedPanel = useUnifiedTopPanel
     )
+    val searchChromeBaseRenderMode = resolveHomeTopChromeRenderMode(
+        materialMode = searchChromeMaterialMode,
+        isGlassSupported = isGlassSupported,
+        hasBackdrop = backdrop != null,
+        hasHazeState = hazeState != null,
+        allowHazeLiquidGlassFallback = allowHazeLiquidGlassFallback
+    )
     val searchChromeRenderMode = resolveHomeTopSearchChromeRenderMode(
-        renderMode = topChromeRenderMode,
+        renderMode = searchChromeBaseRenderMode,
         uiPreset = uiPreset,
         useUnifiedPanel = useUnifiedTopPanel,
         androidNativeVariant = androidNativeVariant
@@ -2554,7 +2597,10 @@ fun iOSHomeHeader(
                                                     motionTier = motionTier,
                                                     isTransitionRunning = topChromeMotionPolicy.isTransitionRunning,
                                                     forceLowBlurBudget = forceLowBlurBudget,
-                                                    drawShellLens = false
+                                                    drawShellLens = searchRefractionLayerPolicy.drawShellLens,
+                                                    isScrolling = topChromeMotionPolicy.isScrolling,
+                                                    materialScrollProgress =
+                                                        searchRefractionLayerPolicy.materialScrollProgress
                                                 )
                                             } else {
                                                 Modifier.homeTopChromeSurface(

@@ -147,7 +147,7 @@ class iOSHomeHeaderVisualPolicyTest {
     }
 
     @Test
-    fun `search content export layer stays disabled to avoid duplicate search capsule`() {
+    fun `search content export layer stays disabled while sliding shell lens is policy controlled`() {
         val scrolling = resolveHomeTopSearchRefractionLayerPolicy(
             renderMode = HomeTopChromeRenderMode.LIQUID_GLASS_BACKDROP,
             hasBackdrop = true,
@@ -182,17 +182,22 @@ class iOSHomeHeaderVisualPolicyTest {
         assertEquals(0f, scrolling.overlayAlpha, 0.0001f)
         assertEquals(1f, scrolling.visibleContentAlpha, 0.0001f)
         assertEquals(0f, scrolling.exportTranslationMultiplier, 0.0001f)
+        assertTrue(scrolling.drawShellLens)
+        assertEquals(1f, scrolling.materialScrollProgress, 0.0001f)
         assertFalse(stable.captureContentLayer)
         assertFalse(stable.useExportedBackdrop)
         assertEquals(0f, stable.overlayAlpha, 0.0001f)
         assertEquals(1f, stable.visibleContentAlpha, 0.0001f)
         assertEquals(0f, stable.exportTranslationMultiplier, 0.0001f)
+        assertFalse(stable.drawShellLens)
         assertFalse(collapsing.captureContentLayer)
         assertFalse(collapsing.useExportedBackdrop)
         assertEquals(0f, collapsing.overlayAlpha, 0.0001f)
+        assertTrue(collapsing.drawShellLens)
         assertFalse(blur.captureContentLayer)
         assertFalse(blur.useExportedBackdrop)
         assertEquals(0f, blur.overlayAlpha, 0.0001f)
+        assertFalse(blur.drawShellLens)
     }
 
     @Test
@@ -988,6 +993,59 @@ class iOSHomeHeaderVisualPolicyTest {
     }
 
     @Test
+    fun `home search follows independent liquid glass setting`() {
+        assertFalse(
+            resolveHomeTopSearchLiquidGlassEnabled(
+                homeSettings = HomeSettings(
+                    isTopBarLiquidGlassEnabled = true,
+                    isHomeSearchLiquidGlassEnabled = false
+                ),
+                uiPreset = UiPreset.MD3
+            )
+        )
+        assertTrue(
+            resolveHomeTopSearchLiquidGlassEnabled(
+                homeSettings = HomeSettings(
+                    isTopBarLiquidGlassEnabled = false,
+                    isHomeSearchLiquidGlassEnabled = true
+                ),
+                uiPreset = UiPreset.MD3
+            )
+        )
+    }
+
+    @Test
+    fun `home search liquid glass shell lens only activates while sliding`() {
+        val idle = resolveHomeTopSearchRefractionLayerPolicy(
+            renderMode = HomeTopChromeRenderMode.LIQUID_GLASS_BACKDROP,
+            hasBackdrop = true,
+            searchRevealFraction = 1f,
+            isScrolling = false,
+            isTransitionRunning = false
+        )
+        val sliding = resolveHomeTopSearchRefractionLayerPolicy(
+            renderMode = HomeTopChromeRenderMode.LIQUID_GLASS_BACKDROP,
+            hasBackdrop = true,
+            searchRevealFraction = 0.45f,
+            isScrolling = true,
+            isTransitionRunning = false
+        )
+        val noBackdrop = resolveHomeTopSearchRefractionLayerPolicy(
+            renderMode = HomeTopChromeRenderMode.LIQUID_GLASS_BACKDROP,
+            hasBackdrop = false,
+            searchRevealFraction = 0.45f,
+            isScrolling = true,
+            isTransitionRunning = false
+        )
+
+        assertFalse(idle.drawShellLens)
+        assertEquals(0f, idle.materialScrollProgress, 0.001f)
+        assertTrue(sliding.drawShellLens)
+        assertTrue(sliding.materialScrollProgress > 0f)
+        assertFalse(noBackdrop.drawShellLens)
+    }
+
+    @Test
     fun `md3 top chrome keeps status bar blur slab while local panel stays blurred`() {
         assertEquals(
             HomeTopChromeRenderMode.BLUR,
@@ -1754,7 +1812,7 @@ class iOSHomeHeaderVisualPolicyTest {
         assertTrue(searchCapsuleSource.contains("val skinSearchSurfaceColor = resolveHomeSkinSearchSurfaceColor("))
         assertTrue(searchCapsuleSource.contains("surfaceColor = skinSearchSurfaceColor"))
         assertTrue(searchCapsuleSource.contains("KernelSuBottomBarIndicatorLayer("))
-        assertTrue(searchCapsuleSource.contains("drawShellLens = false"))
+        assertTrue(searchCapsuleSource.contains("drawShellLens = searchRefractionLayerPolicy.drawShellLens"))
         assertFalse(searchCapsuleSource.contains("SimpleLiquidIndicator("))
         assertFalse(searchCapsuleSource.contains(".matchParentSize()\n                                                .background("))
         assertFalse(searchCapsuleSource.contains("uiSkinDecoration.searchCapsuleTint.copy(alpha = 0.22f)"))
