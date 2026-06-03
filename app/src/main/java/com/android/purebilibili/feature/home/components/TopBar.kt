@@ -187,7 +187,17 @@ internal fun resolveMd3TopTabItemWidthDp(
 ): Float {
     if (containerWidthDp <= 0f) return 96f
     if (visibleSlots >= 6) return (containerWidthDp / visibleSlots).coerceIn(52f, 72f)
-    return (containerWidthDp * 0.3f).coerceIn(88f, 120f)
+    return (containerWidthDp / visibleSlots.coerceAtLeast(1)).coerceAtLeast(88f)
+}
+
+internal fun resolveMd3TopTabContentPaddingDp(
+    containerWidthDp: Float,
+    itemWidthDp: Float,
+    categoryCount: Int
+): Float {
+    if (containerWidthDp <= 0f || itemWidthDp <= 0f || categoryCount <= 0) return 0f
+    val contentWidth = itemWidthDp * categoryCount
+    return ((containerWidthDp - contentWidth) / 2f).coerceAtLeast(0f)
 }
 
 internal fun resolveMd3VisibleTabIndices(
@@ -842,6 +852,15 @@ private fun LightweightHomeTopTabs(
         }
         val density = LocalDensity.current
         val isDarkTheme = isSystemInDarkTheme()
+        val md3ContentPadding = if (effectiveRenderer == HomeTopTabRenderer.MD3) {
+            resolveMd3TopTabContentPaddingDp(
+                containerWidthDp = maxWidth.value,
+                itemWidthDp = itemWidth.value,
+                categoryCount = categories.size
+            ).dp
+        } else {
+            0.dp
+        }
         val md3IndicatorWidth = if (skinPlainStyle) 30.dp else 28.dp
         val dockIndicatorHorizontalGap = resolveTopTabDockIndicatorHorizontalGapDp(
             hasOuterChromeSurface = hasOuterChromeSurface
@@ -998,7 +1017,8 @@ private fun LightweightHomeTopTabs(
                         absolutePagerPosition = topTabIndicatorPosition,
                         itemWidthPx = itemWidth.toPx(),
                         rowScrollOffsetPx = rowScrollOffsetPx,
-                        indicatorWidthPx = md3IndicatorWidth.toPx()
+                        indicatorWidthPx = md3IndicatorWidth.toPx(),
+                        contentPaddingPx = md3ContentPadding.toPx()
                     )
                 }
             }
@@ -1021,7 +1041,8 @@ private fun LightweightHomeTopTabs(
                         absolutePagerPosition = topTabIndicatorPosition,
                         itemWidthPx = itemWidth.toPx(),
                         rowScrollOffsetPx = rowScrollOffsetPx,
-                        indicatorWidthPx = md3LiquidCapsuleWidth.toPx()
+                        indicatorWidthPx = md3LiquidCapsuleWidth.toPx(),
+                        contentPaddingPx = md3ContentPadding.toPx()
                     )
                 }
             }
@@ -1281,7 +1302,13 @@ private fun LightweightHomeTopTabs(
                         },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start,
-                    contentPadding = PaddingValues(horizontal = if (effectiveRenderer == HomeTopTabRenderer.IOS) 2.dp else 0.dp)
+                    contentPadding = PaddingValues(
+                        horizontal = if (effectiveRenderer == HomeTopTabRenderer.IOS) {
+                            2.dp
+                        } else {
+                            md3ContentPadding
+                        }
+                    )
                 ) {
                     itemsIndexed(
                         items = categories,
