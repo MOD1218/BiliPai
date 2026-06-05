@@ -514,6 +514,24 @@ fun ElegantVideoCard(
         val homeSharedTransitionMotionSpec = homeSharedTransitionSpecs.motion
         val homeSharedTransitionVisualSpec = homeSharedTransitionSpecs.visual
         val useCoverOnlySharedBounds = coverSharedEnabled && !effectiveSharedElementSourceRoute.isNullOrBlank()
+        val thisCardVideoSourceKey = remember(video.bvid, effectiveSharedElementSourceRoute) {
+            val normalizedBvid = video.bvid.trim()
+            val normalizedRoute = effectiveSharedElementSourceRoute
+                ?.substringBefore("?")
+                ?.takeIf { it.isNotBlank() }
+            if (normalizedBvid.isNotEmpty() && normalizedRoute != null) {
+                "$normalizedRoute:$normalizedBvid"
+            } else {
+                null
+            }
+        }
+        val isCoverSharedReturnTarget = thisCardVideoSourceKey != null &&
+            thisCardVideoSourceKey == CardPositionManager.lastClickedVideoSourceKey
+        val coverCrossfadeEnabled = shouldEnableVideoCardCoverCrossfade(
+            isReturningFromDetail = isReturningFromVideoDetail,
+            useCoverSharedBounds = useCoverOnlySharedBounds,
+            isSharedReturnTarget = isCoverSharedReturnTarget
+        )
         val cardContainerModifier = Modifier.fillMaxWidth()
         Column(
             modifier = cardContainerModifier
@@ -606,7 +624,7 @@ fun ElegantVideoCard(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(coverUrl)
                         .size(imageWidth, imageHeight)  // 省流量时使用更小尺寸
-                        .crossfade(100)  //  缩短淡入时间
+                        .crossfade(coverCrossfadeEnabled)
                         .memoryCacheKey(coverCacheKey)
                         .diskCacheKey(coverCacheKey)
                         .build(),

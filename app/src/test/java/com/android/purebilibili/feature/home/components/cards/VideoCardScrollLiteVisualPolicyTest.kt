@@ -99,6 +99,35 @@ class VideoCardScrollLiteVisualPolicyTest {
     }
 
     @Test
+    fun `return target cover disables crossfade during shared transition`() {
+        assertFalse(
+            shouldEnableVideoCardCoverCrossfade(
+                isReturningFromDetail = true,
+                useCoverSharedBounds = true,
+                isSharedReturnTarget = true
+            )
+        )
+    }
+
+    @Test
+    fun `non return target cover keeps crossfade`() {
+        assertTrue(
+            shouldEnableVideoCardCoverCrossfade(
+                isReturningFromDetail = true,
+                useCoverSharedBounds = true,
+                isSharedReturnTarget = false
+            )
+        )
+        assertTrue(
+            shouldEnableVideoCardCoverCrossfade(
+                isReturningFromDetail = false,
+                useCoverSharedBounds = true,
+                isSharedReturnTarget = true
+            )
+        )
+    }
+
+    @Test
     fun `home video metadata uses on surface colors for readable up and publish text`() {
         val onSurface = Color(0xFF1D1B20)
         val colors = resolveHomeVideoCardMetadataColors(onSurface)
