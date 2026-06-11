@@ -367,7 +367,7 @@ fun AppNavigation(
     }
     val startDestination = if (firstLaunchShown) ScreenRoutes.Home.route else ScreenRoutes.Onboarding.route
 
-    SharedTransitionProvider {
+    SharedTransitionProvider(enabled = cardTransitionEnabled) {
         // [新增] 全局底栏状态管理
         var navigation3BackStack by remember(startDestination) {
             mutableStateOf(

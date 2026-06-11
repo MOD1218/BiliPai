@@ -197,13 +197,22 @@ class SpaceLoadPolicyTest {
     fun shouldEnableSpaceLazyGridSharedTransition_requiresBothScopes() {
         assertTrue(
             shouldEnableSpaceLazyGridSharedTransition(
+                transitionEnabled = true,
                 hasSharedTransitionScope = true,
                 hasAnimatedVisibilityScope = true
             )
         )
         assertFalse(
             shouldEnableSpaceLazyGridSharedTransition(
+                transitionEnabled = true,
                 hasSharedTransitionScope = false,
+                hasAnimatedVisibilityScope = true
+            )
+        )
+        assertFalse(
+            shouldEnableSpaceLazyGridSharedTransition(
+                transitionEnabled = false,
+                hasSharedTransitionScope = true,
                 hasAnimatedVisibilityScope = true
             )
         )

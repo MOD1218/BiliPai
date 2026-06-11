@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.android.purebilibili.core.ui.LocalAnimatedVisibilityScope
+import com.android.purebilibili.core.ui.LocalSharedTransitionEnabled
 import com.android.purebilibili.core.ui.LocalSharedTransitionScope
 import com.android.purebilibili.core.ui.transition.LocalVideoCardSharedElementSourceRoute
 import com.android.purebilibili.core.ui.transition.resolveVideoCardSharedTransitionMotionSpec
@@ -100,14 +101,16 @@ fun VideoCardLarge(
 
     val sharedTransitionScope = LocalSharedTransitionScope.current
     val animatedVisibilityScope = LocalAnimatedVisibilityScope.current
-    val sharedElementReady = archive.bvid.isNotBlank() &&
+    val sharedTransitionEnabled = LocalSharedTransitionEnabled.current
+    val sharedElementReady = sharedTransitionEnabled &&
+        archive.bvid.isNotBlank() &&
         sourceRoute != null &&
         sharedTransitionScope != null &&
         animatedVisibilityScope != null
-    val sharedTransitionMotionSpec = remember(sourceRoute) {
+    val sharedTransitionMotionSpec = remember(sourceRoute, sharedTransitionEnabled) {
         resolveVideoCardSharedTransitionMotionSpec(
             sourceRoute = sourceRoute,
-            transitionEnabled = true
+            transitionEnabled = sharedTransitionEnabled
         )
     }
     val effectiveSharedElementKey = if (sharedElementReady) {
@@ -122,7 +125,12 @@ fun VideoCardLarge(
         )
     }
     val coverShape = RoundedCornerShape(sharedTransitionVisualSpec.sourceCornerDp.dp)
-    val coverModifier = if (effectiveSharedElementKey != null && sharedTransitionScope != null && animatedVisibilityScope != null) {
+    val coverModifier = if (
+        sharedTransitionEnabled &&
+        effectiveSharedElementKey != null &&
+        sharedTransitionScope != null &&
+        animatedVisibilityScope != null
+    ) {
         with(sharedTransitionScope) {
             Modifier.sharedBounds(
                 sharedContentState = rememberSharedContentState(key = effectiveSharedElementKey),

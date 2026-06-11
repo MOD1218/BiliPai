@@ -61,6 +61,7 @@ import com.android.purebilibili.core.ui.CutePersonLoadingIndicator
 import com.android.purebilibili.core.ui.animation.DampedDragAnimationState
 import com.android.purebilibili.core.ui.animation.rememberDampedDragAnimationState
 import com.android.purebilibili.core.ui.LocalAnimatedVisibilityScope
+import com.android.purebilibili.core.ui.LocalSharedTransitionEnabled
 import com.android.purebilibili.core.ui.LocalSharedTransitionScope
 import com.android.purebilibili.core.ui.globalWallpaperAwareBackground
 import com.android.purebilibili.core.util.responsiveContentWidth
@@ -866,9 +867,10 @@ private fun PartitionVideoRow(
     val cardBoundsRef = remember { object { var value: androidx.compose.ui.geometry.Rect? = null } }
     val sharedTransitionScope = LocalSharedTransitionScope.current
     val animatedVisibilityScope = LocalAnimatedVisibilityScope.current
+    val sharedTransitionEnabled = LocalSharedTransitionEnabled.current
     val sharedElementSourceRoute = LocalVideoCardSharedElementSourceRoute.current
     val coverSharedEnabled = shouldEnableVideoCoverSharedTransition(
-        transitionEnabled = true,
+        transitionEnabled = sharedTransitionEnabled,
         hasSharedTransitionScope = sharedTransitionScope != null,
         hasAnimatedVisibilityScope = animatedVisibilityScope != null
     ) && !sharedElementSourceRoute.isNullOrBlank()
@@ -876,10 +878,10 @@ private fun PartitionVideoRow(
         coverSharedEnabled = coverSharedEnabled,
         isQuickReturnLimited = false
     )
-    val sharedTransitionMotionSpec = remember(sharedElementSourceRoute) {
+    val sharedTransitionMotionSpec = remember(sharedElementSourceRoute, sharedTransitionEnabled) {
         resolveVideoCardSharedTransitionMotionSpec(
             sourceRoute = sharedElementSourceRoute,
-            transitionEnabled = true
+            transitionEnabled = sharedTransitionEnabled
         )
     }
     val sharedTransitionVisualSpec = remember(sharedElementSourceRoute) {

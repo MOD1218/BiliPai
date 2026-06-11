@@ -97,6 +97,7 @@ import com.android.purebilibili.core.ui.AdaptiveScaffold
 import com.android.purebilibili.core.ui.AdaptiveTopAppBar
 import com.android.purebilibili.core.ui.AppShapes
 import com.android.purebilibili.core.ui.ContainerLevel
+import com.android.purebilibili.core.ui.LocalSharedTransitionEnabled
 import com.android.purebilibili.core.ui.OfficialVerifyBadge
 import com.android.purebilibili.core.ui.OfficialVerifyBadgeSpec
 import com.android.purebilibili.core.ui.blur.BlurSurfaceType
@@ -690,8 +691,14 @@ private fun SpaceContent(
         )
     }
     val searchFocusRequester = remember { FocusRequester() }
-    val lazyGridSharedTransitionEnabled = remember(sharedTransitionScope, animatedVisibilityScope) {
+    val sharedTransitionEnabled = LocalSharedTransitionEnabled.current
+    val lazyGridSharedTransitionEnabled = remember(
+        sharedTransitionEnabled,
+        sharedTransitionScope,
+        animatedVisibilityScope
+    ) {
         shouldEnableSpaceLazyGridSharedTransition(
+            transitionEnabled = sharedTransitionEnabled,
             hasSharedTransitionScope = sharedTransitionScope != null,
             hasAnimatedVisibilityScope = animatedVisibilityScope != null
         )

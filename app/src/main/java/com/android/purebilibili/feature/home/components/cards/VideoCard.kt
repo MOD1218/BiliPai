@@ -53,6 +53,7 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.tween
 import com.android.purebilibili.core.ui.LocalSharedTransitionScope
 import com.android.purebilibili.core.ui.LocalAnimatedVisibilityScope
+import com.android.purebilibili.core.ui.LocalSharedTransitionEnabled
 import com.android.purebilibili.core.ui.AppShapes
 import com.android.purebilibili.core.ui.AppSurfaceTokens
 import com.android.purebilibili.core.ui.ContainerLevel
@@ -485,8 +486,9 @@ fun ElegantVideoCard(
         //  尝试获取共享元素作用域。首页点击视频时，由卡片主容器承载整体放大/回收。
         val sharedTransitionScope = LocalSharedTransitionScope.current
         val animatedVisibilityScope = LocalAnimatedVisibilityScope.current
+        val effectiveTransitionEnabled = transitionEnabled && LocalSharedTransitionEnabled.current
         val coverSharedEnabled = shouldEnableVideoCoverSharedTransition(
-            transitionEnabled = transitionEnabled,
+            transitionEnabled = effectiveTransitionEnabled,
             hasSharedTransitionScope = sharedTransitionScope != null,
             hasAnimatedVisibilityScope = animatedVisibilityScope != null
         )
@@ -498,13 +500,13 @@ fun ElegantVideoCard(
         )
         val homeSharedTransitionSpecs = remember(
             effectiveSharedElementSourceRoute,
-            transitionEnabled,
+            effectiveTransitionEnabled,
             cardCornerRadius
         ) {
             VideoCardSharedTransitionSpecs(
                 motion = resolveVideoCardSharedTransitionMotionSpec(
                     sourceRoute = effectiveSharedElementSourceRoute,
-                    transitionEnabled = transitionEnabled
+                    transitionEnabled = effectiveTransitionEnabled
                 ),
                 visual = resolveVideoSharedTransitionVisualSpec(
                     sourceRoute = effectiveSharedElementSourceRoute,

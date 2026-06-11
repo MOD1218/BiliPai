@@ -42,6 +42,7 @@ import androidx.compose.animation.core.tween
 
 import com.android.purebilibili.core.ui.LocalSharedTransitionScope
 import com.android.purebilibili.core.ui.LocalAnimatedVisibilityScope
+import com.android.purebilibili.core.ui.LocalSharedTransitionEnabled
 import com.android.purebilibili.core.ui.AppShapes
 import com.android.purebilibili.core.ui.ContainerLevel
 import com.android.purebilibili.core.theme.BiliPink
@@ -189,8 +190,9 @@ fun StoryVideoCard(
     //  尝试获取共享元素作用域
     val sharedTransitionScope = LocalSharedTransitionScope.current
     val animatedVisibilityScope = LocalAnimatedVisibilityScope.current
+    val effectiveTransitionEnabled = transitionEnabled && LocalSharedTransitionEnabled.current
     val coverSharedEnabled = shouldEnableVideoCoverSharedTransition(
-        transitionEnabled = transitionEnabled,
+        transitionEnabled = effectiveTransitionEnabled,
         hasSharedTransitionScope = sharedTransitionScope != null,
         hasAnimatedVisibilityScope = animatedVisibilityScope != null
     )
@@ -199,10 +201,10 @@ fun StoryVideoCard(
         coverSharedEnabled = coverSharedEnabled,
         isQuickReturnLimited = isQuickReturnLimited
     )
-    val cardSharedTransitionMotionSpec = remember(effectiveSharedElementSourceRoute, transitionEnabled) {
+    val cardSharedTransitionMotionSpec = remember(effectiveSharedElementSourceRoute, effectiveTransitionEnabled) {
         resolveVideoCardSharedTransitionMotionSpec(
             sourceRoute = effectiveSharedElementSourceRoute,
-            transitionEnabled = transitionEnabled
+            transitionEnabled = effectiveTransitionEnabled
         )
     }
     

@@ -211,7 +211,19 @@ class VideoPlayerCoverPolicyTest {
 
     @Test
     fun forcedReturnCoverSourceRoute_keepsEveryVideoCardReturnTargetRoute() {
-        listOf("home", "dynamic", "search", "history", "favorite", "watch_later", "partition").forEach { route ->
+        listOf(
+            "home",
+            "dynamic",
+            "search",
+            "history",
+            "favorite",
+            "watch_later",
+            "partition",
+            "dynamic_detail/123",
+            "category/1",
+            "season_series_detail/series/1/2/title/owner",
+            "space/123"
+        ).forEach { route ->
             assertTrue(resolveForcedReturnCoverSharedElementSourceRoute(route) == route)
             assertTrue(resolveForcedReturnCoverSharedElementSourceRoute("$route?from=tab") == route)
         }

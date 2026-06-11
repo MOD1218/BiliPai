@@ -26,4 +26,14 @@ class DynamicVideoCardSharedTransitionStructureTest {
         assertTrue(source.contains("coverBoundsRef.value?.let { bounds ->"))
         assertTrue(source.contains("modifier = coverModifier.onGloballyPositioned"))
     }
+
+    @Test
+    fun dynamicVideoCard_obeysGlobalSharedTransitionSwitch() {
+        val source = File("src/main/java/com/android/purebilibili/feature/dynamic/components/VideoCards.kt")
+            .readText()
+
+        assertTrue(source.contains("val sharedTransitionEnabled = LocalSharedTransitionEnabled.current"))
+        assertTrue(source.contains("val sharedElementReady = sharedTransitionEnabled &&"))
+        assertTrue(source.contains("transitionEnabled = sharedTransitionEnabled"))
+    }
 }

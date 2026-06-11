@@ -50,6 +50,7 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.tween
 import com.android.purebilibili.core.ui.LocalSharedTransitionScope
 import com.android.purebilibili.core.ui.LocalAnimatedVisibilityScope
+import com.android.purebilibili.core.ui.LocalSharedTransitionEnabled
 import com.android.purebilibili.core.ui.transition.LocalVideoCardSharedElementSourceRoute
 import com.android.purebilibili.core.ui.transition.VIDEO_SHARED_COVER_ASPECT_RATIO
 import com.android.purebilibili.core.ui.transition.resolveVideoCardSharedTransitionMotionSpec
@@ -157,10 +158,11 @@ fun GlassVideoCard(
     val effectiveSharedElementSourceRoute = remember(sharedElementSourceRoute, localSharedElementSourceRoute) {
         sharedElementSourceRoute ?: localSharedElementSourceRoute
     }
-    val cardSharedTransitionMotionSpec = remember(effectiveSharedElementSourceRoute, transitionEnabled) {
+    val effectiveTransitionEnabled = transitionEnabled && LocalSharedTransitionEnabled.current
+    val cardSharedTransitionMotionSpec = remember(effectiveSharedElementSourceRoute, effectiveTransitionEnabled) {
         resolveVideoCardSharedTransitionMotionSpec(
             sourceRoute = effectiveSharedElementSourceRoute,
-            transitionEnabled = transitionEnabled
+            transitionEnabled = effectiveTransitionEnabled
         )
     }
     val triggerCardClick = {
@@ -195,7 +197,7 @@ fun GlassVideoCard(
     }
     
     //  卡片容器 - 支持共享元素过渡（受开关控制）
-    val cardModifier = if (transitionEnabled && sharedTransitionScope != null && animatedVisibilityScope != null) {
+    val cardModifier = if (effectiveTransitionEnabled && sharedTransitionScope != null && animatedVisibilityScope != null) {
         with(sharedTransitionScope) {
             Modifier
                 .sharedBounds(

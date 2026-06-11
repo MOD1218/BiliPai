@@ -48,6 +48,27 @@ class AppNavigationPlaybackPolicyTest {
     }
 
     @Test
+    fun allVideoCardRoutes_supportSharedElementReturn() {
+        listOf(
+            "main_host",
+            ScreenRoutes.Home.route,
+            ScreenRoutes.History.route,
+            ScreenRoutes.Favorite.route,
+            ScreenRoutes.WatchLater.route,
+            ScreenRoutes.Search.route,
+            ScreenRoutes.Dynamic.route,
+            "dynamic_detail/123",
+            ScreenRoutes.Partition.route,
+            "category/1",
+            "season_series_detail/series/1/2/title/owner",
+            "space/123"
+        ).forEach { route ->
+            assertTrue(isVideoCardReturnTargetRoute(route), "共享元素返回应支持来源路由：$route")
+        }
+        assertFalse(isVideoCardReturnTargetRoute(ScreenRoutes.Settings.route))
+    }
+
+    @Test
     fun returningToHomeWithCardTransition_shouldNotDeferBottomBarReveal() {
         assertFalse(
             shouldDeferBottomBarRevealOnVideoReturn(

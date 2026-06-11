@@ -141,6 +141,16 @@ class PartitionScreenStructureTest {
     }
 
     @Test
+    fun `partition video card obeys global shared transition switch`() {
+        val source = loadSource("app/src/main/java/com/android/purebilibili/feature/partition/PartitionScreen.kt")
+        val rowSource = source.substringAfter("private fun PartitionVideoRow(")
+
+        assertTrue(rowSource.contains("val sharedTransitionEnabled = LocalSharedTransitionEnabled.current"))
+        assertTrue(rowSource.contains("transitionEnabled = sharedTransitionEnabled"))
+        assertFalse(rowSource.contains("transitionEnabled = true"))
+    }
+
+    @Test
     fun `video list push follows long press drag then can return to rest`() {
         assertTrue(
             resolvePartitionVideoListPushPx(

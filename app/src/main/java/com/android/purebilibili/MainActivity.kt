@@ -73,7 +73,6 @@ import com.android.purebilibili.core.theme.LocalDisplayMetricsSnapshot
 import com.android.purebilibili.core.theme.PureBiliBiliTheme
 import com.android.purebilibili.core.ui.blur.rememberRecoverableHazeState
 import com.android.purebilibili.core.ui.motion.AppMotionEasing
-import com.android.purebilibili.core.ui.SharedTransitionProvider
 import com.android.purebilibili.core.ui.wallpaper.SplashWallpaperLayout
 import com.android.purebilibili.core.ui.wallpaper.resolveSplashWallpaperLayout
 import com.android.purebilibili.core.util.BilibiliNavigationTarget
@@ -1265,55 +1264,52 @@ open class MainActivity : AppCompatActivity() {
                                     setPictureInPictureParams(pipParams)
                                 }
                             }
-                            //  SharedTransitionProvider 包裹导航，启用共享元素过渡
-                            SharedTransitionProvider {
-                                AppNavigation(
-                                    miniPlayerManager = miniPlayerManager,
-                                    isInPipMode = isPipRenderingActive,
-                                    pendingVideoId = pendingVideoId,
-                                    pendingShortcutRoute = pendingRoute,
-                                    pendingNavigationRoute = pendingNavigationRoute,
-                                    onPendingVideoIdConsumed = { consumedVideoId ->
-                                        if (pendingVideoId == consumedVideoId) {
-                                            pendingVideoId = null
-                                        }
-                                    },
-                                    onPendingShortcutRouteConsumed = { consumedRoute ->
-                                        if (pendingRoute == consumedRoute) {
-                                            pendingRoute = null
-                                        }
-                                    },
-                                    onPendingNavigationRouteConsumed = { consumedRoute ->
-                                        if (pendingNavigationRoute == consumedRoute) {
-                                            pendingNavigationRoute = null
-                                        }
-                                    },
-                                    initialSearchKeyword = pendingSearchKeyword,
-                                    onInitialSearchKeywordConsumed = { consumedKeyword ->
-                                        if (pendingSearchKeyword == consumedKeyword) {
-                                            pendingSearchKeyword = null
-                                        }
-                                    },
-                                    onVideoDetailEnter = { 
-                                        isInVideoDetail = true
-                                        Logger.d(TAG, " 进入视频详情页")
-                                    },
-                                    onVideoDetailExit = { 
-                                        isInVideoDetail = false
-                                        Logger.d(TAG, "🔙 退出视频详情页")
-                                    },
-                                    onAudioModeEnter = {
-                                        isInAudioModeRoute = true
-                                        Logger.d(TAG, "🎧 进入听视频页")
-                                    },
-                                    onAudioModeExit = {
-                                        isInAudioModeRoute = false
-                                        Logger.d(TAG, "🎧 退出听视频页")
-                                    },
-                                    onPrivacyAuthenticationRequired = ::authenticatePrivacyAccess,
-                                    mainHazeState = mainHazeState //  传递全局 Haze 状态
-                                )
-                            }
+                            AppNavigation(
+                                miniPlayerManager = miniPlayerManager,
+                                isInPipMode = isPipRenderingActive,
+                                pendingVideoId = pendingVideoId,
+                                pendingShortcutRoute = pendingRoute,
+                                pendingNavigationRoute = pendingNavigationRoute,
+                                onPendingVideoIdConsumed = { consumedVideoId ->
+                                    if (pendingVideoId == consumedVideoId) {
+                                        pendingVideoId = null
+                                    }
+                                },
+                                onPendingShortcutRouteConsumed = { consumedRoute ->
+                                    if (pendingRoute == consumedRoute) {
+                                        pendingRoute = null
+                                    }
+                                },
+                                onPendingNavigationRouteConsumed = { consumedRoute ->
+                                    if (pendingNavigationRoute == consumedRoute) {
+                                        pendingNavigationRoute = null
+                                    }
+                                },
+                                initialSearchKeyword = pendingSearchKeyword,
+                                onInitialSearchKeywordConsumed = { consumedKeyword ->
+                                    if (pendingSearchKeyword == consumedKeyword) {
+                                        pendingSearchKeyword = null
+                                    }
+                                },
+                                onVideoDetailEnter = {
+                                    isInVideoDetail = true
+                                    Logger.d(TAG, " 进入视频详情页")
+                                },
+                                onVideoDetailExit = {
+                                    isInVideoDetail = false
+                                    Logger.d(TAG, "🔙 退出视频详情页")
+                                },
+                                onAudioModeEnter = {
+                                    isInAudioModeRoute = true
+                                    Logger.d(TAG, "🎧 进入听视频页")
+                                },
+                                onAudioModeExit = {
+                                    isInAudioModeRoute = false
+                                    Logger.d(TAG, "🎧 退出听视频页")
+                                },
+                                onPrivacyAuthenticationRequired = ::authenticatePrivacyAccess,
+                                mainHazeState = mainHazeState //  传递全局 Haze 状态
+                            )
                             
                             //  OnboardingBottomSheet 等其他 overlay 组件
 

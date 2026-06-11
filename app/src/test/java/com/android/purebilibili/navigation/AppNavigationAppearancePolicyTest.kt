@@ -109,6 +109,19 @@ class AppNavigationAppearancePolicyTest {
     }
 
     @Test
+    fun appNavigationProvidesGlobalSharedTransitionSwitch() {
+        val navigationSource = loadSource("app/src/main/java/com/android/purebilibili/navigation/AppNavigation.kt")
+        val providerSource = loadSource("app/src/main/java/com/android/purebilibili/core/ui/SharedTransitionProvider.kt")
+        val activitySource = loadSource("app/src/main/java/com/android/purebilibili/MainActivity.kt")
+
+        assertTrue(navigationSource.contains("SharedTransitionProvider(enabled = cardTransitionEnabled)"))
+        assertTrue(providerSource.contains("val sharedTransitionScope = if (enabled) this else null"))
+        assertTrue(providerSource.contains("LocalSharedTransitionScope provides sharedTransitionScope"))
+        assertTrue(providerSource.contains("LocalSharedTransitionEnabled provides enabled"))
+        assertFalse(activitySource.contains("SharedTransitionProvider"))
+    }
+
+    @Test
     fun appNavigationRemovesVideoTransitionRealtimeBlurRuntimePath() {
         val source = loadSource("app/src/main/java/com/android/purebilibili/navigation/AppNavigation.kt")
 

@@ -222,9 +222,9 @@ fun AnimationSettingsContent(
                         )
                         IOSDivider()
 	                        IOSSwitchItem(
-	                            icon = rememberSettingsSemanticIcon(SettingsIconRole.CARD_TRANSITION_ANIMATION),
+                            icon = rememberSettingsSemanticIcon(SettingsIconRole.CARD_TRANSITION_ANIMATION),
                             title = "过渡动画",
-                            subtitle = "点击卡片时的共享元素过渡效果",
+                            subtitle = "全局视频卡片与详情页的共享元素过渡效果",
                             checked = state.cardTransitionEnabled,
                             onCheckedChange = { viewModel.toggleCardTransition(it) },
                             iconTint = iOSTeal

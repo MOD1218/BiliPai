@@ -56,6 +56,7 @@ import coil.request.ImageRequest
 import com.android.purebilibili.core.theme.LocalCornerRadiusScale
 import com.android.purebilibili.core.theme.iOSCornerRadius
 import com.android.purebilibili.core.ui.LocalAnimatedVisibilityScope
+import com.android.purebilibili.core.ui.LocalSharedTransitionEnabled
 import com.android.purebilibili.core.ui.LocalSharedTransitionScope
 import com.android.purebilibili.core.ui.adaptive.MotionTier
 import com.android.purebilibili.core.ui.components.UpBadgeName
@@ -141,10 +142,11 @@ fun CinematicVideoCard(
     val effectiveSharedElementSourceRoute = remember(sharedElementSourceRoute, localSharedElementSourceRoute) {
         sharedElementSourceRoute ?: localSharedElementSourceRoute
     }
-    val cardSharedTransitionMotionSpec = remember(effectiveSharedElementSourceRoute, transitionEnabled) {
+    val effectiveTransitionEnabled = transitionEnabled && LocalSharedTransitionEnabled.current
+    val cardSharedTransitionMotionSpec = remember(effectiveSharedElementSourceRoute, effectiveTransitionEnabled) {
         resolveVideoCardSharedTransitionMotionSpec(
             sourceRoute = effectiveSharedElementSourceRoute,
-            transitionEnabled = transitionEnabled
+            transitionEnabled = effectiveTransitionEnabled
         )
     }
     val triggerCardClick = {
@@ -166,7 +168,7 @@ fun CinematicVideoCard(
     val sharedTransitionScope = LocalSharedTransitionScope.current
     val animatedVisibilityScope = LocalAnimatedVisibilityScope.current
     val coverSharedEnabled = shouldEnableVideoCoverSharedTransition(
-        transitionEnabled = transitionEnabled,
+        transitionEnabled = effectiveTransitionEnabled,
         hasSharedTransitionScope = sharedTransitionScope != null,
         hasAnimatedVisibilityScope = animatedVisibilityScope != null
     )

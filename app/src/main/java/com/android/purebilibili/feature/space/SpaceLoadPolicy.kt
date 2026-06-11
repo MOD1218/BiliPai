@@ -66,10 +66,11 @@ internal fun resolveSpaceSearchBarRevealScrollOffsetPx(
 }
 
 internal fun shouldEnableSpaceLazyGridSharedTransition(
+    transitionEnabled: Boolean,
     hasSharedTransitionScope: Boolean,
     hasAnimatedVisibilityScope: Boolean
 ): Boolean {
-    return hasSharedTransitionScope && hasAnimatedVisibilityScope
+    return transitionEnabled && hasSharedTransitionScope && hasAnimatedVisibilityScope
 }
 
 internal fun shouldApplySpaceLoadResult(
