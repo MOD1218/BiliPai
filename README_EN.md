@@ -438,8 +438,8 @@ See full changelog: [CHANGELOG.md](CHANGELOG.md)
 
 ### Latest (v9.2.2 · 2026-06-14)
 
-- Fixed fullscreen gesture or plugin seeks leaving the progress bar at the previous position.
-- Fixed danmaku occasionally disappearing after seeking or skipping a segment.
+- Added home card and duration styles, advanced light/dark color overrides, and smoother home scrolling.
+- Improved player controls, progress layout, volume and composer drafts; fixed seek progress rollback and disappearing danmaku.
 
 ---
 
