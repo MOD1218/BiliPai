@@ -1,8 +1,10 @@
 // 文件路径: feature/search/SearchScreen.kt
 package com.android.purebilibili.feature.search
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.AnimatedVisibility
@@ -16,6 +18,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -351,6 +356,46 @@ internal fun resolveSearchSwipeTargetType(
     return tabs.getOrNull(targetIndex)?.takeIf { it != currentType }
 }
 
+internal data class SearchResultContentMotionSpec(
+    val slideDurationMillis: Int,
+    val fadeInDurationMillis: Int,
+    val fadeOutDurationMillis: Int,
+    val slideDistanceDivisor: Int
+)
+
+internal fun resolveSearchResultContentMotionSpec(
+    reducedMotion: Boolean
+): SearchResultContentMotionSpec {
+    return if (reducedMotion) {
+        SearchResultContentMotionSpec(
+            slideDurationMillis = 90,
+            fadeInDurationMillis = 70,
+            fadeOutDurationMillis = 60,
+            slideDistanceDivisor = 6
+        )
+    } else {
+        SearchResultContentMotionSpec(
+            slideDurationMillis = 260,
+            fadeInDurationMillis = 170,
+            fadeOutDurationMillis = 150,
+            slideDistanceDivisor = 1
+        )
+    }
+}
+
+internal fun resolveSearchResultContentSlideDirection(
+    initialType: SearchType,
+    targetType: SearchType,
+    tabs: List<SearchType> = resolveSearchFilterTabs()
+): Int {
+    val initialIndex = tabs.indexOf(initialType)
+    val targetIndex = tabs.indexOf(targetType)
+    if (initialIndex !in tabs.indices || targetIndex !in tabs.indices || initialIndex == targetIndex) {
+        return 0
+    }
+    return if (targetIndex > initialIndex) 1 else -1
+}
+
 internal fun resolveSearchFilterControls(
     currentType: SearchType,
     currentUpOrder: SearchUpOrder
@@ -680,14 +725,7 @@ fun SearchScreen(
         ) {
             // --- 列表内容层 ---
             if (state.showResults) {
-                if (state.isSearching) {
-                    //  使用 Lottie 加载动画
-                    LoadingAnimation(
-                        modifier = Modifier.align(Alignment.Center),
-                        size = 80.dp,
-                        text = "搜索中..."
-                    )
-                } else if (state.error != null) {
+                if (state.error != null) {
                     Text(
                         text = state.error ?: "未知错误",
                         modifier = Modifier.align(Alignment.Center),
@@ -728,8 +766,72 @@ fun SearchScreen(
                                 }
                             }
                         }
-                        //  根据搜索类型显示不同结果
-                        when (state.searchType) {
+                        //  根据搜索类型显示不同结果；切换方向按标签顺序计算，贴近横向分页手感。
+                        AnimatedContent(
+                            targetState = state.searchType,
+                            modifier = Modifier.weight(1f),
+                            transitionSpec = {
+                                val motionSpec = resolveSearchResultContentMotionSpec(
+                                    reducedMotion = effectiveSearchMotionBudget == SearchMotionBudget.REDUCED
+                                )
+                                val direction = resolveSearchResultContentSlideDirection(
+                                    initialType = initialState,
+                                    targetType = targetState
+                                )
+                                if (direction == 0) {
+                                    fadeIn(
+                                        animationSpec = tween(motionSpec.fadeInDurationMillis)
+                                    ) togetherWith fadeOut(
+                                        animationSpec = tween(motionSpec.fadeOutDurationMillis)
+                                    )
+                                } else {
+                                    (
+                                        slideInHorizontally(
+                                            animationSpec = tween(
+                                                durationMillis = motionSpec.slideDurationMillis,
+                                                easing = AppMotionEasing.EmphasizedEnter
+                                            ),
+                                            initialOffsetX = { width ->
+                                                direction * width / motionSpec.slideDistanceDivisor
+                                            }
+                                        ) + fadeIn(
+                                            animationSpec = tween(
+                                                durationMillis = motionSpec.fadeInDurationMillis,
+                                                easing = AppMotionEasing.EmphasizedEnter
+                                            )
+                                        )
+                                    ) togetherWith (
+                                        slideOutHorizontally(
+                                            animationSpec = tween(
+                                                durationMillis = motionSpec.slideDurationMillis,
+                                                easing = AppMotionEasing.EmphasizedExit
+                                            ),
+                                            targetOffsetX = { width ->
+                                                -direction * width / motionSpec.slideDistanceDivisor
+                                            }
+                                        ) + fadeOut(
+                                            animationSpec = tween(
+                                                durationMillis = motionSpec.fadeOutDurationMillis,
+                                                easing = AppMotionEasing.EmphasizedExit
+                                            )
+                                        )
+                                    )
+                                }.using(SizeTransform(clip = false))
+                            },
+                            label = "searchResultTypeTransition"
+                        ) { targetSearchType ->
+                        if (state.isSearching) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                LoadingAnimation(
+                                    size = 80.dp,
+                                    text = "搜索中..."
+                                )
+                            }
+                        } else {
+                        when (targetSearchType) {
                             com.android.purebilibili.data.model.response.SearchType.VIDEO -> {
                                 // 视频搜索结果
                                 LazyVerticalGrid(
@@ -750,7 +852,7 @@ fun SearchScreen(
                                     // ✨ Filter Bar inside Grid
                                     item(span = { GridItemSpan(maxLineSpan) }) {
                                          SearchFilterBar(
-                                            currentType = state.searchType,
+                                            currentType = targetSearchType,
                                             currentOrder = state.searchOrder,
                                             currentDurations = state.searchDurations,
                                             currentVideoTid = state.videoTid,
@@ -899,7 +1001,7 @@ fun SearchScreen(
                                 ) {
                                     item {
                                         SearchFilterBar(
-                                            currentType = state.searchType,
+                                            currentType = targetSearchType,
                                             currentOrder = state.searchOrder,
                                             currentDurations = state.searchDurations,
                                             currentVideoTid = state.videoTid,
@@ -996,7 +1098,7 @@ fun SearchScreen(
                                 ) {
                                     item {
                                         SearchFilterBar(
-                                            currentType = state.searchType,
+                                            currentType = targetSearchType,
                                             currentOrder = state.searchOrder,
                                             currentDurations = state.searchDurations,
                                             currentVideoTid = state.videoTid,
@@ -1019,7 +1121,7 @@ fun SearchScreen(
                                         state.bangumiResults,
                                         key = { index, bangumiItem ->
                                             resolveSearchResultLazyItemKey(
-                                                searchType = state.searchType,
+                                                searchType = targetSearchType,
                                                 index = index,
                                                 numericKey = bangumiItem.seasonId,
                                                 secondaryNumericKey = bangumiItem.mediaId
@@ -1071,7 +1173,7 @@ fun SearchScreen(
                                 ) {
                                     item {
                                         SearchFilterBar(
-                                            currentType = state.searchType,
+                                            currentType = targetSearchType,
                                             currentOrder = state.searchOrder,
                                             currentDurations = state.searchDurations,
                                             currentVideoTid = state.videoTid,
@@ -1167,7 +1269,7 @@ fun SearchScreen(
                                 ) {
                                     item {
                                         SearchFilterBar(
-                                            currentType = state.searchType,
+                                            currentType = targetSearchType,
                                             currentOrder = state.searchOrder,
                                             currentDurations = state.searchDurations,
                                             currentVideoTid = state.videoTid,
@@ -1237,7 +1339,7 @@ fun SearchScreen(
                                 ) {
                                     item {
                                         SearchFilterBar(
-                                            currentType = state.searchType,
+                                            currentType = targetSearchType,
                                             currentOrder = state.searchOrder,
                                             currentDurations = state.searchDurations,
                                             currentVideoTid = state.videoTid,
@@ -1331,7 +1433,7 @@ fun SearchScreen(
                                 ) {
                                     item {
                                         SearchFilterBar(
-                                            currentType = state.searchType,
+                                            currentType = targetSearchType,
                                             currentOrder = state.searchOrder,
                                             currentDurations = state.searchDurations,
                                             currentVideoTid = state.videoTid,
@@ -1390,7 +1492,7 @@ fun SearchScreen(
                                 ) {
                                     item {
                                         SearchFilterBar(
-                                            currentType = state.searchType,
+                                            currentType = targetSearchType,
                                             currentOrder = state.searchOrder,
                                             currentDurations = state.searchDurations,
                                             currentVideoTid = state.videoTid,
@@ -1436,6 +1538,8 @@ fun SearchScreen(
                                     }
                                 }
                             }
+                        }
+                        }
                         }
                     }
                 }

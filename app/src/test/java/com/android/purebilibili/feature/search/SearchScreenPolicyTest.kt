@@ -289,6 +289,45 @@ class SearchScreenPolicyTest {
     }
 
     @Test
+    fun searchResultContentSlideDirection_followsTabOrder() {
+        assertEquals(
+            1,
+            resolveSearchResultContentSlideDirection(
+                initialType = SearchType.VIDEO,
+                targetType = SearchType.UP
+            )
+        )
+        assertEquals(
+            -1,
+            resolveSearchResultContentSlideDirection(
+                initialType = SearchType.LIVE,
+                targetType = SearchType.MEDIA_FT
+            )
+        )
+        assertEquals(
+            0,
+            resolveSearchResultContentSlideDirection(
+                initialType = SearchType.TOPIC,
+                targetType = SearchType.TOPIC
+            )
+        )
+    }
+
+    @Test
+    fun searchResultContentMotion_usesPagerLikeFullMotionAndShortReducedMotion() {
+        val full = resolveSearchResultContentMotionSpec(reducedMotion = false)
+        val reduced = resolveSearchResultContentMotionSpec(reducedMotion = true)
+
+        assertTrue(full.slideDurationMillis >= 240)
+        assertEquals(1, full.slideDistanceDivisor)
+        assertTrue(full.fadeInDurationMillis > full.fadeOutDurationMillis)
+
+        assertTrue(reduced.slideDurationMillis < full.slideDurationMillis)
+        assertTrue(reduced.slideDistanceDivisor > full.slideDistanceDivisor)
+        assertTrue(reduced.fadeOutDurationMillis <= 80)
+    }
+
+    @Test
     fun bottomBarSearchEntry_usesDedicatedTopBarContinuityMotion() {
         val navigationSource = loadSource("app/src/main/java/com/android/purebilibili/navigation/AppNavigation.kt")
         val searchSource = loadSource("app/src/main/java/com/android/purebilibili/feature/search/SearchScreen.kt")
