@@ -473,16 +473,6 @@ fun VideoPlayerSection(
             .orEmpty()
     }
     val audioManager = remember { context.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
-    val preferredPlayerVolume by SettingsManager
-        .getPreferredPlayerVolume(context)
-        .collectAsStateWithLifecycle(
-            initialValue = SettingsManager.getPreferredPlayerVolumeSync(context)
-        )
-    LaunchedEffect(playerState.player, bvid, preferredPlayerVolume) {
-        if (playerState.player.volume > 0f || preferredPlayerVolume <= 0f) {
-            playerState.player.volume = preferredPlayerVolume
-        }
-    }
     val settingsScope = rememberCoroutineScope()
 
     // --- 新增：读取设置中的"详细统计信息"开关 ---
