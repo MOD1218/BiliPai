@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -114,6 +115,11 @@ fun ThinWigglyProgressBar(
 ) {
     var dragTargetPositionMs by remember { mutableLongStateOf(seekPositionMs.coerceAtLeast(0L)) }
     var containerWidth by remember { mutableFloatStateOf(0f) }
+    val currentOnSeek by rememberUpdatedState(onSeek)
+    val currentOnSeekStart by rememberUpdatedState(onSeekStart)
+    val currentOnSeekDragStart by rememberUpdatedState(onSeekDragStart)
+    val currentOnSeekDragUpdate by rememberUpdatedState(onSeekDragUpdate)
+    val currentOnSeekDragCancel by rememberUpdatedState(onSeekDragCancel)
     val activePositionMs = resolveSeekPreviewTargetPositionMs(
         displayPositionMs = seekPositionMs,
         dragTargetPositionMs = dragTargetPositionMs,
@@ -151,7 +157,7 @@ fun ThinWigglyProgressBar(
             .fillMaxWidth()
             .fillMaxHeight()
             .onSizeChanged { containerWidth = it.width.toFloat() }
-            .pointerInput(Unit) {
+            .pointerInput(duration) {
                 detectHorizontalDragGestures(
                     onDragStart = { offset ->
                         val targetPositionMs = resolveSeekPositionFromTouch(
@@ -160,8 +166,8 @@ fun ThinWigglyProgressBar(
                             durationMs = duration
                         )
                         dragTargetPositionMs = targetPositionMs
-                        onSeekStart()
-                        onSeekDragStart(targetPositionMs)
+                        currentOnSeekStart()
+                        currentOnSeekDragStart(targetPositionMs)
                     },
                     onDragEnd = {
                         val committedProgress = if (duration > 0L) {
@@ -169,10 +175,10 @@ fun ThinWigglyProgressBar(
                         } else {
                             0f
                         }
-                        onSeek(committedProgress.coerceIn(0f, 1f))
+                        currentOnSeek(committedProgress.coerceIn(0f, 1f))
                     },
                     onDragCancel = {
-                        onSeekDragCancel()
+                        currentOnSeekDragCancel()
                     },
                     onHorizontalDrag = { change, _ ->
                         change.consume()
@@ -182,12 +188,12 @@ fun ThinWigglyProgressBar(
                             durationMs = duration
                         )
                         dragTargetPositionMs = targetPositionMs
-                        onSeekDragUpdate(targetPositionMs)
+                        currentOnSeekDragUpdate(targetPositionMs)
                     }
                 )
             }
             // 也支持点击跳转
-            .pointerInput(Unit) {
+            .pointerInput(duration) {
                 detectTapGestures(
                     onPress = { offset ->
                         val targetPositionMs = resolveSeekPositionFromTouch(
@@ -196,19 +202,19 @@ fun ThinWigglyProgressBar(
                             durationMs = duration
                         )
                         dragTargetPositionMs = targetPositionMs
-                        onSeekStart()
-                        onSeekDragStart(targetPositionMs)
+                        currentOnSeekStart()
+                        currentOnSeekDragStart(targetPositionMs)
                         val released = tryAwaitRelease()
                         if (released) {
-                            onSeekDragUpdate(targetPositionMs)
+                            currentOnSeekDragUpdate(targetPositionMs)
                             val committedProgress = if (duration > 0L) {
                                 targetPositionMs.toFloat() / duration.toFloat()
                             } else {
                                 0f
                             }
-                            onSeek(committedProgress.coerceIn(0f, 1f))
+                            currentOnSeek(committedProgress.coerceIn(0f, 1f))
                         } else {
-                            onSeekDragCancel()
+                            currentOnSeekDragCancel()
                         }
                     }
                 ) 
