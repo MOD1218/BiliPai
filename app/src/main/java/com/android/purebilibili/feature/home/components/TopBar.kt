@@ -954,7 +954,6 @@ private fun LightweightHomeTopTabs(
         }
         val topTabIndicatorLayerVelocityItemsPerSecond =
             resolveTopTabIndicatorLayerVelocityItemsPerSecond(
-                topTabDragActive = topTabDragActive,
                 motionVelocityItemsPerSecond = topTabMotionVelocityItemsPerSecond
             )
         val topTabMotionVelocityPxPerSecond = with(density) {
@@ -1942,9 +1941,8 @@ internal fun resolveTopTabPagerVelocityItemsPerSecond(
 }
 
 internal fun resolveTopTabIndicatorLayerVelocityItemsPerSecond(
-    topTabDragActive: Boolean,
     motionVelocityItemsPerSecond: Float
-): Float = if (topTabDragActive) 0f else motionVelocityItemsPerSecond
+): Float = motionVelocityItemsPerSecond
 
 internal fun shouldTopTabIndicatorBeInteracting(
     pagerIsDragging: Boolean = false,

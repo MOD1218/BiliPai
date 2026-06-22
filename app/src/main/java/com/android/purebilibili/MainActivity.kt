@@ -433,22 +433,16 @@ internal fun resolveSplashIconResIdForComponentClassName(className: String?): In
         "MainActivitySplashBiliPaiMonet" -> R.mipmap.ic_launcher_bilipai_monet
         "MainActivityAliasFlat",
         "MainActivityAliasFlatNoIcon",
-        "MainActivitySplashFlat" -> R.mipmap.ic_launcher_flat
         "MainActivityAliasTelegramBlue",
         "MainActivityAliasTelegramBlueNoIcon",
-        "MainActivitySplashTelegramBlue" -> R.mipmap.ic_launcher_telegram_blue
         "MainActivityAliasDark",
         "MainActivityAliasDarkNoIcon",
-        "MainActivitySplashTelegramDark" -> R.mipmap.ic_launcher_telegram_dark
         "MainActivityAliasYuki",
         "MainActivityAliasYukiNoIcon",
-        "MainActivitySplashYuki" -> R.mipmap.ic_launcher
         "MainActivityAliasAnime",
         "MainActivityAliasAnimeNoIcon",
-        "MainActivitySplashAnime" -> R.mipmap.ic_launcher_anime
         "MainActivityAliasHeadphone",
-        "MainActivityAliasHeadphoneNoIcon",
-        "MainActivitySplashHeadphone" -> R.mipmap.ic_launcher_headphone
+        "MainActivityAliasHeadphoneNoIcon" -> R.mipmap.ic_launcher_3d
         else -> 0
     }
 }

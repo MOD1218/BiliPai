@@ -59,11 +59,10 @@ class TopTabMotionVelocityTest {
     }
 
     @Test
-    fun `direct drag does not apply velocity deformation twice`() {
+    fun `direct drag keeps bottom bar velocity deformation`() {
         assertEquals(
-            0f,
+            4f,
             resolveTopTabIndicatorLayerVelocityItemsPerSecond(
-                topTabDragActive = true,
                 motionVelocityItemsPerSecond = 4f
             ),
             0.001f
@@ -71,7 +70,6 @@ class TopTabMotionVelocityTest {
         assertEquals(
             4f,
             resolveTopTabIndicatorLayerVelocityItemsPerSecond(
-                topTabDragActive = false,
                 motionVelocityItemsPerSecond = 4f
             ),
             0.001f

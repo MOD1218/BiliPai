@@ -107,13 +107,42 @@ class MainActivityAppCompatContractTest {
     }
 
     @Test
+    fun retiredLauncherIcons_shouldNotKeepDedicatedResources() {
+        val retiredResourceNames = listOf(
+            "ic_launcher_anime",
+            "ic_launcher_flat",
+            "ic_launcher_flat_round",
+            "ic_launcher_headphone",
+            "ic_launcher_telegram_blue",
+            "ic_launcher_telegram_blue_round",
+            "ic_launcher_telegram_dark",
+            "ic_launcher_telegram_dark_round"
+        )
+        val source = listOf(
+            loadResourceText("../AndroidManifest.xml"),
+            loadResourceText("values/themes.xml"),
+            loadResourceText("values-night/themes.xml"),
+            loadMainActivitySource(),
+            loadMiniPlayerManagerSource()
+        ).joinToString("\n")
+
+        retiredResourceNames.forEach { resourceName ->
+            assertTrue(
+                !source.contains(resourceName),
+                "$resourceName should not be referenced after the launcher option is retired"
+            )
+        }
+        assertTrue(
+            !Regex("""(?:@mipmap/|R\.mipmap\.)ic_launcher(?:[\"\s,)]|$)""").containsMatchIn(source),
+            "retired Yuki launcher resource should not be referenced"
+        )
+    }
+
+    @Test
     fun legacyLauncherBitmaps_shouldBeRgbaPngWithTransparentCorners() {
         val iconNames = listOf(
-            "ic_launcher.png",
-            "ic_launcher_round.png",
             "ic_launcher_3d.png",
             "ic_launcher_3d_round.png",
-            "ic_launcher_anime.png",
             "ic_launcher_bilipai.png",
             "ic_launcher_bilipai_round.png",
             "ic_launcher_bilipai_monet.png",
@@ -121,10 +150,7 @@ class MainActivityAppCompatContractTest {
             "ic_launcher_bilipai_pink.png",
             "ic_launcher_bilipai_pink_round.png",
             "ic_launcher_bilipai_white.png",
-            "ic_launcher_bilipai_white_round.png",
-            "ic_launcher_flat.png",
-            "ic_launcher_flat_round.png",
-            "ic_launcher_headphone.png"
+            "ic_launcher_bilipai_white_round.png"
         )
 
         listOf("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi").forEach { density ->
@@ -150,12 +176,12 @@ class MainActivityAppCompatContractTest {
             "MainActivityAliasBiliPaiPink" to SplashAliasContract("MainActivitySplashBiliPaiPink", "Theme.PureBiliBili.Splash.BiliPaiPink", "ic_launcher_bilipai_pink"),
             "MainActivityAliasBiliPaiWhite" to SplashAliasContract("MainActivitySplashBiliPaiWhite", "Theme.PureBiliBili.Splash.BiliPaiWhite", "ic_launcher_bilipai_white"),
             "MainActivityAliasBiliPaiMonet" to SplashAliasContract("MainActivitySplashBiliPaiMonet", "Theme.PureBiliBili.Splash.BiliPaiMonet", "ic_launcher_bilipai_monet"),
-            "MainActivityAliasFlat" to SplashAliasContract("MainActivitySplashFlat", "Theme.PureBiliBili.Splash.Flat", "ic_launcher_flat"),
-            "MainActivityAliasTelegramBlue" to SplashAliasContract("MainActivitySplashTelegramBlue", "Theme.PureBiliBili.Splash.TelegramBlue", "ic_launcher_telegram_blue"),
-            "MainActivityAliasDark" to SplashAliasContract("MainActivitySplashTelegramDark", "Theme.PureBiliBili.Splash.TelegramDark", "ic_launcher_telegram_dark"),
-            "MainActivityAliasYuki" to SplashAliasContract("MainActivitySplashYuki", "Theme.PureBiliBili.Splash.Yuki", "ic_launcher"),
-            "MainActivityAliasAnime" to SplashAliasContract("MainActivitySplashAnime", "Theme.PureBiliBili.Splash.Anime", "ic_launcher_anime"),
-            "MainActivityAliasHeadphone" to SplashAliasContract("MainActivitySplashHeadphone", "Theme.PureBiliBili.Splash.Headphone", "ic_launcher_headphone")
+            "MainActivityAliasFlat" to SplashAliasContract("MainActivitySplashIcon3D", "Theme.PureBiliBili.Splash.Icon3D", "ic_launcher_3d"),
+            "MainActivityAliasTelegramBlue" to SplashAliasContract("MainActivitySplashIcon3D", "Theme.PureBiliBili.Splash.Icon3D", "ic_launcher_3d"),
+            "MainActivityAliasDark" to SplashAliasContract("MainActivitySplashIcon3D", "Theme.PureBiliBili.Splash.Icon3D", "ic_launcher_3d"),
+            "MainActivityAliasYuki" to SplashAliasContract("MainActivitySplashIcon3D", "Theme.PureBiliBili.Splash.Icon3D", "ic_launcher_3d"),
+            "MainActivityAliasAnime" to SplashAliasContract("MainActivitySplashIcon3D", "Theme.PureBiliBili.Splash.Icon3D", "ic_launcher_3d"),
+            "MainActivityAliasHeadphone" to SplashAliasContract("MainActivitySplashIcon3D", "Theme.PureBiliBili.Splash.Icon3D", "ic_launcher_3d")
         ).forEach { (alias, contract) ->
             val aliasBlock = Regex(
                 """<activity-alias\b(?=[^>]*android:name="\.$alias")[\s\S]*?</activity-alias>"""
@@ -206,12 +232,12 @@ class MainActivityAppCompatContractTest {
             "MainActivityAliasBiliPaiPinkNoIcon" to "ic_launcher_bilipai_pink",
             "MainActivityAliasBiliPaiWhiteNoIcon" to "ic_launcher_bilipai_white",
             "MainActivityAliasBiliPaiMonetNoIcon" to "ic_launcher_bilipai_monet",
-            "MainActivityAliasFlatNoIcon" to "ic_launcher_flat",
-            "MainActivityAliasTelegramBlueNoIcon" to "ic_launcher_telegram_blue",
-            "MainActivityAliasDarkNoIcon" to "ic_launcher_telegram_dark",
-            "MainActivityAliasYukiNoIcon" to "ic_launcher",
-            "MainActivityAliasAnimeNoIcon" to "ic_launcher_anime",
-            "MainActivityAliasHeadphoneNoIcon" to "ic_launcher_headphone"
+            "MainActivityAliasFlatNoIcon" to "ic_launcher_3d",
+            "MainActivityAliasTelegramBlueNoIcon" to "ic_launcher_3d",
+            "MainActivityAliasDarkNoIcon" to "ic_launcher_3d",
+            "MainActivityAliasYukiNoIcon" to "ic_launcher_3d",
+            "MainActivityAliasAnimeNoIcon" to "ic_launcher_3d",
+            "MainActivityAliasHeadphoneNoIcon" to "ic_launcher_3d"
         ).forEach { (alias, launcherIcon) ->
             val aliasBlock = Regex(
                 """<activity-alias\b(?=[^>]*android:name="\.$alias")[\s\S]*?</activity-alias>"""
@@ -238,12 +264,12 @@ class MainActivityAppCompatContractTest {
             "com.android.purebilibili.MainActivityAliasBiliPaiPink" to R.mipmap.ic_launcher_bilipai_pink,
             "com.android.purebilibili.MainActivityAliasBiliPaiWhite" to R.mipmap.ic_launcher_bilipai_white,
             "com.android.purebilibili.MainActivityAliasBiliPaiMonet" to R.mipmap.ic_launcher_bilipai_monet,
-            "com.android.purebilibili.MainActivityAliasFlat" to R.mipmap.ic_launcher_flat,
-            "com.android.purebilibili.MainActivityAliasTelegramBlue" to R.mipmap.ic_launcher_telegram_blue,
-            "com.android.purebilibili.MainActivityAliasDark" to R.mipmap.ic_launcher_telegram_dark,
-            "com.android.purebilibili.MainActivityAliasYuki" to R.mipmap.ic_launcher,
-            "com.android.purebilibili.MainActivityAliasAnime" to R.mipmap.ic_launcher_anime,
-            "com.android.purebilibili.MainActivityAliasHeadphone" to R.mipmap.ic_launcher_headphone,
+            "com.android.purebilibili.MainActivityAliasFlat" to R.mipmap.ic_launcher_3d,
+            "com.android.purebilibili.MainActivityAliasTelegramBlue" to R.mipmap.ic_launcher_3d,
+            "com.android.purebilibili.MainActivityAliasDark" to R.mipmap.ic_launcher_3d,
+            "com.android.purebilibili.MainActivityAliasYuki" to R.mipmap.ic_launcher_3d,
+            "com.android.purebilibili.MainActivityAliasAnime" to R.mipmap.ic_launcher_3d,
+            "com.android.purebilibili.MainActivityAliasHeadphone" to R.mipmap.ic_launcher_3d,
             "com.android.purebilibili.MainActivityAlias3DNoIcon" to R.mipmap.ic_launcher_3d
         ).forEach { (className, iconResId) ->
             assertTrue(
@@ -558,6 +584,16 @@ class MainActivityAppCompatContractTest {
         )
         val sourceFile = candidates.firstOrNull { it.exists() }
             ?: error("Cannot locate MainActivity.kt from ${File(".").absolutePath}")
+        return sourceFile.readText()
+    }
+
+    private fun loadMiniPlayerManagerSource(): String {
+        val candidates = listOf(
+            File("app/src/main/java/com/android/purebilibili/feature/video/player/MiniPlayerManager.kt"),
+            File("src/main/java/com/android/purebilibili/feature/video/player/MiniPlayerManager.kt")
+        )
+        val sourceFile = candidates.firstOrNull { it.exists() }
+            ?: error("Cannot locate MiniPlayerManager.kt from ${File(".").absolutePath}")
         return sourceFile.readText()
     }
 

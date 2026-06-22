@@ -38,30 +38,6 @@
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_bilipai_monet</item>
     </style>
 
-    <style name="Theme.PureBiliBili.Splash.Flat" parent="Theme.PureBiliBili">
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_flat</item>
-    </style>
-
-    <style name="Theme.PureBiliBili.Splash.TelegramBlue" parent="Theme.PureBiliBili">
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_telegram_blue</item>
-    </style>
-
-    <style name="Theme.PureBiliBili.Splash.TelegramDark" parent="Theme.PureBiliBili">
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_telegram_dark</item>
-    </style>
-
-    <style name="Theme.PureBiliBili.Splash.Yuki" parent="Theme.PureBiliBili">
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
-    </style>
-
-    <style name="Theme.PureBiliBili.Splash.Anime" parent="Theme.PureBiliBili">
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_anime</item>
-    </style>
-
-    <style name="Theme.PureBiliBili.Splash.Headphone" parent="Theme.PureBiliBili">
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_headphone</item>
-    </style>
-
     <style name="Theme.PureBiliBili.Splash.NoIcon" parent="Theme.PureBiliBili">
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_no_icon</item>
         <item name="windowSplashScreenIconBackgroundColor">@android:color/transparent</item>

@@ -340,7 +340,7 @@ private fun WelcomePage(hazeState: HazeState) {
         ) {
             // 主 Logo
             AsyncImage(
-                model = R.mipmap.ic_launcher,
+                model = R.mipmap.ic_launcher_3d,
                 contentDescription = "BiliPai Logo",
                 modifier = Modifier
                     .size(80.dp)
