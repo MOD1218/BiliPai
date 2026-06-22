@@ -294,6 +294,7 @@ fun VideoPreviewDialog(
 }
 
 @Composable
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 fun DisposableVideoPlayer(url: String) {
     val context = LocalContext.current
     

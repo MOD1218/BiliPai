@@ -2,17 +2,6 @@
 <issues format="6" by="lint 8.13.1" type="baseline" client="gradle" dependencies="false" name="AGP (8.13.1)" variant="all" version="8.13.1">
 
     <issue
-        id="MissingClass"
-        message="Class referenced in the manifest, `leakcanary.internal.activity.LeakLauncherActivity`, was not found in the project or the libraries"
-        errorLine1="            android:name=&quot;leakcanary.internal.activity.LeakLauncherActivity&quot;"
-        errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/debug/AndroidManifest.xml"
-            line="5"
-            column="27"/>
-    </issue>
-
-    <issue
         id="ApplySharedPref"
         message="Consider using `apply()` instead; `commit` writes its data to persistent storage immediately, whereas `apply` will handle it in the background"
         errorLine1="            .edit().putBoolean(&quot;auto_highest_quality&quot;, value).commit()"
@@ -432,28 +421,6 @@
 
     <issue
         id="NewApi"
-        message="Call requires API level 36 (current min is 26): `java.lang.Thread#threadId`"
-        errorLine1="                    setCustomKey(&quot;fatal_thread_id&quot;, thread.threadId())"
-        errorLine2="                                                           ~~~~~~~~">
-        <location
-            file="src/main/java/com/android/purebilibili/core/util/CrashReporter.kt"
-            line="130"
-            column="60"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 30 (current min is 26): `android.os.storage.StorageVolume#getDirectory`"
-        errorLine1="                            val directory = storageVolume.directory"
-        errorLine2="                                                          ~~~~~~~~~">
-        <location
-            file="src/main/java/com/android/purebilibili/core/util/FileUtils.kt"
-            line="36"
-            column="59"/>
-    </issue>
-
-    <issue
-        id="NewApi"
         message="Call requires API level 35 (current min is 26): `java.util.List#removeFirst` (Prior to API level 35, this call would resolve to a Kotlin stdlib extension function. You can use `removeAt(0)` instead.)"
         errorLine1="                    if (messages.size > 50) messages.removeFirst() // 横屏模式只保留最近50条"
         errorLine2="                                                     ~~~~~~~~~~~~~">
@@ -472,28 +439,6 @@
             file="src/main/java/com/android/purebilibili/feature/live/components/LiveChatSection.kt"
             line="53"
             column="55"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Field requires API level 29 (current min is 26): `android.provider.MediaStore.Downloads#EXTERNAL_CONTENT_URI`"
-        errorLine1="            android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI,"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/android/purebilibili/core/util/Logger.kt"
-            line="629"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Field requires API level 29 (current min is 26): `android.provider.MediaStore.Downloads#EXTERNAL_CONTENT_URI`"
-        errorLine1="                android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/android/purebilibili/core/util/Logger.kt"
-            line="640"
-            column="17"/>
     </issue>
 
     <issue
@@ -1929,50 +1874,6 @@
     <issue
         id="UnsafeOptInUsageError"
         message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
-        errorLine1="        AspectRatioFrameLayout.RESIZE_MODE_FILL -> cw to ch"
-        errorLine2="                               ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/android/purebilibili/feature/video/danmaku/FaceOcclusionPolicy.kt"
-            line="275"
-            column="32"/>
-    </issue>
-
-    <issue
-        id="UnsafeOptInUsageError"
-        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
-        errorLine1="        AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH -> {"
-        errorLine2="                               ~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/android/purebilibili/feature/video/danmaku/FaceOcclusionPolicy.kt"
-            line="276"
-            column="32"/>
-    </issue>
-
-    <issue
-        id="UnsafeOptInUsageError"
-        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
-        errorLine1="        AspectRatioFrameLayout.RESIZE_MODE_FIXED_HEIGHT -> {"
-        errorLine2="                               ~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/android/purebilibili/feature/video/danmaku/FaceOcclusionPolicy.kt"
-            line="280"
-            column="32"/>
-    </issue>
-
-    <issue
-        id="UnsafeOptInUsageError"
-        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
-        errorLine1="        AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> {"
-        errorLine2="                               ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/android/purebilibili/feature/video/danmaku/FaceOcclusionPolicy.kt"
-            line="284"
-            column="32"/>
-    </issue>
-
-    <issue
-        id="UnsafeOptInUsageError"
-        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
         errorLine1="@OptIn(androidx.media3.common.util.UnstableApi::class) // 解决 UnsafeOptInUsageError，因为 AppNavigation 内部使用了不稳定的 API"
         errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -1990,105 +1891,6 @@
             file="src/main/java/com/android/purebilibili/MainActivity.kt"
             line="816"
             column="33"/>
-    </issue>
-
-    <issue
-        id="UnsafeOptInUsageError"
-        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
-        errorLine1="    FIT(&quot;适应&quot;, AspectRatioFrameLayout.RESIZE_MODE_FIT),"
-        errorLine2="                                     ~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/android/purebilibili/feature/video/ui/components/VideoAspectRatio.kt"
-            line="28"
-            column="38"/>
-    </issue>
-
-    <issue
-        id="UnsafeOptInUsageError"
-        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
-        errorLine1="    FILL(&quot;填充&quot;, AspectRatioFrameLayout.RESIZE_MODE_ZOOM),"
-        errorLine2="                                      ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/android/purebilibili/feature/video/ui/components/VideoAspectRatio.kt"
-            line="29"
-            column="39"/>
-    </issue>
-
-    <issue
-        id="UnsafeOptInUsageError"
-        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
-        errorLine1="    RATIO_16_9(&quot;16:9&quot;, AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH),"
-        errorLine2="                                              ~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/android/purebilibili/feature/video/ui/components/VideoAspectRatio.kt"
-            line="30"
-            column="47"/>
-    </issue>
-
-    <issue
-        id="UnsafeOptInUsageError"
-        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
-        errorLine1="    RATIO_4_3(&quot;4:3&quot;, AspectRatioFrameLayout.RESIZE_MODE_FIXED_HEIGHT),"
-        errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/android/purebilibili/feature/video/ui/components/VideoAspectRatio.kt"
-            line="31"
-            column="45"/>
-    </issue>
-
-    <issue
-        id="UnsafeOptInUsageError"
-        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
-        errorLine1="    STRETCH(&quot;拉伸&quot;, AspectRatioFrameLayout.RESIZE_MODE_FILL);"
-        errorLine2="                                         ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/android/purebilibili/feature/video/ui/components/VideoAspectRatio.kt"
-            line="32"
-            column="42"/>
-    </issue>
-
-    <issue
-        id="UnsafeOptInUsageError"
-        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
-        errorLine1="                resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM"
-        errorLine2="                ~~~~~~~~~~">
-        <location
-            file="src/main/java/com/android/purebilibili/feature/home/components/VideoPreviewDialog.kt"
-            line="315"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="UnsafeOptInUsageError"
-        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
-        errorLine1="                resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM"
-        errorLine2="                ~~~~~~~~~~">
-        <location
-            file="src/main/java/com/android/purebilibili/feature/home/components/VideoPreviewDialog.kt"
-            line="315"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="UnsafeOptInUsageError"
-        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
-        errorLine1="                resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM"
-        errorLine2="                                                                       ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/android/purebilibili/feature/home/components/VideoPreviewDialog.kt"
-            line="315"
-            column="72"/>
-    </issue>
-
-    <issue
-        id="UnsafeOptInUsageError"
-        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
-        errorLine1="    val videoSurface = playerView.videoSurfaceView"
-        errorLine2="                                  ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/android/purebilibili/feature/video/util/VideoScreenshotUtils.kt"
-            line="84"
-            column="35"/>
     </issue>
 
     <issue

@@ -200,8 +200,10 @@ object CrashReporter {
                     Logger.persistCrashSnapshot(throwable)
                 }
                 if (isEnabled) {
+                    @Suppress("DEPRECATION")
+                    val fatalThreadId = thread.id
                     setCustomKey("fatal_thread_name", thread.name)
-                    setCustomKey("fatal_thread_id", thread.threadId())
+                    setCustomKey("fatal_thread_id", fatalThreadId)
                     setCustomKey("app_in_foreground", !BackgroundManager.isInBackground)
                     setCustomKey("fatal_in_live_session", liveSessionActive)
                     if (liveSessionActive) {

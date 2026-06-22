@@ -25,6 +25,7 @@ import kotlin.math.roundToInt
  * 视频比例枚举
  * `resizeMode` 保留给旧偏好映射，真实渲染使用 `playerResizeMode`。
  */
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 enum class VideoAspectRatio(
     val displayName: String,
     val resizeMode: Int,

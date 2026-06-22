@@ -720,6 +720,7 @@ object LogCollector {
         }
     }
 
+    @androidx.annotation.RequiresApi(android.os.Build.VERSION_CODES.Q)
     private fun findExistingDownloadUri(context: Context, fileName: String): android.net.Uri? {
         val projection = arrayOf(
             android.provider.MediaStore.Downloads._ID

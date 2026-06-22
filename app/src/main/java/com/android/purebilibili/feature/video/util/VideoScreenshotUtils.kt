@@ -76,6 +76,7 @@ suspend fun captureAndSaveVideoScreenshot(
     }
 }
 
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 suspend fun captureVideoScreenshot(
     playerView: PlayerView,
     videoWidth: Int,
