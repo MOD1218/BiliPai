@@ -5815,12 +5815,16 @@ internal fun resolvePreferredHighRefreshModeId(
     minRefreshRate: Float = 90f
 ): Int? {
     if (supportedModes.isEmpty()) return null
-    val candidates = supportedModes.filter { it.refreshRate >= minRefreshRate }
+    val currentMode = supportedModes.firstOrNull { it.modeId == currentModeId } ?: return null
+    val candidates = supportedModes.filter {
+        it.refreshRate >= minRefreshRate &&
+            it.width == currentMode.width &&
+            it.height == currentMode.height
+    }
     if (candidates.isEmpty()) return null
 
     return candidates.maxWithOrNull(
         compareBy<RefreshModeCandidate> { it.refreshRate }
-            .thenBy { it.width * it.height }
             .thenBy { if (it.modeId == currentModeId) 1 else 0 }
     )?.modeId
 }
