@@ -1153,7 +1153,8 @@ fun VideoPlayerSection(
             transitionEnabled = transitionEnabled,
             allowLivePlayerSharedElement = allowLivePlayerSharedElement,
             hasSharedTransitionScope = sharedTransitionScope != null,
-            hasAnimatedVisibilityScope = animatedVisibilityScope != null
+            hasAnimatedVisibilityScope = animatedVisibilityScope != null,
+            forceCoverDuringReturnAnimation = forceCoverDuringReturnAnimation
         )
     if (bvid.isNotEmpty() && livePlayerSharedElementEnabled) {
          with(requireNotNull(sharedTransitionScope)) {

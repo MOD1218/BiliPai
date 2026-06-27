@@ -712,8 +712,10 @@ internal fun shouldEnableLivePlayerSharedElement(
     transitionEnabled: Boolean,
     allowLivePlayerSharedElement: Boolean,
     hasSharedTransitionScope: Boolean,
-    hasAnimatedVisibilityScope: Boolean
+    hasAnimatedVisibilityScope: Boolean,
+    forceCoverDuringReturnAnimation: Boolean = false
 ): Boolean {
+    if (forceCoverDuringReturnAnimation) return false
     return transitionEnabled &&
         allowLivePlayerSharedElement &&
         hasSharedTransitionScope &&

@@ -443,6 +443,19 @@ class VideoPlayerSectionPolicyTest {
     }
 
     @Test
+    fun livePlayerSharedElement_disabledWhenReturnCoverTakesOverSharedBounds() {
+        assertFalse(
+            shouldEnableLivePlayerSharedElement(
+                transitionEnabled = true,
+                allowLivePlayerSharedElement = true,
+                hasSharedTransitionScope = true,
+                hasAnimatedVisibilityScope = true,
+                forceCoverDuringReturnAnimation = true
+            )
+        )
+    }
+
+    @Test
     fun playerSurfaceRebind_onlyWhenForegroundVideoSurfaceCanRender() {
         assertTrue(
             shouldRebindPlayerSurfaceOnForeground(
