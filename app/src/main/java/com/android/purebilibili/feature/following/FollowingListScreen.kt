@@ -45,7 +45,7 @@ import com.android.purebilibili.core.network.NetworkModule
 import com.android.purebilibili.core.store.FollowingCacheStore
 import com.android.purebilibili.core.ui.AdaptiveScaffold
 import com.android.purebilibili.core.ui.AdaptiveTopAppBar
-import com.android.purebilibili.core.ui.ComfortablePullToRefreshBox
+import com.android.purebilibili.core.ui.AdaptivePullToRefreshBox
 import com.android.purebilibili.core.ui.OfficialVerifyBadge
 import com.android.purebilibili.core.ui.globalWallpaperAwareBackground
 import com.android.purebilibili.core.ui.rememberAppBackIcon
@@ -800,7 +800,7 @@ fun FollowingListScreen(
                         val selectedCount = selectedMids.size
                         val hasSelection = selectedCount > 0
 
-                        ComfortablePullToRefreshBox(
+                        AdaptivePullToRefreshBox(
                             isRefreshing = isPullRefreshing,
                             onRefresh = {
                                 if (!isPullRefreshing) {

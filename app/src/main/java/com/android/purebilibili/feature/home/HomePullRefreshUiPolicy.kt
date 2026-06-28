@@ -15,7 +15,8 @@ enum class HomePullRefreshMotionStyle {
 enum class HomePullRefreshIndicatorStyle {
     IOS,
     MATERIAL_DEFAULT,
-    MD3_SCREENSHOT_HANDLE
+    MD3_SCREENSHOT_HANDLE,
+    MIUIX_NATIVE,
 }
 
 internal fun resolveHomePullRefreshMotionStyle(uiPreset: UiPreset): HomePullRefreshMotionStyle {
@@ -46,7 +47,7 @@ internal fun resolveHomePullRefreshIndicatorStyle(
         }
         uiPreset == UiPreset.MD3 &&
             androidNativeVariant == AndroidNativeVariant.MIUIX -> {
-            HomePullRefreshIndicatorStyle.MATERIAL_DEFAULT
+            HomePullRefreshIndicatorStyle.MIUIX_NATIVE
         }
         else -> HomePullRefreshIndicatorStyle.IOS
     }

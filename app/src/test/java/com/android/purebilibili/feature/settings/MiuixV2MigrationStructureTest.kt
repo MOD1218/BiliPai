@@ -84,6 +84,27 @@ class MiuixV2MigrationStructureTest {
     }
 
     @Test
+    fun adaptivePullToRefreshBox_routesMiuixVariantToMiuixPullToRefresh() {
+        val source = loadSource("app/src/main/java/com/android/purebilibili/core/ui/AdaptivePullToRefreshBox.kt")
+        assertTrue(source.contains("MiuixPullToRefresh("))
+        assertTrue(source.contains("PresetPrimitiveRenderer.MIUIX_BRIDGED"))
+        assertTrue(source.contains("ComfortablePullToRefreshBox("))
+    }
+
+    @Test
+    fun homeScreen_usesAdaptivePullToRefreshBox() {
+        val source = loadSource("app/src/main/java/com/android/purebilibili/feature/home/HomeScreen.kt")
+        assertTrue(source.contains("AdaptivePullToRefreshBox("))
+        assertFalse(source.contains("ComfortablePullToRefreshBox("))
+    }
+
+    @Test
+    fun homePullRefreshPolicy_routesMiuixToNativeIndicator() {
+        val source = loadSource("app/src/main/java/com/android/purebilibili/feature/home/HomePullRefreshUiPolicy.kt")
+        assertTrue(source.contains("HomePullRefreshIndicatorStyle.MIUIX_NATIVE"))
+    }
+
+    @Test
     fun md3SegmentedControl_usesAdaptiveSquircleBackground() {
         val source = loadSource(
             "app/src/main/java/com/android/purebilibili/feature/settings/IOSSlidingSegmentedControl.kt"

@@ -49,7 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.android.purebilibili.core.ui.ComfortablePullToRefreshBox
+import com.android.purebilibili.core.ui.AdaptivePullToRefreshBox
 import com.android.purebilibili.core.ui.globalWallpaperAwareChromeColor
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -113,7 +113,7 @@ fun SearchTrendingScreen(
                 )
             }
 
-            else -> ComfortablePullToRefreshBox(
+            else -> AdaptivePullToRefreshBox(
                 isRefreshing = state.isRefreshing,
                 onRefresh = viewModel::refresh,
                 state = pullRefreshState,

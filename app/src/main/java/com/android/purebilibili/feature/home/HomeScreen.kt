@@ -55,7 +55,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.android.purebilibili.core.ui.ComfortablePullToRefreshBox
+import com.android.purebilibili.core.ui.AdaptivePullToRefreshBox
 import com.android.purebilibili.core.ui.AdaptiveScaffold
 import com.android.purebilibili.core.theme.LocalAndroidNativeVariant
 import com.android.purebilibili.core.theme.LocalUiPreset
@@ -573,6 +573,8 @@ fun HomeScreen(
             androidNativeVariant = androidNativeVariant
         )
     }
+    val usesMiuixNativePullRefresh =
+        pullRefreshIndicatorStyle == HomePullRefreshIndicatorStyle.MIUIX_NATIVE
 
     
     var showEasterEggDialog by remember { mutableStateOf(false) }
@@ -1437,29 +1439,37 @@ fun HomeScreen(
                         }
                         val categoryState by categoryStateFlow.collectAsStateWithLifecycle()
                         
-                        //  独立的 PullToRefreshState，避免所有页面共享一个状态导致冲突
-                        val pullRefreshState = rememberPullToRefreshState()
-                        val pullDistanceFraction = pullRefreshState.distanceFraction
                         val isPageRefreshing = isRefreshing && currentCategory == category
+                        val pullRefreshState = rememberPullToRefreshState()
+                        val pullDistanceFraction = if (usesMiuixNativePullRefresh) {
+                            0f
+                        } else {
+                            pullRefreshState.distanceFraction
+                        }
                         var stablePullOffsetFraction by remember { mutableFloatStateOf(0f) }
 
-                        //  下拉物理由策略区分：MD3 截图式跟随当前手指距离回收，旧 iOS 弹性保留防抖滞后。
-                        val resolvedStablePullOffsetFraction = resolveStablePullContentOffsetFraction(
-                            distanceFraction = pullDistanceFraction,
-                            isRefreshing = isPageRefreshing,
-                            isStateAnimating = pullRefreshState.isAnimating,
-                            previousOffsetFraction = stablePullOffsetFraction,
-                            motionStyle = pullRefreshMotionStyle,
-                            indicatorStyle = pullRefreshIndicatorStyle
-                        )
-                        SideEffect {
-                            stablePullOffsetFraction = resolvedStablePullOffsetFraction
+                        val resolvedStablePullOffsetFraction = if (usesMiuixNativePullRefresh) {
+                            0f
+                        } else {
+                            resolveStablePullContentOffsetFraction(
+                                distanceFraction = pullDistanceFraction,
+                                isRefreshing = isPageRefreshing,
+                                isStateAnimating = pullRefreshState.isAnimating,
+                                previousOffsetFraction = stablePullOffsetFraction,
+                                motionStyle = pullRefreshMotionStyle,
+                                indicatorStyle = pullRefreshIndicatorStyle
+                            )
                         }
-                        
-                        //  使用 animateFloatAsState 包装偏移量
+                        if (!usesMiuixNativePullRefresh) {
+                            SideEffect {
+                                stablePullOffsetFraction = resolvedStablePullOffsetFraction
+                            }
+                        }
+
                         val animatedDragOffsetFraction by androidx.compose.animation.core.animateFloatAsState(
-                            targetValue = resolvedStablePullOffsetFraction,
+                            targetValue = if (usesMiuixNativePullRefresh) 0f else resolvedStablePullOffsetFraction,
                             animationSpec = if (
+                                usesMiuixNativePullRefresh ||
                                 shouldSnapPullOffsetToFinger(
                                     distanceFraction = pullDistanceFraction,
                                     isRefreshing = isPageRefreshing,
@@ -1474,14 +1484,18 @@ fun HomeScreen(
                             label = "pull_bounce"
                         )
 
-                        //  Defers calculation to graphicsLayer
                         val calculateDragOffset: androidx.compose.ui.unit.Density.() -> Float = remember(
                             animatedDragOffsetFraction,
-                            pullRefreshIndicatorStyle
+                            pullRefreshIndicatorStyle,
+                            usesMiuixNativePullRefresh
                         ) {
                             {
-                                val maxPx = resolvePullContentMaxOffsetDp(pullRefreshIndicatorStyle).dp.toPx()
-                                maxPx * animatedDragOffsetFraction
+                                if (usesMiuixNativePullRefresh) {
+                                    0f
+                                } else {
+                                    val maxPx = resolvePullContentMaxOffsetDp(pullRefreshIndicatorStyle).dp.toPx()
+                                    maxPx * animatedDragOffsetFraction
+                                }
                             }
                         }
                         
@@ -1495,7 +1509,7 @@ fun HomeScreen(
                         
                         //  把 GridState 提升给父级用于控制 Header? 
                         
-                        ComfortablePullToRefreshBox(
+                        AdaptivePullToRefreshBox(
                             isRefreshing = isRefreshing && currentCategory == category,
                             onRefresh = {
                                 if (category == HomeCategory.FOLLOW) {
@@ -1505,10 +1519,12 @@ fun HomeScreen(
                                 }
                             },
                             state = pullRefreshState,
+                            contentPadding = PaddingValues(top = listTopPadding),
                             modifier = Modifier.fillMaxSize(),
                              //  不同原生外观使用不同下拉刷新指示器，位移策略仍由 policy 统一控制。
                              indicator = {
                                 when (pullRefreshIndicatorStyle) {
+                                    HomePullRefreshIndicatorStyle.MIUIX_NATIVE -> Unit
                                     HomePullRefreshIndicatorStyle.MATERIAL_DEFAULT -> {
                                         PullToRefreshDefaults.Indicator(
                                             modifier = Modifier
@@ -1571,14 +1587,20 @@ fun HomeScreen(
                                 }
                              }
                         ) {
-                             // [物理优化] 内容容器应用下沉效果
+                             // [物理优化] 内容容器应用下沉效果（Miuix 原生 PullToRefresh 自行处理位移）
                              Box(
                                  modifier = Modifier
                                      .fillMaxSize()
                                      .zIndex(0f)
-                                     .graphicsLayer {
-                                         translationY = calculateDragOffset()
-                                     }
+                                     .then(
+                                         if (usesMiuixNativePullRefresh) {
+                                             Modifier
+                                         } else {
+                                             Modifier.graphicsLayer {
+                                                 translationY = calculateDragOffset()
+                                             }
+                                         }
+                                     )
                              ) {
                              if (category != HomeCategory.POPULAR && categoryState.isLoading && categoryState.videos.isEmpty() && categoryState.liveRooms.isEmpty()) {
                                  // Loading Skeleton per page

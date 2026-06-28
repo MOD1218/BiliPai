@@ -53,7 +53,7 @@ import coil.compose.AsyncImage
 import coil.imageLoader
 import com.android.purebilibili.core.ui.AdaptiveScaffold
 import com.android.purebilibili.core.ui.BiliGradientButton
-import com.android.purebilibili.core.ui.ComfortablePullToRefreshBox
+import com.android.purebilibili.core.ui.AdaptivePullToRefreshBox
 import com.android.purebilibili.core.ui.EmptyState
 import com.android.purebilibili.core.ui.LocalGlobalWallpaperBackdropVisible
 import com.android.purebilibili.core.ui.LoadingAnimation
@@ -586,7 +586,7 @@ fun DynamicScreen(
                                 } else {
                                     "以下是之前的${tab.title}"
                                 }
-                                ComfortablePullToRefreshBox(
+                                AdaptivePullToRefreshBox(
                                     isRefreshing = isRefreshing,
                                     onRefresh = { viewModel.refresh(tab.logicalIndex) },
                                     state = pullRefreshState,
@@ -713,7 +713,7 @@ fun DynamicScreen(
                             } else {
                                 "以下是之前的${tab.title}"
                             }
-                            ComfortablePullToRefreshBox(
+                            AdaptivePullToRefreshBox(
                                 isRefreshing = isRefreshing,
                                 onRefresh = { viewModel.refresh(tab.logicalIndex) },
                                 state = pullRefreshState,

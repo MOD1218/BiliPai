@@ -31,7 +31,7 @@ import com.android.purebilibili.core.theme.UiPreset
 import com.android.purebilibili.core.ui.AdaptiveScaffold
 import com.android.purebilibili.core.ui.AdaptiveTopAppBar
 import coil.compose.AsyncImage
-import com.android.purebilibili.core.ui.ComfortablePullToRefreshBox
+import com.android.purebilibili.core.ui.AdaptivePullToRefreshBox
 import com.android.purebilibili.core.ui.rememberAppBackIcon
 import com.android.purebilibili.data.model.response.SessionItem
 import com.android.purebilibili.core.ui.AppSurfaceTokens
@@ -106,7 +106,7 @@ fun InboxScreen(
                     )
                 }
                 else -> {
-                    ComfortablePullToRefreshBox(
+                    AdaptivePullToRefreshBox(
                         isRefreshing = uiState.isRefreshing,
                         onRefresh = { viewModel.refresh() }
                     ) {

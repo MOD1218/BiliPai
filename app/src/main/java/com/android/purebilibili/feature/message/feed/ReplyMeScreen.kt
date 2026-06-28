@@ -32,7 +32,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.purebilibili.core.ui.AdaptiveScaffold
 import com.android.purebilibili.core.ui.AdaptiveTopAppBar
-import com.android.purebilibili.core.ui.ComfortablePullToRefreshBox
+import com.android.purebilibili.core.ui.AdaptivePullToRefreshBox
 import com.android.purebilibili.core.ui.rememberAppBackIcon
 import com.android.purebilibili.data.model.response.MessageFeedReplyItem
 import com.android.purebilibili.data.repository.MessageRepository
@@ -179,7 +179,7 @@ fun ReplyMeScreen(
                     text = "暂无回复消息",
                     modifier = Modifier.fillMaxSize()
                 )
-                else -> ComfortablePullToRefreshBox(
+                else -> AdaptivePullToRefreshBox(
                     isRefreshing = uiState.isRefreshing,
                     onRefresh = viewModel::refresh,
                     modifier = Modifier.fillMaxSize()

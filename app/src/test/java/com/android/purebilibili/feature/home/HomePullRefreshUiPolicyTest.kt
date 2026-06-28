@@ -48,7 +48,7 @@ class HomePullRefreshUiPolicyTest {
             )
         )
         assertEquals(
-            HomePullRefreshIndicatorStyle.MATERIAL_DEFAULT,
+            HomePullRefreshIndicatorStyle.MIUIX_NATIVE,
             resolveHomePullRefreshIndicatorStyle(
                 uiPreset = UiPreset.MD3,
                 androidNativeVariant = AndroidNativeVariant.MIUIX
