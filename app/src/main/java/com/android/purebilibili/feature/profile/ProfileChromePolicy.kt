@@ -21,7 +21,12 @@ data class ProfileContentChrome(
     val onSurfaceColor: Color,
     val onSurfaceVariantColor: Color,
     val primaryColor: Color,
+    val sheetGradientTopColor: Color,
+    val sheetGradientBottomColor: Color,
     val cardContainerColor: Color,
+    val cardMetadataColor: Color,
+    val cardBorderColor: Color,
+    val cardShadowElevationDp: Int,
     val sheetShadowElevationDp: Int,
     val sheetBorderColor: Color
 )
@@ -71,7 +76,10 @@ fun resolveProfileContentChrome(
     onSurfaceColor: Color,
     onSurfaceVariantColor: Color,
     primaryColor: Color,
+    surfaceContainerLowColor: Color,
     surfaceContainerHighColor: Color,
+    surfaceContainerHighestColor: Color,
+    outlineVariantColor: Color,
     isDarkTheme: Boolean
 ): ProfileContentChrome {
     return ProfileContentChrome(
@@ -79,7 +87,12 @@ fun resolveProfileContentChrome(
         onSurfaceColor = onSurfaceColor,
         onSurfaceVariantColor = onSurfaceVariantColor,
         primaryColor = primaryColor,
+        sheetGradientTopColor = surfaceContainerLowColor,
+        sheetGradientBottomColor = surfaceColor,
         cardContainerColor = surfaceContainerHighColor,
+        cardMetadataColor = surfaceContainerHighestColor,
+        cardBorderColor = outlineVariantColor.copy(alpha = if (isDarkTheme) 0.28f else 0.22f),
+        cardShadowElevationDp = if (isDarkTheme) 0 else 1,
         sheetShadowElevationDp = if (isDarkTheme) 0 else 2,
         sheetBorderColor = onSurfaceColor.copy(alpha = if (isDarkTheme) 0.08f else 0.04f)
     )

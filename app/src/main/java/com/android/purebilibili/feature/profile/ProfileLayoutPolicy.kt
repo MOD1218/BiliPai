@@ -16,10 +16,10 @@ data class ProfileLayoutTokens(
 )
 
 data class ProfileCardTokens(
-    val widthDp: Int = 140,
+    val widthDp: Int = 148,
     val coverAspectRatio: Float = 3f / 4f,
     val cornerRadiusDp: Int = 12,
-    val metadataHeightDp: Int = 52,
+    val metadataHeightDp: Int = 48,
     val gapDp: Int = 12
 )
 

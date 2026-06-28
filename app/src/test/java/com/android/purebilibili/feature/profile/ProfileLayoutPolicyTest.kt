@@ -41,9 +41,9 @@ class ProfileLayoutPolicyTest {
     fun cardTokens_useUnifiedPosterDimensions() {
         val tokens = resolveProfileCardTokens()
 
-        assertEquals(140, tokens.widthDp)
+        assertEquals(148, tokens.widthDp)
         assertEquals(12, tokens.cornerRadiusDp)
-        assertEquals(52, tokens.metadataHeightDp)
+        assertEquals(48, tokens.metadataHeightDp)
         assertTrue(resolveProfileCardHeightDp(tokens) > resolveProfileCardCoverHeightDp(tokens))
     }
 }

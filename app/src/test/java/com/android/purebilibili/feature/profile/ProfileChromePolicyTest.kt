@@ -45,13 +45,16 @@ class ProfileChromePolicyTest {
     }
 
     @Test
-    fun contentChrome_usesOpaqueSurfaceAndThemeElevation() {
+    fun contentChrome_usesTintedSheetGradientAndCoverDominantCardLayers() {
         val lightChrome = resolveProfileContentChrome(
             surfaceColor = Color.White,
             onSurfaceColor = Color.Black,
             onSurfaceVariantColor = Color.Gray,
             primaryColor = Color.Blue,
+            surfaceContainerLowColor = Color(0xFFF7F2F4),
             surfaceContainerHighColor = Color(0xFFECECEC),
+            surfaceContainerHighestColor = Color(0xFFE6E1E3),
+            outlineVariantColor = Color(0xFFCAC4D0),
             isDarkTheme = false
         )
         val darkChrome = resolveProfileContentChrome(
@@ -59,13 +62,19 @@ class ProfileChromePolicyTest {
             onSurfaceColor = Color.White,
             onSurfaceVariantColor = Color.LightGray,
             primaryColor = Color.Cyan,
+            surfaceContainerLowColor = Color(0xFF1D1A1C),
             surfaceContainerHighColor = Color(0xFF1E1E1E),
+            surfaceContainerHighestColor = Color(0xFF262426),
+            outlineVariantColor = Color(0xFF49454F),
             isDarkTheme = true
         )
 
-        assertEquals(Color.White, lightChrome.surfaceColor)
+        assertEquals(Color(0xFFF7F2F4), lightChrome.sheetGradientTopColor)
+        assertEquals(Color.White, lightChrome.sheetGradientBottomColor)
+        assertEquals(Color(0xFFE6E1E3), lightChrome.cardMetadataColor)
+        assertEquals(1, lightChrome.cardShadowElevationDp)
         assertEquals(2, lightChrome.sheetShadowElevationDp)
-        assertEquals(0, darkChrome.sheetShadowElevationDp)
+        assertEquals(0, darkChrome.cardShadowElevationDp)
         assertTrue(resolveProfileContentUsesOpaqueSurface(hasWallpaper = true))
     }
 

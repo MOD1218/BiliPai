@@ -846,7 +846,10 @@ private fun ProfileSpaceContent(
             onSurfaceColor = colorScheme.onSurface,
             onSurfaceVariantColor = colorScheme.onSurfaceVariant,
             primaryColor = colorScheme.primary,
+            surfaceContainerLowColor = colorScheme.surfaceContainerLow,
             surfaceContainerHighColor = colorScheme.surfaceContainerHigh,
+            surfaceContainerHighestColor = colorScheme.surfaceContainerHighest,
+            outlineVariantColor = colorScheme.outlineVariant,
             isDarkTheme = isDarkTheme
         )
     }
@@ -1115,16 +1118,28 @@ private fun ProfileContentSheet(
             .fillMaxWidth()
             .offset(y = (-layoutTokens.contentSheetTopOverlapDp).dp),
         shape = shape,
-        color = contentChrome.surfaceColor,
+        color = Color.Transparent,
         border = BorderStroke(0.5.dp, contentChrome.sheetBorderColor),
         shadowElevation = contentChrome.sheetShadowElevationDp.dp,
         tonalElevation = 0.dp
     ) {
         Column(
-            modifier = Modifier.padding(
-                top = layoutTokens.contentSheetTopPaddingDp.dp,
-                bottom = layoutTokens.contentSheetBottomPaddingDp.dp
-            ),
+            modifier = Modifier
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            contentChrome.sheetGradientTopColor,
+                            contentChrome.sheetGradientBottomColor
+                        ),
+                        startY = 0f,
+                        endY = 360f
+                    ),
+                    shape = shape
+                )
+                .padding(
+                    top = layoutTokens.contentSheetTopPaddingDp.dp,
+                    bottom = layoutTokens.contentSheetBottomPaddingDp.dp
+                ),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             content = content
         )
@@ -1758,7 +1773,11 @@ private fun ProfileSpaceSection(
                 modifier = Modifier.weight(1f)
             )
             TextButton(onClick = onMoreClick) {
-                Text("查看更多", color = textColor.copy(alpha = 0.72f))
+                Text(
+                    text = "查看更多",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
         Row(
@@ -1791,8 +1810,11 @@ private fun ProfileSpacePosterCard(
             .height(cardHeight)
             .clip(cardShape)
             .clickable(onClick = onClick),
-        color = contentChrome.cardContainerColor,
-        shadowElevation = 0.dp
+        shape = cardShape,
+        color = contentChrome.cardMetadataColor,
+        border = BorderStroke(0.5.dp, contentChrome.cardBorderColor),
+        shadowElevation = contentChrome.cardShadowElevationDp.dp,
+        tonalElevation = 0.dp
     ) {
         Column {
             Box(
@@ -1821,13 +1843,17 @@ private fun ProfileSpacePosterCard(
             }
             Column(
                 modifier = Modifier
+                    .fillMaxWidth()
                     .height(cardTokens.metadataHeightDp.dp)
-                    .padding(horizontal = 10.dp, vertical = 8.dp)
+                    .background(contentChrome.cardMetadataColor)
+                    .padding(horizontal = 10.dp, vertical = 7.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodyMedium,
                     color = contentChrome.onSurfaceColor,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
