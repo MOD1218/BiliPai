@@ -1253,7 +1253,7 @@ private fun ProfileSpaceHeader(
             OutlinedButton(
                 onClick = onEditClick,
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .weight(1f)
                     .height(44.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = heroChrome.actionButtonContentColor),
                 border = BorderStroke(1.dp, heroChrome.actionButtonContentColor.copy(alpha = heroChrome.actionButtonBorderAlpha)),
@@ -1396,7 +1396,7 @@ private fun ProfileSpaceTabs(
     val selectedIndex = tabs.indexOfFirst { it.tab == selectedTab }.coerceAtLeast(0)
     val tabModifier = Modifier
         .fillMaxWidth()
-        .padding(horizontal = 16.dp)
+        .padding(horizontal = chromeSpec.rowHorizontalInsetDp.dp)
     val useUnderlineTabs = embeddedInPanel || !bottomBarLiquidGlassEnabled
     if (!useUnderlineTabs) {
         BottomBarLiquidSegmentedControl(
@@ -1406,7 +1406,7 @@ private fun ProfileSpaceTabs(
             modifier = tabModifier
                 .padding(vertical = 6.dp)
                 .background(contentChrome.cardContainerColor, rowContainerShape)
-                .padding(horizontal = 10.dp, vertical = 8.dp),
+                .padding(horizontal = chromeSpec.controlHorizontalInsetDp.dp, vertical = 8.dp),
             height = 46.dp,
             indicatorHeight = 40.dp,
             labelFontSize = 16.sp,

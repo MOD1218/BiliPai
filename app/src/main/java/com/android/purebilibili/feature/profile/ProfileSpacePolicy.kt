@@ -36,6 +36,7 @@ data class ProfileSpaceTabChromeSpec(
     val unselectedTextAlpha: Float,
     val rowCornerRadiusDp: Int,
     val rowHorizontalInsetDp: Int,
+    val controlHorizontalInsetDp: Int,
     val rowVerticalInsetDp: Int
 )
 
@@ -131,7 +132,8 @@ fun resolveProfileSpaceTabChromeSpec(): ProfileSpaceTabChromeSpec {
         selectedTextAlpha = 1f,
         unselectedTextAlpha = 0.72f,
         rowCornerRadiusDp = 22,
-        rowHorizontalInsetDp = 16,
+        rowHorizontalInsetDp = 2,
+        controlHorizontalInsetDp = 2,
         rowVerticalInsetDp = 0
     )
 }
