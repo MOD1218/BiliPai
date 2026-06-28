@@ -78,6 +78,13 @@ internal fun resolveIosSlidingSegmentedControlChrome(
     }
 }
 
+internal fun resolveIosSlidingSegmentedLiquidGlassRequest(
+    forceLiquidIndicator: Boolean,
+    hasExternalBackdrop: Boolean
+): Boolean? {
+    return if (forceLiquidIndicator && hasExternalBackdrop) true else null
+}
+
 internal fun resolveMd3SegmentedControlColorTokens(
     androidNativeVariant: AndroidNativeVariant,
     materialPrimaryContainer: Color,
@@ -394,7 +401,10 @@ private fun <T> IOSSlidingSegmentedControlImpl(
         labelFontSize = labelFontSize,
         miuixBackdrop = miuixBackdrop,
         forceLiquidChrome = forceLiquidIndicator,
-        liquidGlassRequestedEnabled = if (forceLiquidIndicator) true else null,
+        liquidGlassRequestedEnabled = resolveIosSlidingSegmentedLiquidGlassRequest(
+            forceLiquidIndicator = forceLiquidIndicator,
+            hasExternalBackdrop = miuixBackdrop != null
+        ),
         tapPressRefractionEnabled = tapPressRefractionEnabled
     )
 }
