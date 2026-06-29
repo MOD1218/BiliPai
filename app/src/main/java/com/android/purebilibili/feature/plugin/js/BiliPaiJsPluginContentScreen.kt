@@ -247,7 +247,12 @@ private fun PluginContent(
                 )
             }
         }
-        items(flattenMediaItems(mediaItems), key = { it.id }) { item ->
+        val flattenedItems = flattenMediaItems(mediaItems)
+        items(
+            count = flattenedItems.size,
+            key = { index -> resolveBiliPaiJsMediaItemLazyKey(index, flattenedItems[index]) }
+        ) { index ->
+            val item = flattenedItems[index]
             BiliPaiJsMediaItemRow(
                 item = item,
                 onPlay = { onPlayItem(item) }
@@ -466,4 +471,8 @@ private fun flattenMediaItems(items: List<BiliPaiJsMediaItem>): List<BiliPaiJsMe
             addAll(item.childItems)
         }
     }
+}
+
+internal fun resolveBiliPaiJsMediaItemLazyKey(index: Int, item: BiliPaiJsMediaItem): String {
+    return "js_media_${index}_${item.id}"
 }
