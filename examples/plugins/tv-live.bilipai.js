@@ -176,6 +176,7 @@ function addChannel(channels, name, url, logoUrl, logoBaseUrl, enableImageProxy)
       title: cleanName || title,
       description: title,
       logoUrl: logoUrl || (cleanName ? logoBaseUrl + cleanName + ".png" : ""),
+      enableImageProxy: enableImageProxy,
       category: guessCategory(title),
       urls: []
     };
@@ -190,7 +191,7 @@ function channelMapToItems(channels) {
       id: channel.urls[0],
       title: channel.title,
       description: channel.description,
-      coverUrl: scaleIcon(channel.logoUrl, true),
+      coverUrl: scaleIcon(channel.logoUrl, channel.enableImageProxy),
       type: "video",
       videoUrl: channel.urls[0],
       streams: channel.urls.slice(1).map(function(url, index) {

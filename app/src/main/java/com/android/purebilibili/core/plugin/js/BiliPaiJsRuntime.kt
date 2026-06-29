@@ -37,7 +37,7 @@ class BiliPaiJsRuntime(
         val payload = runScript(
             pluginId = "preview",
             script = script,
-            expression = "return window.BiliPaiPlugin;"
+            expression = buildBiliPaiJsPreviewExpression()
         )
         val manifest = json.decodeFromString(BiliPaiJsPluginManifest.serializer(), payload)
         validateBiliPaiJsPluginManifest(manifest)?.let { error ->
@@ -52,14 +52,10 @@ class BiliPaiJsRuntime(
         paramsJson: String = "{}"
     ): Result<List<BiliPaiJsMediaItem>> = runCatching {
         val script = File(installed.scriptPath).readText(Charsets.UTF_8)
-        val expression = """
-            const plugin = window.BiliPaiPlugin || {};
-            const fn = plugin[${json.encodeToString(module.functionName)}] || window[${json.encodeToString(module.functionName)}];
-            if (typeof fn !== 'function') {
-              throw new Error('未找到模块函数: ${module.functionName}');
-            }
-            return fn(${paramsJson.ifBlank { "{}" }});
-        """.trimIndent()
+        val expression = buildBiliPaiJsModuleExpression(
+            functionName = module.functionName,
+            paramsJson = paramsJson.ifBlank { "{}" }
+        )
         val payload = runScript(
             pluginId = installed.manifest.id,
             script = script,
@@ -117,45 +113,7 @@ class BiliPaiJsRuntime(
         callId: String,
         script: String,
         expression: String
-    ): String {
-        return """
-            (function() {
-              const callId = ${json.encodeToString(callId)};
-              window.BiliPai = {
-                http: {
-                  get: function(url, headers) {
-                    return JSON.parse(BiliPaiHttpNative.get(String(url), JSON.stringify(headers || {})));
-                  },
-                  post: function(url, body, headers) {
-                    return JSON.parse(BiliPaiHttpNative.post(String(url), String(body || ''), JSON.stringify(headers || {})));
-                  }
-                },
-                storage: {
-                  get: function(key) { return BiliPaiStorageNative.get(String(key)); },
-                  set: function(key, value) { BiliPaiStorageNative.set(String(key), String(value)); },
-                  remove: function(key) { BiliPaiStorageNative.remove(String(key)); }
-                },
-                log: function(message) { BiliPaiLogNative.write(String(message)); }
-              };
-              const finish = function(value) {
-                BiliPaiNative.resolve(callId, JSON.stringify(value == null ? null : value));
-              };
-              const fail = function(error) {
-                const message = error && error.message ? error.message : String(error);
-                BiliPaiNative.reject(callId, message);
-              };
-              try {
-                $script
-                const value = (function() {
-                  $expression
-                })();
-                Promise.resolve(value).then(finish).catch(fail);
-              } catch (error) {
-                fail(error);
-              }
-            })();
-        """.trimIndent()
-    }
+    ): String = buildBiliPaiJsExecutionScript(callId, script, expression)
 
     private inner class CallbackBridge(
         private val result: CompletableDeferred<String>
@@ -268,4 +226,74 @@ class BiliPaiJsRuntime(
 
 private fun String.safeStorageName(): String {
     return replace(Regex("[^A-Za-z0-9_.-]"), "_").take(96)
+}
+
+internal fun buildBiliPaiJsPreviewExpression(): String {
+    return """
+        const plugin = window.BiliPaiPlugin || globalThis.BiliPaiPlugin;
+        if (!plugin) {
+          throw new Error('未找到 BiliPaiPlugin，请使用 BiliPai 原生 JS 插件格式');
+        }
+        return plugin;
+    """.trimIndent()
+}
+
+internal fun buildBiliPaiJsModuleExpression(
+    functionName: String,
+    paramsJson: String
+): String {
+    return """
+        const plugin = window.BiliPaiPlugin || globalThis.BiliPaiPlugin || {};
+        const functionName = ${Json.encodeToString(functionName)};
+        const fn = plugin[functionName] || window[functionName] || globalThis[functionName];
+        if (typeof fn !== 'function') {
+          throw new Error('未找到模块函数: ' + functionName);
+        }
+        return fn(${paramsJson.ifBlank { "{}" }});
+    """.trimIndent()
+}
+
+internal fun buildBiliPaiJsExecutionScript(
+    callId: String,
+    pluginScript: String,
+    expression: String
+): String {
+    return """
+        (function() {
+          const callId = ${Json.encodeToString(callId)};
+          window.BiliPai = {
+            http: {
+              get: function(url, headers) {
+                return JSON.parse(BiliPaiHttpNative.get(String(url), JSON.stringify(headers || {})));
+              },
+              post: function(url, body, headers) {
+                return JSON.parse(BiliPaiHttpNative.post(String(url), String(body || ''), JSON.stringify(headers || {})));
+              }
+            },
+            storage: {
+              get: function(key) { return BiliPaiStorageNative.get(String(key)); },
+              set: function(key, value) { BiliPaiStorageNative.set(String(key), String(value)); },
+              remove: function(key) { BiliPaiStorageNative.remove(String(key)); }
+            },
+            log: function(message) { BiliPaiLogNative.write(String(message)); }
+          };
+          globalThis.BiliPai = window.BiliPai;
+          const finish = function(value) {
+            BiliPaiNative.resolve(callId, JSON.stringify(value == null ? null : value));
+          };
+          const fail = function(error) {
+            const message = error && error.message ? error.message : String(error);
+            BiliPaiNative.reject(callId, message);
+          };
+          try {
+            $pluginScript
+            const value = (function() {
+              $expression
+            })();
+            Promise.resolve(value).then(finish).catch(fail);
+          } catch (error) {
+            fail(error);
+          }
+        })();
+    """.trimIndent()
 }
