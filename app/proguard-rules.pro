@@ -154,6 +154,7 @@
 # === R8 full mode compatibility ===
 -keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
 
+
 # === Enum 保护 ===
 -keepclassmembers enum * {
     public static **[] values();

@@ -4,6 +4,10 @@ buildscript {
         google()
         mavenCentral()
     }
+    dependencies {
+        // Kotlin 2.3.21 metadata 格式较新，升级 R8 以兼容
+        classpath("com.android.tools:r8:9.1.31")
+    }
 }
 
 plugins {
