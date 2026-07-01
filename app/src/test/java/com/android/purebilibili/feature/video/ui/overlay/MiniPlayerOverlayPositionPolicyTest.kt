@@ -24,6 +24,42 @@ class MiniPlayerOverlayPositionPolicyTest {
     }
 
     @Test
+    fun initialOffset_usesCurrentMiniPlayerSizeWhenUserPreviouslyResized() {
+        val result = resolveMiniPlayerInitialOverlayOffset(
+            cardLeftPx = 760f,
+            entryFromLeft = false,
+            screenWidthPx = 1080f,
+            screenHeightPx = 2400f,
+            miniPlayerWidthPx = 640f,
+            miniPlayerHeightPx = 360f,
+            outerPaddingPx = 24f,
+            topInsetPx = 50f,
+            bottomInsetPx = 100f
+        )
+
+        assertEquals(416f, result.x, 0.001f)
+        assertEquals(1916f, result.y, 0.001f)
+    }
+
+    @Test
+    fun resizeFromRightEdge_keepsOffsetInsideBoundsForNewWidth() {
+        val result = resolveMiniPlayerOffsetAfterSizeChanged(
+            offsetX = 636f,
+            offsetY = 320f,
+            screenWidthPx = 1080f,
+            screenHeightPx = 2400f,
+            miniPlayerWidthPx = 640f,
+            miniPlayerHeightPx = 360f,
+            outerPaddingPx = 24f,
+            topInsetPx = 50f,
+            bottomInsetPx = 100f
+        )
+
+        assertEquals(416f, result.x, 0.001f)
+        assertEquals(320f, result.y, 0.001f)
+    }
+
+    @Test
     fun offsetClamp_preservesInBoundsPosition() {
         val result = clampMiniPlayerOverlayOffset(
             offsetX = 120f,

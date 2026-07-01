@@ -8,9 +8,11 @@ internal fun shouldStopPlaybackEagerlyOnVideoRouteExit(
     toRoute: String?
 ): Boolean {
     if (toRoute.isNullOrBlank()) return false
+    val toRouteBase = toRoute.substringBefore("?")
     return isVideoDetailRoute(fromRoute) &&
-        !isVideoDetailRoute(toRoute) &&
-        toRoute != ScreenRoutes.AudioMode.route
+        !isVideoDetailRoute(toRouteBase) &&
+        toRouteBase != ScreenRoutes.AudioMode.route &&
+        !toRouteBase.startsWith("space/")
 }
 
 internal fun shouldDeferBottomBarRevealOnVideoReturn(

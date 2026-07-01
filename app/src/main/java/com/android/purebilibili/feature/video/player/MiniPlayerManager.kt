@@ -418,6 +418,19 @@ internal fun applyPlaybackMediaControlToPlayer(
     return true
 }
 
+internal fun resolvePlayingStateAfterMediaControl(
+    controlType: MediaControlType,
+    playerIsPlaying: Boolean
+): Boolean {
+    return when (controlType) {
+        MediaControlType.PLAY -> true
+        MediaControlType.PAUSE -> false
+        MediaControlType.PLAY_PAUSE -> !playerIsPlaying
+        MediaControlType.PREVIOUS,
+        MediaControlType.NEXT -> playerIsPlaying
+    }
+}
+
 @androidx.annotation.RequiresApi(Build.VERSION_CODES.O)
 internal fun buildPipPlaybackRemoteActions(
     context: Context,
@@ -922,6 +935,7 @@ class MiniPlayerManager private constructor(private val context: Context) :
     fun clearExternalPlayerIfMatches(target: ExoPlayer): Boolean {
         if (_externalPlayer === target) {
             Logger.d(TAG, "clearExternalPlayerIfMatches: cleared external player ${target.hashCode()}")
+            target.removeListener(playerListener)
             _externalPlayer = null
             return true
         }
@@ -931,6 +945,7 @@ class MiniPlayerManager private constructor(private val context: Context) :
     //  [修复2] 清除外部播放器引用（从小窗返回全屏时调用）
     fun resetExternalPlayer() {
         Logger.d(TAG, " resetExternalPlayer: clearing external player reference")
+        _externalPlayer?.removeListener(playerListener)
         _externalPlayer = null
     }
 
@@ -1305,6 +1320,7 @@ class MiniPlayerManager private constructor(private val context: Context) :
             // 解决音频泄漏问题：返回首页后音频仍继续播放
             isActive = false
             playbackServiceRequested = false
+            _externalPlayer?.removeListener(playerListener)
             _externalPlayer = null
             clearPlaybackNotificationArtifacts()
             Logger.d(TAG, "🔧 标记 isActive=false，清除外部播放器引用")
@@ -1605,6 +1621,7 @@ class MiniPlayerManager private constructor(private val context: Context) :
         if (_externalPlayer != null && _externalPlayer != externalPlayer) {
             Logger.d(TAG, "🛑 Releasing old external player: ${_externalPlayer.hashCode()} -> ${externalPlayer.hashCode()}")
             try {
+                _externalPlayer?.removeListener(playerListener)
                 _externalPlayer?.stop()
                 _externalPlayer?.release()
             } catch (e: Exception) {
@@ -1613,6 +1630,8 @@ class MiniPlayerManager private constructor(private val context: Context) :
         }
         
         _externalPlayer = externalPlayer
+        externalPlayer.removeListener(playerListener)
+        externalPlayer.addListener(playerListener)
         isActive = true
         isMiniMode = false
         
@@ -1655,6 +1674,7 @@ class MiniPlayerManager private constructor(private val context: Context) :
         // 释放旧的外部播放器（如果有且不同）
         if (_externalPlayer != null && _externalPlayer != externalPlayer) {
             try {
+                _externalPlayer?.removeListener(playerListener)
                 _externalPlayer?.stop()
                 _externalPlayer?.release()
             } catch (e: Exception) {
@@ -1663,6 +1683,8 @@ class MiniPlayerManager private constructor(private val context: Context) :
         }
         
         _externalPlayer = externalPlayer
+        externalPlayer.removeListener(playerListener)
+        externalPlayer.addListener(playerListener)
         isActive = true
         isMiniMode = false
         
@@ -1743,8 +1765,17 @@ class MiniPlayerManager private constructor(private val context: Context) :
             MediaControlType.PREVIOUS -> playPrevious()
             MediaControlType.PLAY,
             MediaControlType.PAUSE,
-            MediaControlType.PLAY_PAUSE -> player?.let {
-                applyPlaybackMediaControlToPlayer(it, controlType)
+            MediaControlType.PLAY_PAUSE -> player?.let { currentPlayer ->
+                val previousIsPlaying = currentPlayer.isPlaying
+                if (applyPlaybackMediaControlToPlayer(currentPlayer, controlType)) {
+                    isPlaying = resolvePlayingStateAfterMediaControl(
+                        controlType = controlType,
+                        playerIsPlaying = previousIsPlaying
+                    )
+                    if (shouldRefreshNotificationOnPlaybackStateChange(isActive = isActive, title = currentTitle)) {
+                        pushNotification(currentTitle, currentOwner, bitmap = null)
+                    }
+                }
             }
             MediaControlType.NEXT -> playNext()
         }
@@ -2069,7 +2100,7 @@ class MiniPlayerManager private constructor(private val context: Context) :
         override fun onPlaybackStateChanged(playbackState: Int) {
             when (playbackState) {
                 Player.STATE_READY -> {
-                    duration = _player?.duration ?: 0L
+                    duration = player?.duration ?: 0L
                     Logger.d(TAG, "Player ready, duration=$duration")
                 }
                 Player.STATE_ENDED -> {

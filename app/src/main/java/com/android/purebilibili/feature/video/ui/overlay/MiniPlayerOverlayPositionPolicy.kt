@@ -39,6 +39,64 @@ internal fun clampMiniPlayerOverlayOffset(
     )
 }
 
+internal fun resolveMiniPlayerInitialOverlayOffset(
+    cardLeftPx: Float?,
+    entryFromLeft: Boolean,
+    screenWidthPx: Float,
+    screenHeightPx: Float,
+    miniPlayerWidthPx: Float,
+    miniPlayerHeightPx: Float,
+    outerPaddingPx: Float,
+    topInsetPx: Float,
+    bottomInsetPx: Float
+): MiniPlayerOverlayOffset {
+    return clampMiniPlayerOverlayOffset(
+        offsetX = cardLeftPx
+            ?: if (entryFromLeft) {
+                outerPaddingPx
+            } else {
+                screenWidthPx - miniPlayerWidthPx - outerPaddingPx
+            },
+        offsetY = resolveMiniPlayerDockedBottomOffsetY(
+            screenHeightPx = screenHeightPx,
+            miniPlayerHeightPx = miniPlayerHeightPx,
+            outerPaddingPx = outerPaddingPx,
+            bottomInsetPx = bottomInsetPx
+        ),
+        screenWidthPx = screenWidthPx,
+        screenHeightPx = screenHeightPx,
+        miniPlayerWidthPx = miniPlayerWidthPx,
+        miniPlayerHeightPx = miniPlayerHeightPx,
+        outerPaddingPx = outerPaddingPx,
+        topInsetPx = topInsetPx,
+        bottomInsetPx = bottomInsetPx
+    )
+}
+
+internal fun resolveMiniPlayerOffsetAfterSizeChanged(
+    offsetX: Float,
+    offsetY: Float,
+    screenWidthPx: Float,
+    screenHeightPx: Float,
+    miniPlayerWidthPx: Float,
+    miniPlayerHeightPx: Float,
+    outerPaddingPx: Float,
+    topInsetPx: Float,
+    bottomInsetPx: Float
+): MiniPlayerOverlayOffset {
+    return clampMiniPlayerOverlayOffset(
+        offsetX = offsetX,
+        offsetY = offsetY,
+        screenWidthPx = screenWidthPx,
+        screenHeightPx = screenHeightPx,
+        miniPlayerWidthPx = miniPlayerWidthPx,
+        miniPlayerHeightPx = miniPlayerHeightPx,
+        outerPaddingPx = outerPaddingPx,
+        topInsetPx = topInsetPx,
+        bottomInsetPx = bottomInsetPx
+    )
+}
+
 internal fun resolveMiniPlayerDockedBottomOffsetY(
     screenHeightPx: Float,
     miniPlayerHeightPx: Float,

@@ -89,4 +89,12 @@ class MiniPlayerMediaControlPolicyTest {
         verify(exactly = 1) { player.play() }
         verify(exactly = 0) { player.pause() }
     }
+
+    @Test
+    fun `pip media control immediately syncs observable playing state`() {
+        assertTrue(resolvePlayingStateAfterMediaControl(MediaControlType.PLAY, playerIsPlaying = false))
+        assertFalse(resolvePlayingStateAfterMediaControl(MediaControlType.PAUSE, playerIsPlaying = true))
+        assertFalse(resolvePlayingStateAfterMediaControl(MediaControlType.PLAY_PAUSE, playerIsPlaying = true))
+        assertTrue(resolvePlayingStateAfterMediaControl(MediaControlType.PLAY_PAUSE, playerIsPlaying = false))
+    }
 }

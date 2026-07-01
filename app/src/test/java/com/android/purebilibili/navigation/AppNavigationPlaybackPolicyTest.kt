@@ -34,6 +34,16 @@ class AppNavigationPlaybackPolicyTest {
     }
 
     @Test
+    fun leavingVideoToUpSpace_shouldEnterMiniPlayerInsteadOfStoppingEagerly() {
+        assertFalse(
+            shouldStopPlaybackEagerlyOnVideoRouteExit(
+                fromRoute = VideoRoute.route,
+                toRoute = ScreenRoutes.Space.createRoute(123L)
+            )
+        )
+    }
+
+    @Test
     fun switchingBetweenVideoRoutes_shouldNotStopPlaybackEagerly() {
         assertFalse(
             shouldStopPlaybackEagerlyOnVideoRouteExit(

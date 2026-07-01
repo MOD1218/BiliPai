@@ -131,8 +131,6 @@ fun MiniPlayerOverlay(
     val screenHeightPx = with(density) { configuration.screenHeightDp.dp.toPx() }
     val miniPlayerWidthPx = with(density) { miniPlayerWidth.toPx() }
     val miniPlayerHeightPx = with(density) { miniPlayerHeight.toPx() }
-    val defaultMiniPlayerWidthPx = with(density) { layoutPolicy.miniPlayerWidthDp.dp.toPx() }
-    val defaultMiniPlayerHeightPx = with(density) { layoutPolicy.miniPlayerHeightDp.dp.toPx() }
     val paddingPx = with(density) { padding.toPx() }
     val dragTopInsetPx = with(density) { layoutPolicy.dragTopInsetDp.dp.toPx() }
     val dragBottomInsetPx = with(density) { layoutPolicy.dragBottomInsetDp.dp.toPx() }
@@ -147,25 +145,19 @@ fun MiniPlayerOverlay(
         cardBounds,
         screenWidthPx,
         screenHeightPx,
-        defaultMiniPlayerWidthPx,
-        defaultMiniPlayerHeightPx,
+        miniPlayerWidthPx,
+        miniPlayerHeightPx,
         paddingPx,
         dragTopInsetPx,
         dragBottomInsetPx
     ) {
-        clampMiniPlayerOverlayOffset(
-            offsetX = cardBounds?.left
-                ?: if (entryFromLeft) paddingPx else screenWidthPx - defaultMiniPlayerWidthPx - paddingPx,
-            offsetY = resolveMiniPlayerDockedBottomOffsetY(
-                screenHeightPx = screenHeightPx,
-                miniPlayerHeightPx = defaultMiniPlayerHeightPx,
-                outerPaddingPx = paddingPx,
-                bottomInsetPx = dragBottomInsetPx
-            ),
+        resolveMiniPlayerInitialOverlayOffset(
+            cardLeftPx = cardBounds?.left,
+            entryFromLeft = entryFromLeft,
             screenWidthPx = screenWidthPx,
             screenHeightPx = screenHeightPx,
-            miniPlayerWidthPx = defaultMiniPlayerWidthPx,
-            miniPlayerHeightPx = defaultMiniPlayerHeightPx,
+            miniPlayerWidthPx = miniPlayerWidthPx,
+            miniPlayerHeightPx = miniPlayerHeightPx,
             outerPaddingPx = paddingPx,
             topInsetPx = dragTopInsetPx,
             bottomInsetPx = dragBottomInsetPx
@@ -272,7 +264,7 @@ fun MiniPlayerOverlay(
     val targetOffsetY = if (isStashed) stashedOffsetY else offsetY
 
     fun clampCurrentOffset() {
-        val clamped = clampMiniPlayerOverlayOffset(
+        val clamped = resolveMiniPlayerOffsetAfterSizeChanged(
             offsetX = offsetX,
             offsetY = offsetY,
             screenWidthPx = screenWidthPx,
@@ -445,10 +437,12 @@ fun MiniPlayerOverlay(
                                                 isDraggingProgress = false
                                                 dragProgressDelta = 0f
                                                 dragProgressStartPosition = 0L
+                                                lastInteractionTime = System.currentTimeMillis()
                                             }
                                             MiniPlayerContentDragIntent.MOVE -> {
                                                 isDraggingPosition = false
                                                 snapMiniPlayerToNearestHorizontalEdge()
+                                                lastInteractionTime = System.currentTimeMillis()
                                             }
                                             MiniPlayerContentDragIntent.UNDECIDED -> Unit
                                         }
@@ -461,6 +455,7 @@ fun MiniPlayerOverlay(
                                         isDraggingPosition = false
                                         dragProgressDelta = 0f
                                         dragProgressStartPosition = 0L
+                                        lastInteractionTime = System.currentTimeMillis()
                                         contentDragIntent = MiniPlayerContentDragIntent.UNDECIDED
                                         contentDragTotalX = 0f
                                         contentDragTotalY = 0f
@@ -535,9 +530,11 @@ fun MiniPlayerOverlay(
                                 onDragEnd = {
                                     isDraggingPosition = false
                                     snapMiniPlayerToNearestHorizontalEdge()
+                                    lastInteractionTime = System.currentTimeMillis()
                                 },
                                 onDragCancel = {
                                     isDraggingPosition = false
+                                    lastInteractionTime = System.currentTimeMillis()
                                 },
                                 onDrag = { change, dragAmount ->
                                     change.consume()
@@ -797,10 +794,12 @@ fun MiniPlayerOverlay(
                                     onDragEnd = {
                                         isResizing = false
                                         clampCurrentOffset()
+                                        lastInteractionTime = System.currentTimeMillis()
                                     },
                                     onDragCancel = {
                                         isResizing = false
                                         clampCurrentOffset()
+                                        lastInteractionTime = System.currentTimeMillis()
                                     },
                                     onDrag = { change, dragAmount ->
                                         change.consume()
