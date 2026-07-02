@@ -52,6 +52,13 @@ private const val VIDEO_CARD_TRANSITION_PROGRESS_EPSILON = 0.001f
 private const val VIDEO_CARD_TRANSITION_COLLAPSE_BLUR_POWER = 1.8f
 private const val VIDEO_CARD_TRANSITION_EXPAND_BLUR_POWER = 1.35f
 private const val VIDEO_CARD_TRANSITION_EXPAND_BLUR_PEAK_PROGRESS = 0.35f
+private const val VIDEO_CARD_TRANSITION_BLUR_EFFECT_MIN_RADIUS_DP = 0.5f
+
+internal enum class VideoTransitionBackdropBlurMode {
+    RENDER_EFFECT,
+    COMPOSE_BLUR_FALLBACK,
+    DISABLED
+}
 
 internal fun shouldDriveVideoCardTransitionBackdrop(
     cardTransitionEnabled: Boolean,
@@ -140,6 +147,21 @@ internal fun resolveVideoCardTransitionEffectStrength(
         VideoCardTransitionDirection.COLLAPSE -> {
             clamped.pow(VIDEO_CARD_TRANSITION_COLLAPSE_BLUR_POWER)
         }
+    }
+}
+
+internal fun resolveVideoTransitionBackdropBlurMode(
+    blurRadiusDp: Float,
+    motionTier: MotionTier,
+    sdkInt: Int = Build.VERSION.SDK_INT
+): VideoTransitionBackdropBlurMode {
+    if (motionTier == MotionTier.Reduced || blurRadiusDp <= VIDEO_CARD_TRANSITION_BLUR_EFFECT_MIN_RADIUS_DP) {
+        return VideoTransitionBackdropBlurMode.DISABLED
+    }
+    return if (sdkInt >= Build.VERSION_CODES.S) {
+        VideoTransitionBackdropBlurMode.RENDER_EFFECT
+    } else {
+        VideoTransitionBackdropBlurMode.COMPOSE_BLUR_FALLBACK
     }
 }
 

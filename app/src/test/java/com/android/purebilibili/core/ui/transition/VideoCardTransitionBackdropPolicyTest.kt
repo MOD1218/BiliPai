@@ -129,6 +129,50 @@ class VideoCardTransitionBackdropPolicyTest {
     }
 
     @Test
+    fun renderEffectBlurMode_requiresApi31AndActiveNormalMotionBlur() {
+        assertEquals(
+            VideoTransitionBackdropBlurMode.RENDER_EFFECT,
+            resolveVideoTransitionBackdropBlurMode(
+                blurRadiusDp = 12f,
+                motionTier = MotionTier.Normal,
+                sdkInt = 31
+            )
+        )
+        assertEquals(
+            VideoTransitionBackdropBlurMode.RENDER_EFFECT,
+            resolveVideoTransitionBackdropBlurMode(
+                blurRadiusDp = 12f,
+                motionTier = MotionTier.Enhanced,
+                sdkInt = 35
+            )
+        )
+        assertEquals(
+            VideoTransitionBackdropBlurMode.COMPOSE_BLUR_FALLBACK,
+            resolveVideoTransitionBackdropBlurMode(
+                blurRadiusDp = 12f,
+                motionTier = MotionTier.Normal,
+                sdkInt = 30
+            )
+        )
+        assertEquals(
+            VideoTransitionBackdropBlurMode.DISABLED,
+            resolveVideoTransitionBackdropBlurMode(
+                blurRadiusDp = 12f,
+                motionTier = MotionTier.Reduced,
+                sdkInt = 35
+            )
+        )
+        assertEquals(
+            VideoTransitionBackdropBlurMode.DISABLED,
+            resolveVideoTransitionBackdropBlurMode(
+                blurRadiusDp = 0.2f,
+                motionTier = MotionTier.Normal,
+                sdkInt = 35
+            )
+        )
+    }
+
+    @Test
     fun expandedFraction_resolvesSessionPhases() {
         assertEquals(
             VideoCardTransitionPhase.IDLE,

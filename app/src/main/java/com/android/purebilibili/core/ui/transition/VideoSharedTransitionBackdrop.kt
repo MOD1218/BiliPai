@@ -1,5 +1,8 @@
 package com.android.purebilibili.core.ui.transition
 
+import android.graphics.RenderEffect
+import android.graphics.Shader
+import android.os.Build
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -15,7 +18,9 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.android.purebilibili.core.ui.adaptive.resolveDeviceUiProfile
 import com.android.purebilibili.core.util.LocalWindowSizeClass
@@ -115,6 +120,10 @@ internal fun VideoSharedTransitionBackdropHost(
     }
     VideoSharedTransitionBackdropDecoration(
         frame = frame,
+        blurMode = resolveVideoTransitionBackdropBlurMode(
+            blurRadiusDp = frame.blurRadiusDp,
+            motionTier = motionTier
+        ),
         modifier = modifier,
         content = content
     )
@@ -123,9 +132,14 @@ internal fun VideoSharedTransitionBackdropHost(
 @Composable
 internal fun VideoSharedTransitionBackdropDecoration(
     frame: VideoCardTransitionBackdropFrame,
+    blurMode: VideoTransitionBackdropBlurMode,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
+    val density = LocalDensity.current
+    val blurRadiusPx = remember(frame.blurRadiusDp, density) {
+        with(density) { frame.blurRadiusDp.dp.toPx() }
+    }
     Box(modifier = modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
@@ -134,9 +148,22 @@ internal fun VideoSharedTransitionBackdropDecoration(
                     scaleX = frame.scale
                     scaleY = frame.scale
                     transformOrigin = TransformOrigin(0.5f, 0.5f)
+                    renderEffect =
+                        if (
+                            blurMode == VideoTransitionBackdropBlurMode.RENDER_EFFECT &&
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                        ) {
+                            RenderEffect.createBlurEffect(
+                                blurRadiusPx,
+                                blurRadiusPx,
+                                Shader.TileMode.CLAMP
+                            ).asComposeRenderEffect()
+                        } else {
+                            null
+                        }
                 }
                 .then(
-                    if (frame.blurRadiusDp > 0.5f) {
+                    if (blurMode == VideoTransitionBackdropBlurMode.COMPOSE_BLUR_FALLBACK) {
                         Modifier.blur(frame.blurRadiusDp.dp)
                     } else {
                         Modifier
