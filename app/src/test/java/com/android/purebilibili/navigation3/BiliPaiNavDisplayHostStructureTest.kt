@@ -77,13 +77,33 @@ class BiliPaiNavDisplayHostStructureTest {
     @Test
     fun navDisplayHostRestoresVideoCardReturnBackgroundBlurFromFullProgress() {
         val source = navDisplayHostSource()
+        val openingBranch = source
+            .substringAfter("openedVideoDetail -> {")
+            .substringBefore("returnedFromVideoDetail -> {")
         val returnBranch = source
             .substringAfter("returnedFromVideoDetail -> {")
             .substringBefore("currentTop !is BiliPaiNavKey.VideoDetail")
 
+        assertTrue(openingBranch.contains("videoCardTransitionBackgroundProgress.snapTo(0f)"))
+        assertTrue(openingBranch.contains("targetValue = 1f"))
+        assertFalse(openingBranch.substringAfter("targetValue = 1f").contains("videoCardTransitionBackgroundProgress.snapTo(0f)"))
         assertTrue(returnBranch.contains("VideoCardTransitionBackgroundPhase.RETURNING"))
         assertTrue(returnBranch.contains("videoCardTransitionBackgroundProgress.snapTo(1f)"))
         assertTrue(returnBranch.contains("targetValue = 0f"))
+    }
+
+    @Test
+    fun navDisplayHostRunsSameCompletedBackPathForClassicAndPredictiveReturn() {
+        val source = navDisplayHostSource()
+        val performBackBlock = source
+            .substringAfter("val performBack: (() -> Unit) -> Unit = {")
+            .substringBefore("val scopedContent:")
+
+        assertTrue(source.contains("onBack = { performBack { } }"))
+        assertTrue(source.contains("onBackCompleted = performBack"))
+        assertTrue(performBackBlock.contains("predictiveBackHandler.onBackPressed("))
+        assertTrue(performBackBlock.contains("commitTransitionCallBack()"))
+        assertTrue(performBackBlock.contains("onBack()"))
     }
 
     @Test
