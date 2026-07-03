@@ -20,7 +20,22 @@ import com.android.purebilibili.core.theme.UiPreset
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.android.purebilibili.core.theme.iOSBlue
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
+
+enum class IOSAlertDialogRenderer {
+    IOS_LOCAL,
+    MATERIAL_ALERT,
+    LOCAL_DIALOG
+}
+
+fun resolveIosAlertDialogRenderer(
+    uiPreset: UiPreset,
+    androidNativeVariant: AndroidNativeVariant
+): IOSAlertDialogRenderer = when {
+    uiPreset == UiPreset.MD3 && androidNativeVariant == AndroidNativeVariant.MIUIX ->
+        IOSAlertDialogRenderer.LOCAL_DIALOG
+    uiPreset == UiPreset.MD3 -> IOSAlertDialogRenderer.MATERIAL_ALERT
+    else -> IOSAlertDialogRenderer.IOS_LOCAL
+}
 
 internal data class IOSDialogActionLayoutPolicy(
     val expandToContainer: Boolean
@@ -50,83 +65,92 @@ fun IOSAlertDialog(
 ) {
     val uiPreset = LocalUiPreset.current
     val androidNativeVariant = LocalAndroidNativeVariant.current
-    if (uiPreset == UiPreset.MD3 && androidNativeVariant == AndroidNativeVariant.MIUIX) {
-        OverlayDialog(
-            show = true,
-            onDismissRequest = onDismissRequest,
-            backgroundColor = AppSurfaceTokens.cardContainer(),
-            content = {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
+    when (resolveIosAlertDialogRenderer(uiPreset, androidNativeVariant)) {
+        IOSAlertDialogRenderer.LOCAL_DIALOG -> {
+            Dialog(
+                onDismissRequest = onDismissRequest,
+                properties = properties
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .widthIn(min = 280.dp, max = 360.dp)
+                        .clip(MaterialTheme.shapes.extraLarge),
+                    color = AppSurfaceTokens.cardContainer(),
+                    tonalElevation = 6.dp
                 ) {
-                    if (title != null) {
-                        Box(
-                            modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            ProvideTextStyle(
-                                value = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold
-                                )
-                            ) {
-                                title()
-                            }
-                        }
-                    }
-                    if (text != null) {
-                        Box(
-                            modifier = Modifier.padding(
-                                top = if (title != null) 8.dp else 12.dp,
-                                start = 16.dp,
-                                end = 16.dp,
-                                bottom = 12.dp
-                            ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            ProvideTextStyle(
-                                value = MaterialTheme.typography.bodyMedium.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            ) {
-                                text()
-                            }
-                        }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.End
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        if (dismissButton != null) {
-                            Box(modifier = Modifier.padding(horizontal = 4.dp)) {
-                                dismissButton()
+                        if (title != null) {
+                            Box(
+                                modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                ProvideTextStyle(
+                                    value = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                ) {
+                                    title()
+                                }
                             }
                         }
-                        if (confirmButton != null) {
-                            Box(modifier = Modifier.padding(horizontal = 4.dp)) {
-                                confirmButton()
+                        if (text != null) {
+                            Box(
+                                modifier = Modifier.padding(
+                                    top = if (title != null) 8.dp else 12.dp,
+                                    start = 16.dp,
+                                    end = 16.dp,
+                                    bottom = 12.dp
+                                ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                ProvideTextStyle(
+                                    value = MaterialTheme.typography.bodyMedium.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                ) {
+                                    text()
+                                }
+                            }
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            if (dismissButton != null) {
+                                Box(modifier = Modifier.padding(horizontal = 4.dp)) {
+                                    dismissButton()
+                                }
+                            }
+                            if (confirmButton != null) {
+                                Box(modifier = Modifier.padding(horizontal = 4.dp)) {
+                                    confirmButton()
+                                }
                             }
                         }
                     }
                 }
             }
-        )
-        return
-    }
-    if (uiPreset == UiPreset.MD3) {
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            title = title,
-            text = text,
-            confirmButton = { confirmButton?.invoke() ?: Spacer(modifier = Modifier) },
-            dismissButton = dismissButton,
-            properties = properties,
-            shape = MaterialTheme.shapes.extraLarge,
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-        return
+            return
+        }
+        IOSAlertDialogRenderer.MATERIAL_ALERT -> {
+            AlertDialog(
+                onDismissRequest = onDismissRequest,
+                title = title,
+                text = text,
+                confirmButton = { confirmButton?.invoke() ?: Spacer(modifier = Modifier) },
+                dismissButton = dismissButton,
+                properties = properties,
+                shape = MaterialTheme.shapes.extraLarge,
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+            return
+        }
+        IOSAlertDialogRenderer.IOS_LOCAL -> Unit
     }
 
     val progressVisual = resolveInteractiveOverlayProgressVisual(

@@ -43,12 +43,14 @@ class HomeVideoNavigationPolicyTest {
             bvid = "BV1xyz",
             cid = 100L,
             coverUrl = "cover",
-            source = HomeVideoClickSource.PREVIEW
+            source = HomeVideoClickSource.PREVIEW,
+            sourceRoute = "home?category=FOLLOW"
         )
 
         val intent = resolveHomeVideoNavigationIntent(request)
 
         assertEquals(HomeVideoClickSource.PREVIEW, intent?.source)
+        assertEquals("home?category=FOLLOW", intent?.sourceRoute)
     }
 
     @Test

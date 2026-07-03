@@ -51,16 +51,16 @@ class BiliPaiNavSourceMetadataPolicyTest {
     }
 
     @Test
-    fun resolverNormalizesSourceRouteAndKeepsSharedReadyInputsTogether() {
+    fun resolverKeepsSourceRouteQueryForTopTabScopedVideoSource() {
         val metadata = resolveBiliPaiNavSourceMetadata(
-            sourceKey = "home:BV1",
-            sourceRoute = "home?from=tab",
+            sourceKey = "home?category=POPULAR:BV1",
+            sourceRoute = "home?category=POPULAR",
             clickedBoundsRecorded = true,
             cardFullyVisible = true
         )
 
-        assertEquals("home", metadata.sourceRoute)
-        assertEquals("home:BV1", metadata.sourceKey)
+        assertEquals("home?category=POPULAR", metadata.sourceRoute)
+        assertEquals("home?category=POPULAR:BV1", metadata.sourceKey)
         assertTrue(metadata.sharedTransitionEntryReady)
         assertTrue(metadata.sharedTransitionReady)
     }

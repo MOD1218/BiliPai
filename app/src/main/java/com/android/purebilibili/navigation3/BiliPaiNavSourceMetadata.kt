@@ -46,7 +46,7 @@ internal fun resolveBiliPaiNavSourceMetadata(
 ): BiliPaiNavSourceMetadata {
     return BiliPaiNavSourceMetadata(
         sourceKey = sourceKey,
-        sourceRoute = sourceRoute?.substringBefore("?"),
+        sourceRoute = normalizeBiliPaiVideoSourceRoute(sourceRoute),
         clickedBoundsRecorded = clickedBoundsRecorded,
         cardFullyVisible = cardFullyVisible,
         cardSourceDirection = cardSourceDirection

@@ -56,4 +56,17 @@ class BiliPaiVideoSourcePolicyTest {
         assertEquals("search", source.route)
         assertEquals("search:BV1", source.key)
     }
+
+    @Test
+    fun homeTopTabSourceRouteKeepsQueryForIndependentSourceKey() {
+        val source = resolveBiliPaiVideoSource(
+            bvid = "BV1",
+            explicitSourceRoute = "home?category=POPULAR",
+            currentKey = BiliPaiNavKey.Home,
+            previousSourceRoute = null
+        )
+
+        assertEquals("home?category=POPULAR", source.route)
+        assertEquals("home?category=POPULAR:BV1", source.key)
+    }
 }

@@ -248,7 +248,7 @@ fun CategoryScreen(
                                     isReturningFromVideoDetail = isReturningFromVideoDetail,
                                     isQuickReturningFromVideoDetail = isQuickReturningFromVideoDetail,
                                     onClick = { bvid, _ ->
-                                        onVideoClick(bvid, video.id, video.pic, video.isVertical)
+                                        onVideoClick(bvid, video.cid, video.pic, video.isVertical)
                                     }
                                 )
                             }
@@ -266,7 +266,7 @@ fun CategoryScreen(
                                     isReturningFromVideoDetail = isReturningFromVideoDetail,
                                     isQuickReturningFromVideoDetail = isQuickReturningFromVideoDetail,
                                     onClick = { bvid, _ ->
-                                        onVideoClick(bvid, video.id, video.pic, video.isVertical)
+                                        onVideoClick(bvid, video.cid, video.pic, video.isVertical)
                                     }
                                 )
                             }

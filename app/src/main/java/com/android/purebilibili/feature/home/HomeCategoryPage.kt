@@ -165,7 +165,8 @@ internal fun HomeCategoryPageContent(
                 cid = video.cid,
                 coverUrl = video.pic,
                 isVerticalVideo = video.isVertical,
-                source = HomeVideoClickSource.TODAY_WATCH
+                source = HomeVideoClickSource.TODAY_WATCH,
+                sourceRoute = resolveHomeCategoryVideoSourceRoute(HomeCategory.RECOMMEND)
             )
         )
     },
@@ -173,6 +174,9 @@ internal fun HomeCategoryPageContent(
     uiSkinDecoration: HomeUiSkinDecoration? = null,
     modifier: Modifier = Modifier,
 ) {
+    val sourceRoute = remember(category) {
+        resolveHomeCategoryVideoSourceRoute(category)
+    }
     val cardLayout = remember(homeFeedCardStyle) {
         resolveHomeFeedCardLayout(homeFeedCardStyle)
     }
@@ -333,7 +337,8 @@ internal fun HomeCategoryPageContent(
                                         cid = video.cid,
                                         coverUrl = video.pic,
                                         isVerticalVideo = video.isVertical,
-                                        source = HomeVideoClickSource.GRID
+                                        source = HomeVideoClickSource.GRID,
+                                        sourceRoute = sourceRoute
                                     )
                                 )
                             },
@@ -447,7 +452,8 @@ internal fun HomeCategoryPageContent(
                                                     cid = cid,
                                                     coverUrl = video.pic,
                                                     isVerticalVideo = video.isVertical,
-                                                    source = HomeVideoClickSource.GRID
+                                                    source = HomeVideoClickSource.GRID,
+                                                    sourceRoute = sourceRoute
                                                 )
                                             )
                                         }
@@ -492,7 +498,8 @@ internal fun HomeCategoryPageContent(
                                                     cid = cid,
                                                     coverUrl = video.pic,
                                                     isVerticalVideo = video.isVertical,
-                                                    source = HomeVideoClickSource.GRID
+                                                    source = HomeVideoClickSource.GRID,
+                                                    sourceRoute = sourceRoute
                                                 )
                                             )
                                         }

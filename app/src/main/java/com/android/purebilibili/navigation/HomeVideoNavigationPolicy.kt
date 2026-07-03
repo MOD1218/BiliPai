@@ -10,7 +10,8 @@ internal data class HomeVideoNavigationIntent(
     val cid: Long,
     val coverUrl: String,
     val isVerticalVideo: Boolean,
-    val source: HomeVideoClickSource
+    val source: HomeVideoClickSource,
+    val sourceRoute: String?
 )
 
 internal sealed interface HomeNavigationTarget {
@@ -29,7 +30,8 @@ internal fun resolveHomeVideoNavigationIntent(
         cid = request.cid.takeIf { it > 0L } ?: 0L,
         coverUrl = request.coverUrl,
         isVerticalVideo = request.isVerticalVideo,
-        source = request.source
+        source = request.source,
+        sourceRoute = request.sourceRoute
     )
 }
 

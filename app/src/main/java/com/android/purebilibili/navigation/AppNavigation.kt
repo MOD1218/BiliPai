@@ -823,14 +823,14 @@ fun AppNavigation(
                                 coverUrl = intent.coverUrl,
                                 autoPortrait = true,
                                 initialVertical = intent.isVerticalVideo,
-                                sourceRoute = ScreenRoutes.Home.route
+                                sourceRoute = intent.sourceRoute ?: ScreenRoutes.Home.route
                             )
                         }
                         navigateToVideo()
                     } else {
                         navigateToVideoRouteInNavigation3(
                             route = target.route,
-                            sourceRoute = ScreenRoutes.Home.route
+                            sourceRoute = request.sourceRoute ?: ScreenRoutes.Home.route
                         )
                     }
                 }
@@ -2219,7 +2219,12 @@ fun AppNavigation(
                         BiliPaiNavEntryContentRole.PARTITION -> com.android.purebilibili.feature.partition.PartitionScreen(
                                 onBack = { performSystemBackAction() },
                                 onVideoClick = { bvid, cid, cover ->
-                                    navigateToVideoInNavigation3(bvid, cid, cover)
+                                    navigateToVideoInNavigation3(
+                                        bvid = bvid,
+                                        cid = cid,
+                                        coverUrl = cover,
+                                        sourceRoute = ScreenRoutes.Partition.route
+                                    )
                                 }
                             )
                         BiliPaiNavEntryContentRole.CATEGORY -> {
@@ -2233,7 +2238,8 @@ fun AppNavigation(
                                             bvid = bvid,
                                             cid = cid,
                                             coverUrl = cover,
-                                            initialVertical = isVertical
+                                            initialVertical = isVertical,
+                                            sourceRoute = categoryKey.toLegacyRoute()
                                         )
                                     },
                                     isReturningFromVideoDetail = navigation3ReturnSession.isReturningFromDetail,

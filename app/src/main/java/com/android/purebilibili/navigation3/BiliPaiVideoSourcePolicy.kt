@@ -25,7 +25,10 @@ internal fun resolveBiliPaiVideoSource(
 }
 
 internal fun normalizeBiliPaiVideoSourceRoute(route: String?): String? {
-    return route
-        ?.takeIf { it.isNotBlank() }
-        ?.substringBefore("?")
+    val normalized = route?.trim()?.takeIf { it.isNotBlank() } ?: return null
+    return if (normalized.startsWith("home?category=")) {
+        normalized
+    } else {
+        normalized.substringBefore("?")
+    }
 }

@@ -182,7 +182,8 @@ fun HomeScreen(
                 cid = video.cid,
                 coverUrl = video.pic,
                 isVerticalVideo = video.isVertical,
-                source = HomeVideoClickSource.GRID
+                source = HomeVideoClickSource.GRID,
+                sourceRoute = partitionVideoSourceRoute
             )
         )
     },
@@ -1330,7 +1331,8 @@ fun HomeScreen(
                     cid = video.cid,
                     coverUrl = video.pic,
                     isVerticalVideo = video.isVertical,
-                    source = HomeVideoClickSource.TODAY_WATCH
+                    source = HomeVideoClickSource.TODAY_WATCH,
+                    sourceRoute = resolveHomeCategoryVideoSourceRoute(HomeCategory.RECOMMEND)
                 )
             )
         }
@@ -2059,7 +2061,8 @@ fun HomeScreen(
                              cid = item.cid,
                              coverUrl = item.pic,
                              isVerticalVideo = item.isVertical,
-                             source = HomeVideoClickSource.PREVIEW
+                             source = HomeVideoClickSource.PREVIEW,
+                             sourceRoute = resolveHomeCategoryVideoSourceRoute(currentCategory)
                          )
                      )
                      // 2. Clear preview state
