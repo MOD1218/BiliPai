@@ -98,7 +98,8 @@ fun SettingsScreen(
     onCategoryClick: (SettingsRootCategory) -> Unit = {},
     onSearchOpen: () -> Unit = {},
     destination: SettingsNavDestination = SettingsNavDestination.Home,
-    mainHazeState: dev.chrisbanes.haze.HazeState? = null
+    mainHazeState: dev.chrisbanes.haze.HazeState? = null,
+    forceSinglePaneContent: Boolean = false
 ) {
     val context = LocalContext.current
     val hapticFeedback = LocalHapticFeedback.current
@@ -925,7 +926,11 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .hazeSourceCompat(state = activeHazeState)
         ) {
-            if (!shouldUseSettingsSplitLayout(widthDp = configuration.screenWidthDp)) {
+            if (shouldRenderSettingsSinglePaneContent(
+                    widthDp = configuration.screenWidthDp,
+                    forceSinglePaneContent = forceSinglePaneContent
+                )
+            ) {
                 MobileSettingsNavLayout(
                     destination = destination,
                     onBack = onBack,

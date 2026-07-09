@@ -27,6 +27,7 @@ fun SettingsCategoryScreen(
     onCategoryClick: (SettingsRootCategory) -> Unit = {},
     onSearchOpen: () -> Unit = {},
     mainHazeState: HazeState? = null,
+    forceSinglePaneContent: Boolean = false,
 ) {
     SettingsScreen(
         viewModel = viewModel,
@@ -46,5 +47,6 @@ fun SettingsCategoryScreen(
         onSearchOpen = onSearchOpen,
         destination = SettingsNavDestination.Category(category),
         mainHazeState = mainHazeState,
+        forceSinglePaneContent = forceSinglePaneContent,
     )
 }

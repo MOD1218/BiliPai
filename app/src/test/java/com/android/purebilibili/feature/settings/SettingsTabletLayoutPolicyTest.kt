@@ -45,6 +45,13 @@ class SettingsTabletLayoutPolicyTest {
     }
 
     @Test
+    fun singlePaneContent_canBeForcedInsideTabletDetailPane() {
+        assertEquals(false, shouldRenderSettingsSinglePaneContent(widthDp = 1024, forceSinglePaneContent = false))
+        assertEquals(true, shouldRenderSettingsSinglePaneContent(widthDp = 1024, forceSinglePaneContent = true))
+        assertEquals(true, shouldRenderSettingsSinglePaneContent(widthDp = 720, forceSinglePaneContent = false))
+    }
+
+    @Test
     fun tabletLandscape_keepsMasterAndDetailContentScrollable() {
         val source = listOf(
             File("app/src/main/java/com/android/purebilibili/feature/settings/screen/SettingsTabletShell.kt"),

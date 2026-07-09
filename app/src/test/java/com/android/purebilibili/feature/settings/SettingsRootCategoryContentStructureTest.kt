@@ -191,6 +191,7 @@ class SettingsRootCategoryContentStructureTest {
 
         assertTrue(source.contains("fun SettingsTabletEntry(content: @Composable () -> Unit)"))
         assertTrue(source.contains("SettingsTabletNavEntryShell("))
+        assertTrue(source.contains("forceSinglePaneContent = true"))
         listOf(
             "BiliPaiNavEntryContentRole.SETTINGS ->",
             "BiliPaiNavEntryContentRole.PLAYBACK_SETTINGS ->",

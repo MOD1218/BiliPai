@@ -1936,6 +1936,7 @@ fun AppNavigation(
                                     },
                                     onSearchOpen = { pushNavigation3Key(BiliPaiNavKey.SettingsSearch) },
                                     mainHazeState = mainHazeState,
+                                    forceSinglePaneContent = true,
                                 )
                             }
                         BiliPaiNavEntryContentRole.SETTINGS_CATEGORY -> {
@@ -1961,6 +1962,7 @@ fun AppNavigation(
                                     },
                                     onSearchOpen = { pushNavigation3Key(BiliPaiNavKey.SettingsSearch) },
                                     mainHazeState = mainHazeState,
+                                    forceSinglePaneContent = true,
                                 )
                             }
                         }
