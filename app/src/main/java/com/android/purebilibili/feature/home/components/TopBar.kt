@@ -117,10 +117,13 @@ internal fun resolveFloatingIndicatorStartPaddingPx(
 
 internal fun resolveTopTabRowHorizontalPaddingDp(
     isFloatingStyle: Boolean,
-    edgeToEdge: Boolean = false
+    edgeToEdge: Boolean = false,
+    labelMode: Int = 0
 ): Float {
     if (edgeToEdge) return 0f
-    return if (isFloatingStyle) 0f else 4f
+    if (isFloatingStyle) return 0f
+    // Text-only MD3/Miuix: drop the extra 4dp so the first indicator sits closer to the edge.
+    return if (normalizeTopTabLabelMode(labelMode) == 2) 0f else 4f
 }
 
 // Slightly tighter than before so rest capsule nearly fills the dock (bottom-bar feel),
@@ -219,11 +222,19 @@ internal fun resolveMd3TopTabItemWidthDp(
 internal fun resolveMd3TopTabContentPaddingDp(
     containerWidthDp: Float,
     itemWidthDp: Float,
-    categoryCount: Int
+    categoryCount: Int,
+    labelMode: Int = 0
 ): Float {
     if (containerWidthDp <= 0f || itemWidthDp <= 0f || categoryCount <= 0) return 0f
     val contentWidth = itemWidthDp * categoryCount
-    return ((containerWidthDp - contentWidth) / 2f).coerceAtLeast(0f)
+    val leftover = (containerWidthDp - contentWidth).coerceAtLeast(0f)
+    // Text-only MD3/Miuix: keep the first indicator near the leading edge. Centering the
+    // leftover (from the 72dp item-width cap) pushes "推荐" too far from the left.
+    return if (normalizeTopTabLabelMode(labelMode) == 2) {
+        0f
+    } else {
+        leftover / 2f
+    }
 }
 
 internal fun resolveMd3VisibleTabIndices(
@@ -824,7 +835,8 @@ private fun LightweightHomeTopTabs(
             .padding(
                 horizontal = resolveTopTabRowHorizontalPaddingDp(
                     isFloatingStyle = isFloatingStyle,
-                    edgeToEdge = edgeToEdge
+                    edgeToEdge = edgeToEdge,
+                    labelMode = normalizedLabelMode
                 ).dp
             )
         ) {
@@ -850,7 +862,8 @@ private fun LightweightHomeTopTabs(
             resolveMd3TopTabContentPaddingDp(
                 containerWidthDp = maxWidth.value,
                 itemWidthDp = itemWidth.value,
-                categoryCount = categories.size
+                categoryCount = categories.size,
+                labelMode = normalizedLabelMode
             ).dp
         } else {
             0.dp

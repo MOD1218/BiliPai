@@ -75,9 +75,9 @@ class BottomBarMiuixStructureTest {
         assertTrue(kernelSuRendererSource.contains("miuixVibrancy()"))
         assertTrue(kernelSuRendererSource.contains("miuixLens("))
         assertTrue(kernelSuRendererSource.contains("val contentBackdrop = if (shouldRenderIndicatorBackdrop && miuixBackdrop != null)"))
-        assertTrue(kernelSuRendererSource.contains("tabsBackdrop\n            } else"))
-        assertFalse(kernelSuRendererSource.contains("rememberMiuixCombinedBackdrop("))
+        assertTrue(kernelSuRendererSource.contains("rememberMiuixCombinedBackdrop(miuixBackdrop, tabsBackdrop)"))
         assertTrue(kernelSuRendererSource.contains("val tabsBackdrop = rememberMiuixLayerBackdrop()"))
+        assertTrue(source.contains("BOTTOM_BAR_INDICATOR_DRAG_SCALE_TARGET = 88f / 56f"))
         assertTrue(
             kernelSuRendererSource.contains("shellProgress = backdropPresetProgress.shellProgress")
         )
@@ -507,7 +507,15 @@ class BottomBarMiuixStructureTest {
         assertTrue(kernelSuRendererSource.contains("if (shouldRenderIndicatorContentCapture && miuixBackdrop != null) {"))
         assertTrue(kernelSuRendererSource.contains("shape = { shellShape }"))
         assertTrue(kernelSuRendererSource.contains(".width(dockWidth)"))
-        assertTrue(kernelSuRendererSource.contains(".height(56.dp)"))
+        assertTrue(kernelSuRendererSource.contains("BOTTOM_BAR_INDICATOR_DOCK_BAND_HEIGHT_DP.dp"))
+        assertTrue(kernelSuRendererSource.contains("rememberMiuixCombinedBackdrop(miuixBackdrop, tabsBackdrop)"))
+        assertTrue(
+            source
+                .substringAfter("if (shouldRenderIndicatorContentCapture && miuixBackdrop != null) {")
+                .substringBefore("KernelSuMiuixBottomBarIndicatorLayer(")
+                .contains("miuixDrawBackdrop(")
+        )
+        assertFalse(kernelSuRendererSource.contains("resolveBottomBarIndicatorExportCaptureHeightDp("))
     }
 
     @Test
@@ -524,8 +532,11 @@ class BottomBarMiuixStructureTest {
         assertFalse(kernelSuRendererSource.contains("KernelSuBottomBarSearchRefractionCapture("))
         assertTrue(refractionCaptureSource.contains("shape = { shellShape }"))
         assertTrue(refractionCaptureSource.contains(".width(dockWidth)"))
-        assertTrue(refractionCaptureSource.contains(".height(56.dp)"))
+        assertTrue(refractionCaptureSource.contains("BOTTOM_BAR_INDICATOR_DOCK_BAND_HEIGHT_DP.dp"))
         assertTrue(refractionCaptureSource.contains(".miuixLayerBackdrop(tabsBackdrop)"))
+        assertTrue(refractionCaptureSource.contains("miuixDrawBackdrop("))
+        assertTrue(refractionCaptureSource.contains("backdrop = miuixBackdrop"))
+        assertFalse(refractionCaptureSource.contains(".background(ksuContainerColor, shellShape)"))
         assertFalse(refractionCaptureSource.contains(".offset(x = dockWidth + launchAdjustedSearchGap)"))
         assertFalse(refractionCaptureSource.contains("KernelSuBottomBarSearchVisualContent("))
         assertFalse(refractionCaptureSource.contains("kernelSuMiuixFloatingDockSurface("))

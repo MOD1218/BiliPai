@@ -154,6 +154,7 @@ import com.kyant.backdrop.shadow.Shadow
 import com.android.purebilibili.feature.home.components.liquid.InnerShadow as MiuixInnerShadow
 import com.android.purebilibili.feature.home.components.liquid.innerShadow as miuixInnerShadow
 import com.android.purebilibili.feature.home.components.liquid.lens as miuixLens
+import com.android.purebilibili.feature.home.components.liquid.rememberCombinedBackdrop as rememberMiuixCombinedBackdrop
 import com.android.purebilibili.feature.home.components.liquid.vibrancy as miuixVibrancy
 import androidx.compose.foundation.shape.RoundedCornerShape as RoundedCornerShapeAlias
 import androidx.compose.ui.Modifier.Companion.then
@@ -1488,6 +1489,7 @@ private const val KSU_INDICATOR_VELOCITY_NORMALIZATION_DIVISOR = 10f
 private const val KSU_INDICATOR_VELOCITY_SCALE_X_MULTIPLIER = 0.75f
 private const val KSU_INDICATOR_VELOCITY_SCALE_Y_MULTIPLIER = 0.25f
 private const val KSU_INDICATOR_VELOCITY_CLAMP = 0.2f
+internal const val BOTTOM_BAR_INDICATOR_DOCK_BAND_HEIGHT_DP = 56f
 
 internal fun resolveBottomBarIndicatorVisualPolicyWithHold(
     basePolicy: BottomBarIndicatorVisualPolicy,
@@ -3387,12 +3389,11 @@ private fun KernelSuAlignedBottomBar(
             val shouldRenderIndicatorContentCapture =
                 shouldComposeDockContent &&
                     (shouldRenderRefractionCapture || isBottomBarPressActive)
-            // tabsBackdrop already records the global backdrop with the same blur/lens chain
-            // before adding tinted dock content. Drawing the global layer again through a
-            // CombinedBackdrop leaves a nested/reused RenderNode graph that overflows traversal
-            // on some Android 16 renderers.
+            // InstallerX FloatingBottomBar: CombinedBackdrop(page, tabsCapture).
+            // tabsCapture also draws the page backdrop + container tint + icons (56.dp).
+            // Indicator samples the combined source so scaled edges keep page+frost, not black.
             val contentBackdrop = if (shouldRenderIndicatorBackdrop && miuixBackdrop != null) {
-                tabsBackdrop
+                rememberMiuixCombinedBackdrop(miuixBackdrop, tabsBackdrop)
             } else {
                 null
             }
@@ -3584,10 +3585,12 @@ private fun KernelSuAlignedBottomBar(
                 }
 
                 if (shouldRenderIndicatorContentCapture && miuixBackdrop != null) {
+                    // InstallerX-aligned export capture: record page backdrop + container tint +
+                    // tinted icons into tabsBackdrop. Height stays dock band (56.dp).
                     Box(
                         modifier = Modifier
                             .width(dockWidth)
-                            .height(56.dp)
+                            .height(BOTTOM_BAR_INDICATOR_DOCK_BAND_HEIGHT_DP.dp)
                             .align(Alignment.CenterStart)
                             .clearAndSetSemantics {}
                             .alpha(0f)

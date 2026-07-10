@@ -123,6 +123,18 @@ class TopTabIndicatorGeometryTest {
     }
 
     @Test
+    fun `top tab row horizontal padding is zero for text-only docked style`() {
+        assertEquals(
+            0f,
+            resolveTopTabRowHorizontalPaddingDp(
+                isFloatingStyle = false,
+                labelMode = 2
+            ),
+            0.01f
+        )
+    }
+
+    @Test
     fun `top tab row horizontal padding is zero in edge to edge mode`() {
         assertEquals(
             0f,

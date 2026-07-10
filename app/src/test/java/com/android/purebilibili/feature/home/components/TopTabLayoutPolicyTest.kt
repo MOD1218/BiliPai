@@ -62,6 +62,33 @@ class TopTabLayoutPolicyTest {
     }
 
     @Test
+    fun `md3 text-only top tabs keep leading edge instead of centering leftover`() {
+        val itemWidth = resolveMd3TopTabItemWidthDp(containerWidthDp = 400f, visibleSlots = 5)
+
+        assertEquals(72f, itemWidth, 0.001f)
+        assertEquals(
+            0f,
+            resolveMd3TopTabContentPaddingDp(
+                containerWidthDp = 400f,
+                itemWidthDp = itemWidth,
+                categoryCount = 5,
+                labelMode = 2
+            ),
+            0.001f
+        )
+        assertEquals(
+            20f,
+            resolveMd3TopTabContentPaddingDp(
+                containerWidthDp = 400f,
+                itemWidthDp = itemWidth,
+                categoryCount = 5,
+                labelMode = 0
+            ),
+            0.001f
+        )
+    }
+
+    @Test
     fun `md3 top tabs show all tabs for every label mode when partition is an inline page`() {
         assertEquals(
             6,

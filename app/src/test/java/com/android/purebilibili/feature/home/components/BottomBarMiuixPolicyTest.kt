@@ -81,11 +81,11 @@ class BottomBarMiuixPolicyTest {
         assertTrue(source.contains("val tabsBackdrop = rememberMiuixLayerBackdrop()"))
         assertTrue(source.contains(".miuixLayerBackdrop(tabsBackdrop)"))
         assertTrue(source.contains("val contentBackdrop = if (shouldRenderIndicatorBackdrop && miuixBackdrop != null)"))
-        assertTrue(source.contains("tabsBackdrop\n            } else"))
-        assertFalse(source.contains("rememberMiuixCombinedBackdrop("))
+        assertTrue(source.contains("rememberMiuixCombinedBackdrop(miuixBackdrop, tabsBackdrop)"))
         assertTrue(source.contains("miuixBlur(4.dp.toPx(), 4.dp.toPx())"))
         assertTrue(source.contains("refractionHeight = 24.dp.toPx()"))
         assertTrue(source.contains("refractionAmount = 24.dp.toPx()"))
+        assertTrue(source.contains("BOTTOM_BAR_INDICATOR_DRAG_SCALE_TARGET = 88f / 56f"))
     }
 
     @Test
@@ -94,22 +94,30 @@ class BottomBarMiuixPolicyTest {
 
         assertTrue(
             Regex(
-                """val contentBackdrop = if \(shouldRenderIndicatorBackdrop && miuixBackdrop != null\)[\s\S]*?tabsBackdrop[\s\S]*?miuixDrawBackdrop\([\s\S]*?effects = \{[\s\S]*?miuixLens\(""",
+                """rememberMiuixCombinedBackdrop\(miuixBackdrop, tabsBackdrop\)[\s\S]*?miuixDrawBackdrop\([\s\S]*?effects = \{[\s\S]*?miuixLens\(""",
                 RegexOption.MULTILINE
             ).containsMatchIn(source)
         )
     }
 
     @Test
-    fun `android native indicator consumes only the flattened tabs capture`() {
+    fun `android native indicator follows InstallerX combined page plus tabs capture`() {
         val source = loadSource("app/src/main/java/com/android/purebilibili/feature/home/components/BottomBar.kt")
         val renderer = source
             .substringAfter("private fun KernelSuAlignedBottomBar(")
             .substringBefore("@Composable\nprivate fun AndroidNativeBottomBarItem(")
+        val refractionCaptureSource = source
+            .substringAfter("if (shouldRenderIndicatorContentCapture && miuixBackdrop != null) {")
+            .substringBefore("KernelSuMiuixBottomBarIndicatorLayer(")
 
-        assertTrue(renderer.contains("val contentBackdrop = if (shouldRenderIndicatorBackdrop && miuixBackdrop != null)"))
-        assertTrue(renderer.contains("tabsBackdrop\n            } else"))
-        assertFalse(renderer.contains("rememberMiuixCombinedBackdrop("))
+        assertTrue(renderer.contains("rememberMiuixCombinedBackdrop(miuixBackdrop, tabsBackdrop)"))
+        assertTrue(refractionCaptureSource.contains(".miuixLayerBackdrop(tabsBackdrop)"))
+        assertTrue(refractionCaptureSource.contains("backdrop = miuixBackdrop"))
+        assertTrue(refractionCaptureSource.contains("miuixDrawBackdrop("))
+        assertTrue(refractionCaptureSource.contains("BOTTOM_BAR_INDICATOR_DOCK_BAND_HEIGHT_DP.dp"))
+        assertFalse(refractionCaptureSource.contains("resolveBottomBarIndicatorExportCaptureHeightDp("))
+        assertFalse(refractionCaptureSource.contains(".background(ksuContainerColor, shellShape)"))
+        assertTrue(source.contains("BOTTOM_BAR_INDICATOR_DRAG_SCALE_TARGET = 88f / 56f"))
     }
 
     @Test

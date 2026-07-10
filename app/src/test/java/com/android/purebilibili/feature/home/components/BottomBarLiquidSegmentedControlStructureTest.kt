@@ -184,6 +184,28 @@ class BottomBarLiquidSegmentedControlStructureTest {
     }
 
     @Test
+    fun `export capture backdrop requires an external page layer`() {
+        assertTrue(
+            shouldDrawSegmentedControlExportCaptureBackdrop(
+                liquidGlassEnabled = true,
+                hasExternalBackdrop = true
+            )
+        )
+        assertFalse(
+            shouldDrawSegmentedControlExportCaptureBackdrop(
+                liquidGlassEnabled = true,
+                hasExternalBackdrop = false
+            )
+        )
+        assertFalse(
+            shouldDrawSegmentedControlExportCaptureBackdrop(
+                liquidGlassEnabled = false,
+                hasExternalBackdrop = true
+            )
+        )
+    }
+
+    @Test
     fun `android native inline segmented control avoids liquid pill when global glass is enabled`() {
         assertEquals(
             SegmentedControlChromeStyle.ANDROID_NATIVE_UNDERLINE,
@@ -231,7 +253,10 @@ class BottomBarLiquidSegmentedControlStructureTest {
         assertTrue(source.contains("resolveSharedLiquidIndicatorPanelOffsetPx("))
         assertTrue(source.contains("4.dp.toPx()"))
         assertTrue(source.contains("resolveBottomBarItemMotionVisual("))
-        assertTrue(source.contains("rememberCombinedBackdrop(backdrop, tabsBackdrop)"))
+        assertFalse(source.contains("rememberCombinedBackdrop("))
+        assertFalse(source.contains("backdrop ?: tabsBackdrop"))
+        assertFalse(source.contains("containerBackdrop = backdrop ?: tabsBackdrop"))
+        assertTrue(source.contains("shouldDrawSegmentedControlExportCaptureBackdrop("))
         assertTrue(source.contains("drawBackdrop("))
         assertTrue(source.contains("resolveBottomBarBackdropPresetCaptureLens("))
         assertTrue(source.contains("resolveBottomBarBackdropPresetIndicatorLens("))
@@ -316,6 +341,10 @@ class BottomBarLiquidSegmentedControlStructureTest {
         assertTrue(visibleLabelsIndex >= 0)
         assertTrue(visibleLabelsIndex < indicatorIndex)
         assertTrue(source.contains("contentBackdrop = tabsBackdrop"))
+        assertTrue(
+            source.contains("backdrop = backdrop,"),
+            "Indicator must sample external page backdrop only; never CombinedBackdrop/tabs self-capture"
+        )
         assertFalse(source.contains("val indicatorPolicy = remember(itemCount)"))
         assertFalse(source.contains("resolveBottomBarIndicatorPolicy(itemCount = itemCount)"))
         assertTrue(source.contains("resolveSharedLiquidIndicatorPanelOffsetPx("))

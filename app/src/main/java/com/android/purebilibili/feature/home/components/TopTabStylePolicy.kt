@@ -219,7 +219,7 @@ internal fun resolveHomeTopPresetStyle(
                     continuousSlabOverlap = 20.dp
                 ),
                 tabs = HomeTopTabsStyle(
-                    horizontalPadding = HomeTopDpPair(docked = 2.dp, floating = 2.dp),
+                    horizontalPadding = HomeTopDpPair(docked = 0.dp, floating = 2.dp),
                     // Align with resolveMd3TopTabVisualSpec(MIUIX) used by the tab row.
                     rowHeight = HomeTopDpPair(
                         docked = if (isIconAndText) 58.dp else 52.dp,
@@ -278,7 +278,7 @@ internal fun resolveHomeTopPresetStyle(
                     continuousSlabOverlap = 24.dp
                 ),
                 tabs = HomeTopTabsStyle(
-                    horizontalPadding = HomeTopDpPair(docked = 4.dp, floating = 2.dp),
+                    horizontalPadding = HomeTopDpPair(docked = 0.dp, floating = 2.dp),
                     // Align with resolveMd3TopTabVisualSpec used by the tab row.
                     rowHeight = HomeTopDpPair(
                         docked = if (isIconAndText) 62.dp else 54.dp,

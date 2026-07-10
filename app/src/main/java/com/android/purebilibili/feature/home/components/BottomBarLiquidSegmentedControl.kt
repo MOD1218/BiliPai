@@ -64,7 +64,6 @@ import com.android.purebilibili.core.ui.motion.BottomBarMotionSpec
 import com.android.purebilibili.core.ui.motion.resolveBottomBarMotionSpec
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -181,6 +180,18 @@ internal fun shouldDrawSegmentedControlIndicatorBackdrop(
 ): Boolean {
     if (!liquidGlassEnabled) return false
     return hasExternalBackdrop || motionProgress > 0.001f
+}
+
+/**
+ * Export capture may drawBackdrop only from an external page LayerBackdrop.
+ * Sampling the same tabs LayerBackdrop being recorded on that node creates a
+ * cyclic RenderNode graph and overflows HyperOS MiBackgroundBlurBlend.
+ */
+internal fun shouldDrawSegmentedControlExportCaptureBackdrop(
+    liquidGlassEnabled: Boolean,
+    hasExternalBackdrop: Boolean
+): Boolean {
+    return liquidGlassEnabled && hasExternalBackdrop
 }
 
 @Composable
@@ -564,12 +575,12 @@ fun BottomBarLiquidSegmentedControl(
         val panelOffsetPx = presetPanelOffsets.indicatorPanelOffsetPx
         val exportPanelOffsetPx = presetPanelOffsets.exportPanelOffsetPx
         val tabsBackdrop = rememberLayerBackdrop()
-        val containerBackdrop = backdrop ?: tabsBackdrop
-        val contentBackdrop = if (backdrop != null) {
-            rememberCombinedBackdrop(backdrop, tabsBackdrop)
-        } else {
-            tabsBackdrop
-        }
+        // Never fall back export/shell sampling to tabsBackdrop: that LayerBackdrop is
+        // recorded on the export node, and self-drawBackdrop overflows HyperOS
+        // MiBackgroundBlurBlend (RenderThread stack overflow). Also never CombinedBackdrop
+        // the page + tabs layers — same nested RenderNode failure mode as the dock bar.
+        val hasExternalBackdrop = backdrop != null
+        val containerBackdrop = backdrop
         val captureLensProgress = resolveSharedLiquidIndicatorCaptureLensProgress(
             lensProgress = lensProgress,
             isDragging = dragState.isDragging
@@ -644,7 +655,12 @@ fun BottomBarLiquidSegmentedControl(
                 .layerBackdrop(tabsBackdrop)
                 .graphicsLayer { translationX = exportPanelOffsetPx }
                 .run {
-                    if (liquidGlassEnabled) {
+                    if (
+                        shouldDrawSegmentedControlExportCaptureBackdrop(
+                            liquidGlassEnabled = liquidGlassEnabled,
+                            hasExternalBackdrop = hasExternalBackdrop
+                        ) && containerBackdrop != null
+                    ) {
                         drawBackdrop(
                             backdrop = containerBackdrop,
                             shape = { containerShape },
@@ -708,7 +724,7 @@ fun BottomBarLiquidSegmentedControl(
             liquidGlassPreset = homeSettings.bottomBarLiquidGlassPreset,
             // Prefer tabs export so capsule shows theme glyphs, not page feed colors.
             contentBackdrop = tabsBackdrop,
-            backdrop = contentBackdrop,
+            backdrop = backdrop,
             indicatorLensSpec = indicatorLensSpec,
             effectivePressProgress = lensProgress,
             indicatorIdleSurfaceColor = indicatorIdleSurfaceColor,
