@@ -130,6 +130,8 @@ internal fun BiliPaiNavDisplayHost(
         val previousTop = previousVideoCardTransitionBackStack.lastOrNull()
         val currentTop = safeBackStack.lastOrNull()
         val hasVideoCardTransitionSource = isVideoCardReturnTargetRoute(sourceMetadata.sourceRoute)
+        val switchedBetweenVideoDetails =
+            previousTop is BiliPaiNavKey.VideoDetail && currentTop is BiliPaiNavKey.VideoDetail
         val openedVideoDetail = currentTop is BiliPaiNavKey.VideoDetail &&
             previousTop !is BiliPaiNavKey.VideoDetail &&
             hasVideoCardTransitionSource
@@ -138,7 +140,11 @@ internal fun BiliPaiNavDisplayHost(
             hasVideoCardTransitionSource
         previousVideoCardTransitionBackStack = safeBackStack
 
-        if (!cardTransitionEnabled || !hasVideoCardTransitionSource) {
+        if (
+            switchedBetweenVideoDetails ||
+            !cardTransitionEnabled ||
+            !hasVideoCardTransitionSource
+        ) {
             videoCardTransitionBackgroundPhase = VideoCardTransitionBackgroundPhase.IDLE
             videoCardReturnGestureInProgress = false
             videoCardGestureProgress = null
@@ -511,6 +517,7 @@ internal fun BiliPaiNavDisplayHost(
         cardTransitionEnabled = cardTransitionEnabled,
         phase = videoCardTransitionBackgroundPhase,
         isVideoDetailOnStack = currentBackKey is BiliPaiNavKey.VideoDetail,
+        isReturningToVideoDetail = targetBackKey is BiliPaiNavKey.VideoDetail,
     )
 
     Box(modifier = modifier.fillMaxSize()) {

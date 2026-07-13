@@ -213,6 +213,22 @@ class BiliPaiNavMotionPolicyTest {
     }
 
     @Test
+    fun navDisplayPop_relatedDetailReturnUsesNavigationDefault() {
+        val transition = resolveBiliPaiNavDisplayPopRouteTransition(
+            cardTransitionEnabled = true,
+            sourceMetadata = BiliPaiNavSourceMetadata(
+                sourceKey = "video/BV_A:BV_B",
+                sourceRoute = "video/BV_A",
+                clickedBoundsRecorded = true
+            ),
+            fromKey = BiliPaiNavKey.VideoDetail("BV_B", sourceRoute = "video/BV_A"),
+            toKey = BiliPaiNavKey.VideoDetail("BV_A")
+        )
+
+        assertEquals(BiliPaiNavRouteTransition.FALLBACK, transition)
+    }
+
+    @Test
     fun navDisplayPop_subscribedFavoriteCollectionReturn_keepsRouteLayerNoOp() {
         val transition = resolveBiliPaiNavDisplayPopRouteTransition(
             cardTransitionEnabled = true,

@@ -159,6 +159,9 @@ internal fun resolveBiliPaiNavDisplayPopRouteTransition(
     val fromVideoKey = fromKey as? BiliPaiNavKey.VideoDetail
     val toIsCardReturnTarget = toKey != null && isCardReturnTargetNavKey(toKey)
     if (cardTransitionEnabled) {
+        if (isRelatedVideoDetailReturn(fromVideoKey, toKey, sourceMetadata)) {
+            return BiliPaiNavRouteTransition.FALLBACK
+        }
         val sharedReadyFavoriteCollectionReturn =
             fromKey is BiliPaiNavKey.SeasonSeriesDetail &&
                 fromKey.sharedElementTransition &&
@@ -187,6 +190,29 @@ internal fun resolveBiliPaiNavDisplayPopRouteTransition(
         return resolveCardDisabledReturnTransition(sourceMetadata.cardSourceDirection)
     }
     return BiliPaiNavRouteTransition.FALLBACK
+}
+
+internal fun isRelatedVideoDetailEntry(
+    key: BiliPaiNavKey,
+    sourceMetadata: BiliPaiNavSourceMetadata
+): Boolean {
+    val videoKey = key as? BiliPaiNavKey.VideoDetail ?: return false
+    val sourceRoute = sourceMetadata.sourceRoute?.substringBefore("?") ?: return false
+    return sourceRoute.startsWith("video/") &&
+        videoKey.sourceRoute?.substringBefore("?") == sourceRoute &&
+        sourceMetadata.sourceKey == "$sourceRoute:${videoKey.bvid}"
+}
+
+private fun isRelatedVideoDetailReturn(
+    fromKey: BiliPaiNavKey.VideoDetail?,
+    toKey: BiliPaiNavKey?,
+    sourceMetadata: BiliPaiNavSourceMetadata
+): Boolean {
+    val targetKey = toKey as? BiliPaiNavKey.VideoDetail ?: return false
+    val sourceRoute = sourceMetadata.sourceRoute?.substringBefore("?") ?: return false
+    return sourceRoute == "video/${targetKey.bvid}" &&
+        fromKey?.sourceRoute?.substringBefore("?") == sourceRoute &&
+        sourceMetadata.sourceKey == "$sourceRoute:${fromKey.bvid}"
 }
 
 internal fun shouldInterceptSystemBackForNavigation3(

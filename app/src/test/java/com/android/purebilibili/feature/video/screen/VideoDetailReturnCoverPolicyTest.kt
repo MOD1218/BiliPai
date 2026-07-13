@@ -9,55 +9,44 @@ import java.io.File
 class VideoDetailReturnCoverPolicyTest {
 
     @Test
-    fun `detail shell morph keeps an opaque surface while returning to the source card`() {
-        assertEquals(
-            1f,
-            resolveVideoDetailShellBackgroundAlphaTarget(
-                useReturningVisualState = true,
-                detailShellSharedBoundsEnabled = true,
-                coverSharedBoundsActive = false
+    fun `predictive cancel keeps the cover until the detail exit transition has settled`() {
+        assertTrue(
+            shouldTreatVideoDetailCardExitAsReturning(
+                isExitTransitionInProgress = true,
+                sharedBoundsActive = true,
+            )
+        )
+        assertFalse(
+            shouldTreatVideoDetailCardExitAsReturning(
+                isExitTransitionInProgress = false,
+                sharedBoundsActive = true,
             )
         )
     }
 
     @Test
-    fun `cover-only fallback can reveal the destination behind the detail shell`() {
-        assertEquals(
-            0f,
-            resolveVideoDetailShellBackgroundAlphaTarget(
-                useReturningVisualState = true,
-                detailShellSharedBoundsEnabled = false,
-                coverSharedBoundsActive = true
-            )
-        )
-        assertEquals(
-            1f,
-            resolveVideoDetailShellBackgroundAlphaTarget(
-                useReturningVisualState = false,
-                detailShellSharedBoundsEnabled = false,
-                coverSharedBoundsActive = true
-            )
-        )
+    fun `detail route does not manually fade its background during return`() {
+        val source = File("src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt")
+            .readText()
+
+        assertFalse(source.contains("resolveVideoDetailShellBackgroundAlphaTarget"))
+        assertFalse(source.contains("shellBackgroundAlpha"))
     }
 
     @Test
     fun `force cover becomes active when explicit return flag is true`() {
         assertTrue(
             resolveForceCoverOnlyForReturn(
-                forceCoverOnlyOnReturn = true,
-                isReturningFromDetail = false,
-                isExitTransitionInProgress = false
+                forceCoverOnlyOnReturn = true
             )
         )
     }
 
     @Test
-    fun `force cover becomes active when global returning state is true`() {
-        assertTrue(
+    fun `global returning state does not force the target detail cover`() {
+        assertFalse(
             resolveForceCoverOnlyForReturn(
-                forceCoverOnlyOnReturn = false,
-                isReturningFromDetail = true,
-                isExitTransitionInProgress = false
+                forceCoverOnlyOnReturn = false
             )
         )
     }
@@ -66,9 +55,7 @@ class VideoDetailReturnCoverPolicyTest {
     fun `detail shell shared bounds does not disable return cover visual`() {
         assertTrue(
             resolveForceCoverOnlyForReturn(
-                forceCoverOnlyOnReturn = true,
-                isReturningFromDetail = true,
-                isExitTransitionInProgress = true
+                forceCoverOnlyOnReturn = true
             )
         )
         val source = File("src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt")
@@ -84,8 +71,6 @@ class VideoDetailReturnCoverPolicyTest {
         assertFalse(
             resolveForceCoverOnlyForReturn(
                 forceCoverOnlyOnReturn = true,
-                isReturningFromDetail = true,
-                isExitTransitionInProgress = false,
                 transitionEnabled = false
             )
         )
@@ -95,9 +80,7 @@ class VideoDetailReturnCoverPolicyTest {
     fun `force cover stays disabled when only exit transition is in progress`() {
         assertFalse(
             resolveForceCoverOnlyForReturn(
-                forceCoverOnlyOnReturn = false,
-                isReturningFromDetail = false,
-                isExitTransitionInProgress = true
+                forceCoverOnlyOnReturn = false
             )
         )
     }
@@ -109,8 +92,6 @@ class VideoDetailReturnCoverPolicyTest {
         assertTrue(
             resolveForceCoverOnlyForReturn(
                 forceCoverOnlyOnReturn = false,
-                isReturningFromDetail = false,
-                isExitTransitionInProgress = true,
                 isCardReturnExitInProgress = true
             )
         )
@@ -121,8 +102,6 @@ class VideoDetailReturnCoverPolicyTest {
         assertFalse(
             resolveForceCoverOnlyForReturn(
                 forceCoverOnlyOnReturn = false,
-                isReturningFromDetail = false,
-                isExitTransitionInProgress = true,
                 transitionEnabled = false,
                 isCardReturnExitInProgress = true
             )
@@ -133,9 +112,7 @@ class VideoDetailReturnCoverPolicyTest {
     fun `force cover stays disabled when no return state is active`() {
         assertFalse(
             resolveForceCoverOnlyForReturn(
-                forceCoverOnlyOnReturn = false,
-                isReturningFromDetail = false,
-                isExitTransitionInProgress = false
+                forceCoverOnlyOnReturn = false
             )
         )
     }
@@ -144,9 +121,7 @@ class VideoDetailReturnCoverPolicyTest {
     fun `predictive exit alone does not switch detail into returning visual state`() {
         assertFalse(
             shouldUseReturningVideoDetailVisualState(
-                forceCoverOnlyForReturn = false,
-                isReturningFromDetail = false,
-                isExitTransitionInProgress = true
+                forceCoverOnlyForReturn = false
             )
         )
     }
@@ -155,16 +130,12 @@ class VideoDetailReturnCoverPolicyTest {
     fun `explicit return state switches detail into returning visual state`() {
         assertTrue(
             shouldUseReturningVideoDetailVisualState(
-                forceCoverOnlyForReturn = true,
-                isReturningFromDetail = false,
-                isExitTransitionInProgress = false
+                forceCoverOnlyForReturn = true
             )
         )
-        assertTrue(
+        assertFalse(
             shouldUseReturningVideoDetailVisualState(
-                forceCoverOnlyForReturn = false,
-                isReturningFromDetail = true,
-                isExitTransitionInProgress = false
+                forceCoverOnlyForReturn = false
             )
         )
     }

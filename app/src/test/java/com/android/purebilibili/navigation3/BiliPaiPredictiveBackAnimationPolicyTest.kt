@@ -21,6 +21,15 @@ class BiliPaiPredictiveBackAnimationPolicyTest {
     }
 
     @Test
+    fun relatedDetailRoute_usesNavigationDefaultHandler() {
+        val handler = resolveBiliPaiPredictiveBackAnimationHandler(
+            routeTransition = BiliPaiNavRouteTransition.FALLBACK,
+        )
+
+        assertTrue(handler is BiliPaiDefaultPredictiveBackAnimation)
+    }
+
+    @Test
     fun sharedElementPredictivePop_keepsRouteLayerStillForCardReturn() {
         val function = sharedElementPredictivePopFunction()
 

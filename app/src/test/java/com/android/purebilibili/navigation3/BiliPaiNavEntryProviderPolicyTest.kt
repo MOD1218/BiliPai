@@ -95,6 +95,23 @@ class BiliPaiNavEntryProviderPolicyTest {
     }
 
     @Test
+    fun relatedVideoDetailUsesNavigationDefaultsForForwardPopAndPredictivePop() {
+        val transitions = resolveBiliPaiNavEntryRouteTransitions(
+            key = BiliPaiNavKey.VideoDetail(bvid = "BV_B", sourceRoute = "video/BV_A"),
+            cardTransitionEnabled = true,
+            sourceMetadata = BiliPaiNavSourceMetadata(
+                sourceKey = "video/BV_A:BV_B",
+                sourceRoute = "video/BV_A",
+                clickedBoundsRecorded = true
+            )
+        )
+
+        assertEquals(BiliPaiNavRouteTransition.FALLBACK, transitions.forward)
+        assertEquals(BiliPaiNavRouteTransition.FALLBACK, transitions.pop)
+        assertEquals(BiliPaiNavRouteTransition.FALLBACK, transitions.predictivePop)
+    }
+
+    @Test
     fun seasonDetailVideoPushNearHeaderStillUsesSharedElementRouteLayer() {
         val sourceRoute = "season_series_detail/favorite_season/1324105"
         val transitions = resolveBiliPaiNavEntryRouteTransitions(
