@@ -865,7 +865,7 @@ fun BottomBarLiquidSegmentedControl(
 }
 
 @Composable
-private fun AndroidNativeUnderlinedSegmentedControl(
+internal fun AndroidNativeUnderlinedSegmentedControl(
     items: List<String>,
     selectedIndex: Int,
     onSelected: (Int) -> Unit,

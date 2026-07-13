@@ -96,8 +96,6 @@ import com.android.purebilibili.core.util.resolveScrollToTopPlan
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.blur.layerBackdrop as miuixLayerBackdrop
-import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop as rememberMiuixLayerBackdrop
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 val LocalDynamicScrollChannel = compositionLocalOf<Channel<Unit>?> { null }
@@ -251,7 +249,6 @@ fun DynamicScreen(
 
     //  [Haze] 模糊状态
     val hazeState = rememberRecoverableHazeState()
-    val dynamicChromeBackdrop = rememberMiuixLayerBackdrop()
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(viewModel, isCurrentPage) {
@@ -648,7 +645,6 @@ fun DynamicScreen(
                                         },
                                         likedDynamics = likedDynamics,
                                         modifier = Modifier
-                                            .miuixLayerBackdrop(dynamicChromeBackdrop)
                                             .hazeSourceCompat(hazeState)
                                     )
                                 }
@@ -675,7 +671,6 @@ fun DynamicScreen(
                                     displayMode = displayMode,
                                     onDisplayModeChange = { viewModel.setDisplayMode(it) },
                                     hazeState = hazeState,
-                                    miuixBackdrop = dynamicChromeBackdrop,
                                     indicatorPositionProvider = dynamicTabIndicatorPositionProvider
                                 )
                             }
@@ -778,7 +773,6 @@ fun DynamicScreen(
                                     },
                                     likedDynamics = likedDynamics,
                                     modifier = Modifier
-                                        .miuixLayerBackdrop(dynamicChromeBackdrop)
                                         .hazeSourceCompat(hazeState)
                                 )
                             }
@@ -831,7 +825,6 @@ fun DynamicScreen(
                                             displayMode = displayMode,
                                             onDisplayModeChange = { viewModel.setDisplayMode(it) },
                                             hazeState = hazeState,
-                                            miuixBackdrop = dynamicChromeBackdrop,
                                             indicatorPositionProvider = dynamicTabIndicatorPositionProvider
                                         )
                                     }

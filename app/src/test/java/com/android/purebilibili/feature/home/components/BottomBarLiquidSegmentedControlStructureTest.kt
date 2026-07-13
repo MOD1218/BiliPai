@@ -403,10 +403,7 @@ class BottomBarLiquidSegmentedControlStructureTest {
     }
 
     @Test
-    fun `dynamic top tabs use bottom bar miuix capture for text and indicator`() {
-        val segmented = loadSource(
-            "app/src/main/java/com/android/purebilibili/feature/home/components/BottomBarLiquidSegmentedControl.kt"
-        )
+    fun `dynamic top tabs temporarily opt out of liquid glass reuse`() {
         val dynamicScreen = loadSource(
             "app/src/main/java/com/android/purebilibili/feature/dynamic/DynamicScreen.kt"
         )
@@ -414,20 +411,17 @@ class BottomBarLiquidSegmentedControlStructureTest {
             "app/src/main/java/com/android/purebilibili/feature/dynamic/components/DynamicTopBar.kt"
         )
 
-        assertTrue(segmented.contains("miuixBackdrop: MiuixBackdrop? = null"))
-        assertTrue(segmented.contains(".miuixLayerBackdrop(tabsMiuixBackdrop)"))
-        assertTrue(segmented.contains("KernelSuMiuixBottomBarIndicatorLayer("))
-        assertTrue(dynamicScreen.contains("val dynamicChromeBackdrop = rememberMiuixLayerBackdrop()"))
-        assertTrue(dynamicScreen.contains(".miuixLayerBackdrop(dynamicChromeBackdrop)"))
-        assertTrue(dynamicTopBar.contains("miuixBackdrop: MiuixBackdrop? = null"))
-        assertTrue(dynamicTopBar.contains("miuixBackdrop = miuixBackdrop"))
+        assertTrue(dynamicTopBar.contains("AndroidNativeUnderlinedSegmentedControl("))
+        assertFalse(dynamicTopBar.contains("BottomBarLiquidSegmentedControl("))
+        assertFalse(dynamicTopBar.contains("MiuixBackdrop"))
+        assertFalse(dynamicTopBar.contains("miuixBackdrop"))
+        assertFalse(dynamicScreen.contains("dynamicChromeBackdrop"))
+        assertFalse(dynamicScreen.contains("miuixLayerBackdrop"))
     }
 
     @Test
-    fun `common list and dynamic tabs pass page backdrop into segmented control`() {
+    fun `common list and video tabs pass page backdrop into segmented control`() {
         val commonList = loadSource("app/src/main/java/com/android/purebilibili/feature/list/CommonListScreen.kt")
-        val dynamicScreen = loadSource("app/src/main/java/com/android/purebilibili/feature/dynamic/DynamicScreen.kt")
-        val dynamicTopBar = loadSource("app/src/main/java/com/android/purebilibili/feature/dynamic/components/DynamicTopBar.kt")
         val iosSegmented = loadSource("app/src/main/java/com/android/purebilibili/feature/settings/IOSSlidingSegmentedControl.kt")
 
         val videoContent = loadSource("app/src/main/java/com/android/purebilibili/feature/video/screen/VideoContentSection.kt")
@@ -448,14 +442,6 @@ class BottomBarLiquidSegmentedControlStructureTest {
         assertTrue(commentSortBar.contains("backdrop = backdrop"))
         assertTrue(commentSheetHost.contains("val commentChromeBackdrop = rememberLayerBackdrop()"))
         assertTrue(commentSheetHost.contains(".layerBackdrop(commentChromeBackdrop)"))
-        assertTrue(dynamicScreen.contains("val dynamicChromeBackdrop = rememberMiuixLayerBackdrop()"))
-        assertTrue(dynamicScreen.contains(".miuixLayerBackdrop(dynamicChromeBackdrop)"))
-        assertTrue(dynamicScreen.contains("miuixBackdrop = dynamicChromeBackdrop"))
-        assertTrue(dynamicScreen.contains("shouldCollapseDynamicTopBar("))
-        assertTrue(dynamicScreen.contains("getDynamicTopBarCollapseOnScroll(context)"))
-        assertTrue(dynamicTopBar.contains("miuixBackdrop: MiuixBackdrop? = null"))
-        assertTrue(dynamicTopBar.contains("miuixBackdrop = miuixBackdrop"))
-        assertTrue(dynamicTopBar.contains("forceLiquidChrome = homeSettings.androidNativeLiquidGlassEnabled"))
         assertTrue(iosSegmented.contains("backdrop: Backdrop? = null"))
         assertTrue(iosSegmented.contains("backdrop = backdrop"))
     }
@@ -477,7 +463,6 @@ class BottomBarLiquidSegmentedControlStructureTest {
         val paths = listOf(
             "app/src/main/java/com/android/purebilibili/feature/video/ui/components/CommentSortFilterBar.kt",
             "app/src/main/java/com/android/purebilibili/feature/video/screen/VideoContentSection.kt",
-            "app/src/main/java/com/android/purebilibili/feature/dynamic/components/DynamicTopBar.kt",
             "app/src/main/java/com/android/purebilibili/feature/live/LiveListScreen.kt",
             "app/src/main/java/com/android/purebilibili/feature/live/LiveAreaScreen.kt",
             "app/src/main/java/com/android/purebilibili/feature/live/LivePlayerScreen.kt"
