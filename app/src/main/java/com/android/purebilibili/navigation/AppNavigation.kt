@@ -1929,7 +1929,7 @@ fun AppNavigation(
                                         bvid = vid,
                                         cid = targetCid,
                                         coverUrl = "",
-                                        sourceRoute = VideoRoute.base
+                                        sourceRoute = "video/${videoKey.bvid}"
                                     )
                                 },
                                 onBgmClick = { bgm ->

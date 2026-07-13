@@ -75,7 +75,7 @@ class AppNavigationNavigation3BridgeStructureTest {
     }
 
     @Test
-    fun videoDetailRelatedVideoClickUsesVideoSourceRouteForSharedElementPairing() {
+    fun videoDetailRelatedVideoClickUsesParentDetailRouteForSharedElementPairing() {
         val source = appNavigationSource()
         val videoDetailBranch = source
             .substringAfter("BiliPaiNavEntryContentRole.VIDEO_DETAIL ->")
@@ -83,7 +83,7 @@ class AppNavigationNavigation3BridgeStructureTest {
         val onVideoClickBlock = videoDetailBranch
             .substringAfter("onVideoClick = { vid, options ->")
 
-        assertTrue(onVideoClickBlock.contains("sourceRoute = VideoRoute.base"))
+        assertTrue(onVideoClickBlock.contains("sourceRoute = \"video/${'$'}{videoKey.bvid}\""))
     }
 
     @Test
