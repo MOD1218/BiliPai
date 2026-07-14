@@ -1007,6 +1007,7 @@ private fun PortraitInlineVideoPlayerHost(
     audioQualityPreference: Int,
     onNavigateToAudioMode: () -> Unit,
     forceCoverOnly: Boolean,
+    liveBackPreview: Boolean,
     allowLivePlayerSharedElement: Boolean,
     sourceRouteForSharedElement: String?,
     suppressSubtitleOverlay: Boolean,
@@ -1077,6 +1078,7 @@ private fun PortraitInlineVideoPlayerHost(
             onSaveCover = { viewModel.saveCover(context) },
             onDownloadAudio = { viewModel.downloadAudio(context) },
             forceCoverOnly = forceCoverOnly,
+            liveBackPreview = liveBackPreview,
             allowLivePlayerSharedElement = allowLivePlayerSharedElement,
             sourceRouteForSharedElement = sourceRouteForSharedElement,
             suppressSubtitleOverlay = suppressSubtitleOverlay,
@@ -3690,6 +3692,7 @@ fun VideoDetailScreen(
                                     onNavigateToAudioMode()
                                 },
                                 forceCoverOnly = forceCoverOnlyForReturn,
+                                liveBackPreview = keepLoadedContentForBackPreview,
                                 allowLivePlayerSharedElement = true,
                                 sourceRouteForSharedElement = sourceRouteForSharedElement,
                                 suppressSubtitleOverlay = shouldSuppressSubtitleOverlay,

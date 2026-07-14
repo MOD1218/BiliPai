@@ -739,9 +739,10 @@ internal fun resolveGesturePercentDigitChangeMask(
 
 internal fun shouldUseTextureSurfaceForFlip(
     isFlippedHorizontal: Boolean,
-    isFlippedVertical: Boolean
+    isFlippedVertical: Boolean,
+    liveBackPreview: Boolean = false
 ): Boolean {
-    return isFlippedHorizontal || isFlippedVertical
+    return isFlippedHorizontal || isFlippedVertical || liveBackPreview
 }
 
 internal fun shouldEnableLivePlayerSharedElement(
@@ -1164,10 +1165,11 @@ internal fun shouldLogPlaybackStall(
 internal fun shouldBindInlinePlayerViewToPlayer(
     isPortraitFullscreen: Boolean,
     hostLifecycleStarted: Boolean,
-    isInPipMode: Boolean
+    isInPipMode: Boolean,
+    liveBackPreview: Boolean = false
 ): Boolean {
     return !isPortraitFullscreen &&
-        (hostLifecycleStarted || isInPipMode)
+        (hostLifecycleStarted || isInPipMode || liveBackPreview)
 }
 
 internal fun shouldLoadDanmakuForForegroundHost(

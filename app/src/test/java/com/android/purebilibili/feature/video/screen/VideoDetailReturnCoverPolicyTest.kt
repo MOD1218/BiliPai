@@ -36,6 +36,18 @@ class VideoDetailReturnCoverPolicyTest {
     }
 
     @Test
+    fun `immediate back target mounts the live inline player`() {
+        val source = File("src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt")
+            .readText()
+        val inlinePlayerCall = source
+            .substringAfter("PortraitInlineVideoPlayerHost(", "")
+            .substringAfter("PortraitInlineVideoPlayerHost(", "")
+            .substringBefore("allowLivePlayerSharedElement = true")
+
+        assertTrue(inlinePlayerCall.contains("liveBackPreview = keepLoadedContentForBackPreview"))
+    }
+
+    @Test
     fun `detail route does not manually fade its background during return`() {
         val source = File("src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt")
             .readText()

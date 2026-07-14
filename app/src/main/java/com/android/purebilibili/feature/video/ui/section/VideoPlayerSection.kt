@@ -449,6 +449,7 @@ fun VideoPlayerSection(
     hasFavoritePlaylist: Boolean = false,
     onFavoritePlaylistClick: () -> Unit = {},
     forceCoverOnly: Boolean = false,
+    liveBackPreview: Boolean = false,
     allowLivePlayerSharedElement: Boolean = true,
     sourceRouteForSharedElement: String? = null,
     suppressSubtitleOverlay: Boolean = false,
@@ -868,12 +869,14 @@ fun VideoPlayerSection(
     val shouldBindInlinePlayerView = remember(
         isPortraitFullscreen,
         hostLifecycleStarted,
-        isInPipMode
+        isInPipMode,
+        liveBackPreview
     ) {
         shouldBindInlinePlayerViewToPlayer(
             isPortraitFullscreen = isPortraitFullscreen,
             hostLifecycleStarted = hostLifecycleStarted,
-            isInPipMode = isInPipMode
+            isInPipMode = isInPipMode,
+            liveBackPreview = liveBackPreview
         )
     }
 
@@ -2458,7 +2461,8 @@ fun VideoPlayerSection(
                     factory = { ctx ->
                         val useTextureSurface = shouldUseTextureSurfaceForFlip(
                             isFlippedHorizontal = isFlippedHorizontal,
-                            isFlippedVertical = isFlippedVertical
+                            isFlippedVertical = isFlippedVertical,
+                            liveBackPreview = liveBackPreview
                         )
                         val basePlayerView = if (useTextureSurface) {
                             LayoutInflater.from(ctx)
