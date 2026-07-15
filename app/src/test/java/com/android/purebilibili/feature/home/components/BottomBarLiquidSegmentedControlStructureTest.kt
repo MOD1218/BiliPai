@@ -295,7 +295,9 @@ class BottomBarLiquidSegmentedControlStructureTest {
         assertTrue(source.contains("resolveSharedLiquidIndicatorPanelOffsetPx("))
         assertTrue(source.contains("4.dp.toPx()"))
         assertTrue(source.contains("resolveBottomBarItemMotionVisual("))
-        assertFalse(source.contains("rememberCombinedBackdrop("))
+        assertTrue(source.contains("rememberCombinedBackdrop("))
+        assertTrue(source.contains("resolveLiquidReuseIndicatorContentBackdrop("))
+        assertTrue(source.contains("contentBackdrop = indicatorContentBackdrop"))
         assertFalse(source.contains("backdrop ?: tabsBackdrop"))
         assertFalse(source.contains("containerBackdrop = backdrop ?: tabsBackdrop"))
         assertTrue(source.contains("shouldDrawSegmentedControlExportCaptureBackdrop("))
@@ -379,7 +381,7 @@ class BottomBarLiquidSegmentedControlStructureTest {
         // Visible labels must be composed BEFORE the capsule so theme color shows through glass.
         assertTrue(visibleLabelsIndex >= 0)
         assertTrue(visibleLabelsIndex < indicatorIndex)
-        assertTrue(source.contains("contentBackdrop = tabsBackdrop"))
+        assertTrue(source.contains("contentBackdrop = indicatorContentBackdrop"))
         assertTrue(
             source.contains("backdrop = backdrop,"),
             "Indicator must sample external page backdrop only; never CombinedBackdrop/tabs self-capture"

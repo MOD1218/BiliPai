@@ -60,6 +60,7 @@ import com.android.purebilibili.core.ui.motion.BottomBarMotionProfile
 import com.android.purebilibili.core.ui.motion.BottomBarMotionSpec
 import com.android.purebilibili.core.ui.motion.resolveBottomBarMotionSpec
 import com.android.purebilibili.feature.home.components.liquid.lens
+import com.android.purebilibili.feature.home.components.liquid.rememberCombinedBackdrop
 import com.android.purebilibili.feature.home.components.liquid.vibrancy
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.blur
@@ -191,6 +192,30 @@ internal fun shouldDrawSegmentedControlExportCaptureBackdrop(
     hasExternalBackdrop: Boolean
 ): Boolean {
     return liquidGlassEnabled && hasExternalBackdrop
+}
+
+/**
+ * Dock-aligned sample source for [KernelSuMiuixBottomBarIndicatorLayer].
+ *
+ * With BILIPAI_TUNED / IOS26_REFINED the indicator samples [contentBackdrop] only.
+ * Prefer Combined(page, export) so the capsule is frosted page + refracted glyphs.
+ * Never pass export-only when glass is always on — empty LayerBackdrop samples as black.
+ *
+ * [combinedBackdrop] must be a pre-built Combined(page, export) when both exist and
+ * [useCombined] is true (use [rememberCombinedBackdrop] at the call site).
+ */
+internal fun resolveLiquidReuseIndicatorContentBackdrop(
+    pageBackdrop: Backdrop?,
+    exportBackdrop: Backdrop?,
+    useCombined: Boolean,
+    combinedBackdrop: Backdrop?,
+): Backdrop? {
+    if (useCombined && pageBackdrop != null && exportBackdrop != null && combinedBackdrop != null) {
+        return combinedBackdrop
+    }
+    // Prefer page alone over export-only to avoid black empty export sampling.
+    if (pageBackdrop != null) return pageBackdrop
+    return null
 }
 
 internal fun resolveSegmentedControlMotionProgress(
@@ -504,11 +529,20 @@ fun BottomBarLiquidSegmentedControl(
         val exportPanelOffsetPx = presetPanelOffsets.exportPanelOffsetPx
         // Export capture layer (InstallerX/Miuix). Never self-sample this LayerBackdrop.
         val tabsBackdrop = rememberLayerBackdrop()
-        // Never fall back export/shell sampling to tabsBackdrop: that LayerBackdrop is
-        // recorded on the export node, and self-drawBackdrop overflows HyperOS
-        // MiBackgroundBlurBlend (RenderThread stack overflow). Also never CombinedBackdrop
-        // the page + tabs layers on segmented control (unlike home dock).
+        // Dock parity: Combined(page, export) as indicator contentBackdrop.
+        // Never drawBackdrop(tabsBackdrop) on the same node that layerBackdrop(tabsBackdrop).
         val hasExternalBackdrop = backdrop != null
+        val combinedIndicatorBackdrop = if (backdrop != null) {
+            rememberCombinedBackdrop(backdrop, tabsBackdrop)
+        } else {
+            null
+        }
+        val indicatorContentBackdrop = resolveLiquidReuseIndicatorContentBackdrop(
+            pageBackdrop = backdrop,
+            exportBackdrop = tabsBackdrop,
+            useCombined = hasExternalBackdrop,
+            combinedBackdrop = combinedIndicatorBackdrop,
+        )
         val captureLensProgress = resolveSharedLiquidIndicatorCaptureLensProgress(
             lensProgress = lensProgress,
             isDragging = dragState.isDragging
@@ -642,7 +676,7 @@ fun BottomBarLiquidSegmentedControl(
             indicatorHeight = resolvedIndicatorHeight,
             shellShape = indicatorShape,
             liquidGlassPreset = homeSettings.bottomBarLiquidGlassPreset,
-            contentBackdrop = tabsBackdrop,
+            contentBackdrop = indicatorContentBackdrop,
             backdrop = backdrop,
             indicatorLensSpec = indicatorLensSpec,
             effectivePressProgress = lensProgress,

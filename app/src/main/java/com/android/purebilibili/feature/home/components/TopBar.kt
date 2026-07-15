@@ -1103,13 +1103,30 @@ private fun LightweightHomeTopTabs(
             indicatorVisualPolicy = topTabIndicatorVisualPolicy
         )
         val topTabContentBackdrop = rememberLayerBackdrop()
-        val effectiveTopTabIndicatorContentBackdrop: Backdrop? = when {
-            !shouldRenderTopTabIndicatorBackdrop ||
-                !topTabIndicatorBackdropPolicy.useIndicatorBackdrop -> null
-            topTabIndicatorBackdropPolicy.useCombinedBackdrop && backdrop != null ->
-                rememberCombinedBackdrop(backdrop, topTabContentBackdrop)
-            else -> topTabContentBackdrop
+        val topTabCombinedBackdrop = if (
+            shouldRenderTopTabIndicatorBackdrop &&
+                topTabIndicatorBackdropPolicy.useCombinedBackdrop &&
+                backdrop != null
+        ) {
+            rememberCombinedBackdrop(backdrop, topTabContentBackdrop)
+        } else {
+            null
         }
+        // Dock parity: BILIPAI_TUNED samples contentBackdrop only — must be Combined(page, export),
+        // not export-only (empty LayerBackdrop samples as solid black).
+        val effectiveTopTabIndicatorContentBackdrop: Backdrop? =
+            if (!shouldRenderTopTabIndicatorBackdrop ||
+                !topTabIndicatorBackdropPolicy.useIndicatorBackdrop
+            ) {
+                null
+            } else {
+                resolveLiquidReuseIndicatorContentBackdrop(
+                    pageBackdrop = backdrop,
+                    exportBackdrop = topTabContentBackdrop,
+                    useCombined = topTabIndicatorBackdropPolicy.useCombinedBackdrop,
+                    combinedBackdrop = topTabCombinedBackdrop,
+                )
+            }
         val topTabLensProgress = resolveSharedLiquidIndicatorLensProgress(
             pressProgress = topTabPressProgress,
             motionProgress = topTabMotionProgress,
@@ -1376,14 +1393,14 @@ private fun LightweightHomeTopTabs(
                             indicatorHeight = dockIndicatorHeight,
                             shellShape = capsuleShape,
                             liquidGlassPreset = BottomBarLiquidGlassPreset.BILIPAI_TUNED,
-                            // Prefer export capture so capsule shows theme-tinted glyphs.
-                            contentBackdrop = topTabContentBackdrop,
-                            backdrop = effectiveTopTabIndicatorContentBackdrop ?: backdrop,
+                            // Combined(page, export) — same topology as floating bottom dock.
+                            contentBackdrop = effectiveTopTabIndicatorContentBackdrop,
+                            backdrop = backdrop,
                             indicatorLensSpec = topTabIndicatorLensSpec,
                             effectivePressProgress = topTabLensProgress,
-                            indicatorIdleSurfaceColor = resolveIosTopTabCapsuleContainerColor(
-                                isDarkTheme = isDarkTheme,
-                                selectionFraction = 1f
+                            indicatorIdleSurfaceColor = resolveBottomBarIdleIndicatorSurfaceColor(
+                                preset = BottomBarLiquidGlassPreset.BILIPAI_TUNED,
+                                darkTheme = isDarkTheme
                             ),
                             glassEnabled = shouldUseLiquidGlassIndicator,
                             indicatorEffectsEnabled = shouldUseLiquidGlassIndicator,
@@ -1406,12 +1423,12 @@ private fun LightweightHomeTopTabs(
                             indicatorHeight = dockIndicatorHeight,
                             shellShape = resolveSharedBottomBarCapsuleShape(),
                             liquidGlassPreset = BottomBarLiquidGlassPreset.BILIPAI_TUNED,
-                            // Prefer export capture so capsule shows theme-tinted glyphs.
-                            contentBackdrop = topTabContentBackdrop,
-                            backdrop = effectiveTopTabIndicatorContentBackdrop ?: backdrop,
+                            contentBackdrop = effectiveTopTabIndicatorContentBackdrop,
+                            backdrop = backdrop,
                             indicatorLensSpec = topTabIndicatorLensSpec,
                             effectivePressProgress = topTabLensProgress,
-                            indicatorIdleSurfaceColor = resolveAndroidNativeIdleIndicatorSurfaceColor(
+                            indicatorIdleSurfaceColor = resolveBottomBarIdleIndicatorSurfaceColor(
+                                preset = BottomBarLiquidGlassPreset.BILIPAI_TUNED,
                                 darkTheme = isDarkTheme
                             ),
                             glassEnabled = true,
@@ -1435,16 +1452,14 @@ private fun LightweightHomeTopTabs(
                             indicatorHeight = dockIndicatorHeight,
                             shellShape = capsuleShape,
                             liquidGlassPreset = BottomBarLiquidGlassPreset.BILIPAI_TUNED,
-                            // Prefer export capture so capsule shows theme-tinted glyphs.
-                            contentBackdrop = topTabContentBackdrop,
-                            backdrop = effectiveTopTabIndicatorContentBackdrop ?: backdrop,
+                            contentBackdrop = effectiveTopTabIndicatorContentBackdrop,
+                            backdrop = backdrop,
                             indicatorLensSpec = topTabIndicatorLensSpec,
                             effectivePressProgress = topTabLensProgress,
-                            indicatorIdleSurfaceColor = if (isDarkTheme) {
-                                Color.White.copy(alpha = 0.1f)
-                            } else {
-                                Color.Black.copy(alpha = 0.1f)
-                            },
+                            indicatorIdleSurfaceColor = resolveBottomBarIdleIndicatorSurfaceColor(
+                                preset = BottomBarLiquidGlassPreset.BILIPAI_TUNED,
+                                darkTheme = isDarkTheme
+                            ),
                             glassEnabled = true,
                             motionProgress = topTabMotionProgress,
                             velocityItemsPerSecond = topTabIndicatorLayerVelocityItemsPerSecond,

@@ -195,7 +195,8 @@ class HomeChromeLiquidSurfaceStructureTest {
                 topBarSource.contains("val glassLayersAlwaysOn = shouldUseLiquidGlassIndicator") &&
                 topBarSource.contains("resolveTopTabIndicatorBackdropPolicy(") &&
                 topBarSource.contains("allowIdleGlassEffect = false") &&
-                topBarSource.contains("contentBackdrop = topTabContentBackdrop") &&
+                topBarSource.contains("contentBackdrop = effectiveTopTabIndicatorContentBackdrop") &&
+                topBarSource.contains("resolveLiquidReuseIndicatorContentBackdrop(") &&
                 topBarSource.contains("topTabListScrollOffsetPx") &&
                 topBarSource.contains("One shared shift for export") &&
                 topBarSource.contains("indicatorPanelOffsetPx = 0f") &&
