@@ -4,6 +4,7 @@ package com.android.purebilibili.feature.bangumi.ui.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -20,6 +21,8 @@ import io.github.alexzhirkevich.cupertino.icons.outlined.ChevronDown
 import com.android.purebilibili.core.ui.AppShapes
 import com.android.purebilibili.core.ui.AppSurfaceTokens
 import com.android.purebilibili.core.ui.ContainerLevel
+import com.android.purebilibili.core.ui.blur.BlurSurfaceType
+import com.android.purebilibili.core.ui.blur.unifiedBlur
 import com.android.purebilibili.data.model.response.BangumiFilter
 import com.android.purebilibili.data.model.response.BangumiIndexFilterGroup
 import com.android.purebilibili.data.model.response.BangumiIndexFilterOption
@@ -28,6 +31,7 @@ import com.android.purebilibili.data.model.response.resolveBangumiIndexSelectedO
 import com.android.purebilibili.feature.bangumi.BangumiDisplayMode
 import com.android.purebilibili.feature.bangumi.resolveBangumiTopModes
 import androidx.compose.ui.text.font.FontWeight
+import dev.chrisbanes.haze.HazeState
 
 /**
  * 模式切换 Tabs (索引/时间表)
@@ -36,8 +40,11 @@ import androidx.compose.ui.text.font.FontWeight
 fun BangumiModeTabs(
     currentMode: BangumiDisplayMode,
     onModeChange: (BangumiDisplayMode) -> Unit,
+    liquidGlassEnabled: Boolean = false,
+    hazeState: HazeState? = null,
     modifier: Modifier = Modifier
 ) {
+    val chromeShape = AppShapes.container(ContainerLevel.Sheet)
     val modes = resolveBangumiTopModes().map { mode ->
         mode to when (mode) {
             BangumiDisplayMode.LIST -> "索引"
@@ -49,9 +56,27 @@ fun BangumiModeTabs(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        shape = AppShapes.container(ContainerLevel.Sheet),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
+            .padding(horizontal = 16.dp, vertical = 10.dp)
+            .then(
+                if (liquidGlassEnabled && hazeState != null) {
+                    Modifier.unifiedBlur(
+                        hazeState = hazeState,
+                        shape = chromeShape,
+                        surfaceType = BlurSurfaceType.DRAWER_OR_SHEET
+                    )
+                } else {
+                    Modifier
+                }
+            ),
+        shape = chromeShape,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(
+            alpha = if (liquidGlassEnabled) 0.34f else 0.65f
+        ),
+        border = if (liquidGlassEnabled) {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f))
+        } else {
+            null
+        }
     ) {
         Row(
             modifier = Modifier
@@ -65,7 +90,15 @@ fun BangumiModeTabs(
                     modifier = Modifier.weight(1f),
                     onClick = { onModeChange(mode) },
                     shape = AppShapes.container(ContainerLevel.Dialog),
-                    color = if (isSelected) AppSurfaceTokens.cardContainer() else Color.Transparent,
+                    color = if (isSelected) {
+                        if (liquidGlassEnabled) {
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
+                        } else {
+                            AppSurfaceTokens.cardContainer()
+                        }
+                    } else {
+                        Color.Transparent
+                    },
                     shadowElevation = if (isSelected) 1.dp else 0.dp
                 ) {
                     Box(
@@ -184,15 +217,37 @@ fun BangumiIndexFilterRows(
     groups: List<BangumiIndexFilterGroup>,
     filter: BangumiFilter,
     onFilterChange: (BangumiFilter) -> Unit,
+    liquidGlassEnabled: Boolean = false,
+    hazeState: HazeState? = null,
     modifier: Modifier = Modifier
 ) {
     if (groups.isEmpty()) return
+    val chromeShape = AppShapes.container(ContainerLevel.Sheet)
 
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .animateContentSize(),
-        color = MaterialTheme.colorScheme.surface
+            .animateContentSize()
+            .then(
+                if (liquidGlassEnabled && hazeState != null) {
+                    Modifier.unifiedBlur(
+                        hazeState = hazeState,
+                        shape = chromeShape,
+                        surfaceType = BlurSurfaceType.DRAWER_OR_SHEET
+                    )
+                } else {
+                    Modifier
+                }
+            ),
+        shape = chromeShape,
+        color = MaterialTheme.colorScheme.surface.copy(
+            alpha = if (liquidGlassEnabled) 0.28f else 1f
+        ),
+        border = if (liquidGlassEnabled) {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f))
+        } else {
+            null
+        }
     ) {
         Column(
             modifier = Modifier.padding(top = 8.dp, bottom = 10.dp),

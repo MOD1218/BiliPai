@@ -56,6 +56,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.purebilibili.core.ui.AdaptiveScaffold
 import com.android.purebilibili.core.ui.rememberAppChevronUpIcon
+import com.android.purebilibili.core.ui.blur.hazeSourceCompat
+import com.android.purebilibili.core.ui.blur.rememberRecoverableHazeState
+import com.android.purebilibili.core.store.HomeSettings
+import com.android.purebilibili.core.store.SettingsManager
 //  已改用 MaterialTheme.colorScheme.primary
 import com.android.purebilibili.core.theme.iOSYellow
 import com.android.purebilibili.core.util.FormatUtils
@@ -102,6 +106,11 @@ fun BangumiScreen(
     val myFollowStats by viewModel.myFollowStats.collectAsStateWithLifecycle()
     val filter by viewModel.filter.collectAsStateWithLifecycle()
     val searchKeyword by viewModel.searchKeyword.collectAsStateWithLifecycle()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val homeSettings by SettingsManager.getHomeSettings(context)
+        .collectAsStateWithLifecycle(initialValue = HomeSettings())
+    val liquidGlassEnabled = homeSettings.androidNativeLiquidGlassEnabled
+    val hazeState = rememberRecoverableHazeState(userEnabled = liquidGlassEnabled)
     
     // 搜索状态
     var showSearchBar by remember { mutableStateOf(false) }
@@ -145,7 +154,6 @@ fun BangumiScreen(
     }
     
     //  [修复] 设置导航栏透明，确保底部手势栏沉浸式效果
-    val context = androidx.compose.ui.platform.LocalContext.current
     androidx.compose.runtime.DisposableEffect(Unit) {
         val window = (context as? android.app.Activity)?.window
         val originalNavBarColor = window?.navigationBarColor ?: android.graphics.Color.TRANSPARENT
@@ -205,6 +213,7 @@ fun BangumiScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .responsiveContentWidth()
+                .then(if (liquidGlassEnabled) Modifier.hazeSourceCompat(hazeState) else Modifier)
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
@@ -225,7 +234,9 @@ fun BangumiScreen(
                     Column {
                         BangumiModeTabs(
                             currentMode = displayMode,
-                            onModeChange = { viewModel.setDisplayMode(it) }
+                            onModeChange = { viewModel.setDisplayMode(it) },
+                            liquidGlassEnabled = liquidGlassEnabled,
+                            hazeState = hazeState
                         )
 
                         if (displayMode == BangumiDisplayMode.LIST) {
@@ -237,7 +248,9 @@ fun BangumiScreen(
                             BangumiIndexFilterRows(
                                 groups = filterGroups,
                                 filter = filter,
-                                onFilterChange = { viewModel.updateFilter(it) }
+                                onFilterChange = { viewModel.updateFilter(it) },
+                                liquidGlassEnabled = liquidGlassEnabled,
+                                hazeState = hazeState
                             )
                         }
                     }
@@ -289,7 +302,9 @@ fun BangumiScreen(
                         onFollowTypeChange = { viewModel.selectMyFollowType(it) },
                         onRetry = { viewModel.loadMyFollowBangumi(myFollowType) },
                         onLoadMore = { viewModel.loadMoreMyFollow() },
-                        onBangumiClick = onBangumiClick
+                        onBangumiClick = onBangumiClick,
+                        liquidGlassEnabled = liquidGlassEnabled,
+                        hazeState = hazeState
                     )
                 }
                 BangumiDisplayMode.SEARCH -> {

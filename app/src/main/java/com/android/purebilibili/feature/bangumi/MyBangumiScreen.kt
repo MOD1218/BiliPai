@@ -33,8 +33,11 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 //  已改用 MaterialTheme.colorScheme.primary
 import com.android.purebilibili.core.theme.iOSYellow
+import com.android.purebilibili.core.ui.blur.BlurSurfaceType
+import com.android.purebilibili.core.ui.blur.unifiedBlur
 import com.android.purebilibili.core.util.FormatUtils
 import com.android.purebilibili.data.model.response.FollowBangumiItem
+import dev.chrisbanes.haze.HazeState
 
 /**
  * 我的追番列表组件
@@ -48,6 +51,8 @@ fun MyBangumiContent(
     onRetry: () -> Unit,
     onLoadMore: () -> Unit,
     onBangumiClick: (Long) -> Unit,
+    liquidGlassEnabled: Boolean = false,
+    hazeState: HazeState? = null,
     modifier: Modifier = Modifier
 ) {
     val followLabel = if (followType == MY_FOLLOW_TYPE_CINEMA) "追剧" else "追番"
@@ -69,12 +74,16 @@ fun MyBangumiContent(
             stats = followStats,
             currentType = followType,
             statsDetail = statsDetail,
-            watchInsight = watchInsight
+            watchInsight = watchInsight,
+            liquidGlassEnabled = liquidGlassEnabled,
+            hazeState = hazeState
         )
 
         MyFollowTypeTabs(
             selectedType = followType,
-            onTypeChange = onFollowTypeChange
+            onTypeChange = onFollowTypeChange,
+            liquidGlassEnabled = liquidGlassEnabled,
+            hazeState = hazeState
         )
 
         when (myFollowState) {
@@ -147,19 +156,35 @@ private fun MyFollowSummarySection(
     stats: MyFollowStats,
     currentType: Int,
     statsDetail: MyFollowStatsDetail,
-    watchInsight: MyFollowWatchInsight
+    watchInsight: MyFollowWatchInsight,
+    liquidGlassEnabled: Boolean,
+    hazeState: HazeState?
 ) {
     var showDetail by rememberSaveable(currentType) { mutableStateOf(true) }
+    val summaryShape = RoundedCornerShape(20.dp)
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
+            .padding(horizontal = 16.dp, vertical = 10.dp)
+            .then(
+                if (liquidGlassEnabled && hazeState != null) {
+                    Modifier.unifiedBlur(
+                        hazeState = hazeState,
+                        shape = summaryShape,
+                        surfaceType = BlurSurfaceType.DRAWER_OR_SHEET
+                    )
+                } else {
+                    Modifier
+                }
+            ),
+        shape = summaryShape,
+        color = MaterialTheme.colorScheme.surface.copy(alpha = if (liquidGlassEnabled) 0.36f else 0.94f),
         border = androidx.compose.foundation.BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
+            color = MaterialTheme.colorScheme.outlineVariant.copy(
+                alpha = if (liquidGlassEnabled) 0.58f else 0.45f
+            )
         )
     ) {
         Column(
@@ -473,26 +498,58 @@ private fun MyFollowGrid(
 @Composable
 private fun MyFollowTypeTabs(
     selectedType: Int,
-    onTypeChange: (Int) -> Unit
+    onTypeChange: (Int) -> Unit,
+    liquidGlassEnabled: Boolean,
+    hazeState: HazeState?
 ) {
-    Row(
+    val tabsShape = RoundedCornerShape(14.dp)
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .then(
+                if (liquidGlassEnabled && hazeState != null) {
+                    Modifier.unifiedBlur(
+                        hazeState = hazeState,
+                        shape = tabsShape,
+                        surfaceType = BlurSurfaceType.DRAWER_OR_SHEET
+                    )
+                } else {
+                    Modifier
+                }
+            ),
+        shape = tabsShape,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = if (liquidGlassEnabled) 0.30f else 0f),
+        border = if (liquidGlassEnabled) {
+            androidx.compose.foundation.BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f)
+            )
+        } else {
+            null
+        }
     ) {
-        FollowTypeTab(
-            text = "追番",
-            selected = selectedType == MY_FOLLOW_TYPE_BANGUMI,
-            onClick = { onTypeChange(MY_FOLLOW_TYPE_BANGUMI) },
-            modifier = Modifier.weight(1f)
-        )
-        FollowTypeTab(
-            text = "追剧",
-            selected = selectedType == MY_FOLLOW_TYPE_CINEMA,
-            onClick = { onTypeChange(MY_FOLLOW_TYPE_CINEMA) },
-            modifier = Modifier.weight(1f)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FollowTypeTab(
+                text = "追番",
+                selected = selectedType == MY_FOLLOW_TYPE_BANGUMI,
+                onClick = { onTypeChange(MY_FOLLOW_TYPE_BANGUMI) },
+                liquidGlassEnabled = liquidGlassEnabled,
+                modifier = Modifier.weight(1f)
+            )
+            FollowTypeTab(
+                text = "追剧",
+                selected = selectedType == MY_FOLLOW_TYPE_CINEMA,
+                onClick = { onTypeChange(MY_FOLLOW_TYPE_CINEMA) },
+                liquidGlassEnabled = liquidGlassEnabled,
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
 }
 
@@ -501,13 +558,18 @@ private fun FollowTypeTab(
     text: String,
     selected: Boolean,
     onClick: () -> Unit,
+    liquidGlassEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     Surface(
         modifier = modifier,
         onClick = onClick,
         shape = RoundedCornerShape(10.dp),
-        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+        color = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = if (liquidGlassEnabled) 0.16f else 0.6f)
+        }
     ) {
         Box(
             modifier = Modifier.padding(vertical = 8.dp),
