@@ -55,10 +55,12 @@ import com.android.purebilibili.core.ui.transition.resolvePredictiveBackCommitBl
 import com.android.purebilibili.core.ui.transition.resolvePredictiveBackGestureBlurProgress
 import com.android.purebilibili.core.ui.transition.resolveVideoCardTransitionBackgroundGestureBlurProgress
 import com.android.purebilibili.core.ui.transition.resolveVideoCardTransitionBackgroundReturnDurationMs
+import com.android.purebilibili.core.ui.transition.resolveVideoCardTransitionReturnFullDurationMillis
 import com.android.purebilibili.core.ui.transition.resolveVideoCardSharedTransitionEnterEasing
 import com.android.purebilibili.core.ui.transition.resolveVideoCardSharedTransitionReturnEasing
 import com.android.purebilibili.core.ui.transition.isVideoCardTransitionBackgroundGesturePhase
 import com.android.purebilibili.core.ui.transition.shouldApplyPredictiveBackGestureBlur
+import com.android.purebilibili.core.ui.transition.shouldInterruptVideoCardOpeningOnReturn
 import com.android.purebilibili.core.ui.transition.shouldShowVideoCardTransitionNavBackdrop
 import com.android.purebilibili.core.ui.transition.VideoCardTransitionNavBackdrop
 import com.android.purebilibili.navigation.isVideoCardReturnTargetRoute
@@ -67,6 +69,7 @@ import com.android.purebilibili.navigation3.predictiveback.BiliPaiPredictiveBack
 import com.android.purebilibili.navigation3.predictiveback.resolveBiliPaiAutoPredictiveBackExitDirection
 import com.android.purebilibili.navigation3.predictiveback.resolveBiliPaiPredictiveBackAnimationHandler
 import com.android.purebilibili.navigation3.predictiveback.resolveBiliPaiPredictiveBackExitDirection
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 @Composable
@@ -74,6 +77,7 @@ internal fun BiliPaiNavDisplayHost(
     backStack: List<BiliPaiNavKey>,
     cardTransitionEnabled: Boolean = true,
     videoSharedTransitionDurationMillis: Int,
+    isQuickReturnFromDetail: Boolean = false,
     predictiveBackEnabled: Boolean = true,
     predictiveBackAnimationStyle: BiliPaiPredictiveBackAnimationStyle = BiliPaiPredictiveBackAnimationStyle.SCALE,
     predictiveBackExitDirectionOverride: String = "auto",
@@ -104,6 +108,26 @@ internal fun BiliPaiNavDisplayHost(
     var videoCardTransitionSourceRoute by remember { mutableStateOf<String?>(null) }
     var videoCardGestureStartBlurProgress by remember { mutableFloatStateOf(1f) }
     var videoCardGestureProgress by remember { mutableStateOf<Float?>(null) }
+    // 景深动画唯一 owner：OPENING / RETURNING / cancel 互斥，避免双路径叠动画。
+    var videoCardDepthAnimationJob by remember { mutableStateOf<Job?>(null) }
+    fun cancelVideoCardDepthAnimation() {
+        videoCardDepthAnimationJob?.cancel()
+        videoCardDepthAnimationJob = null
+    }
+    fun launchVideoCardDepthAnimation(block: suspend () -> Unit) {
+        cancelVideoCardDepthAnimation()
+        var job: Job? = null
+        job = navigationScope.launch {
+            try {
+                block()
+            } finally {
+                if (videoCardDepthAnimationJob === job) {
+                    videoCardDepthAnimationJob = null
+                }
+            }
+        }
+        videoCardDepthAnimationJob = job
+    }
     val videoCardBackgroundProgressProvider = remember(videoCardTransitionBackgroundProgress) {
         {
             val backProgress = videoCardGestureProgress
@@ -128,6 +152,7 @@ internal fun BiliPaiNavDisplayHost(
         safeBackStack,
         cardTransitionEnabled,
         videoSharedTransitionDurationMillis,
+        isQuickReturnFromDetail,
     ) {
         val previousStack = previousVideoCardTransitionBackStack
         val previousTop = previousStack.lastOrNull()
@@ -143,6 +168,7 @@ internal fun BiliPaiNavDisplayHost(
         previousVideoCardTransitionBackStack = safeBackStack
 
         if (!cardTransitionEnabled) {
+            cancelVideoCardDepthAnimation()
             videoCardTransitionBackgroundPhase = VideoCardTransitionBackgroundPhase.IDLE
             videoCardReturnGestureInProgress = false
             videoCardGestureProgress = null
@@ -155,52 +181,78 @@ internal fun BiliPaiNavDisplayHost(
                 videoCardTransitionSourceRoute = openingSourceRoute
                 videoCardTransitionBackgroundPhase = VideoCardTransitionBackgroundPhase.OPENING
                 videoCardTransitionBackgroundProgress.snapTo(0f)
-                videoCardTransitionBackgroundProgress.animateTo(
-                    targetValue = 1f,
-                    animationSpec = tween(
-                        durationMillis = videoSharedTransitionDurationMillis,
-                        easing = resolveVideoCardSharedTransitionEnterEasing(),
+                // 进场动画跑在独立 Job：返回/打断时可 cancel，禁止补完后强行 HELD。
+                launchVideoCardDepthAnimation {
+                    videoCardTransitionBackgroundProgress.animateTo(
+                        targetValue = 1f,
+                        animationSpec = tween(
+                            durationMillis = videoSharedTransitionDurationMillis,
+                            easing = resolveVideoCardSharedTransitionEnterEasing(),
+                        )
                     )
-                )
-                // 详情页覆盖期间保持 blur-only 状态，避免返回 pop 后先清晰一帧再补模糊。
-                videoCardTransitionBackgroundPhase = VideoCardTransitionBackgroundPhase.HELD
+                    // 仅当仍停留在 OPENING（未被返回打断）时才进入 HELD。
+                    if (videoCardTransitionBackgroundPhase ==
+                        VideoCardTransitionBackgroundPhase.OPENING
+                    ) {
+                        videoCardTransitionBackgroundPhase =
+                            VideoCardTransitionBackgroundPhase.HELD
+                    }
+                }
             }
 
             returnedFromVideoDetail -> {
                 videoCardTransitionSourceRoute = returningSourceRoute
                 if (videoCardTransitionBackgroundPhase != VideoCardTransitionBackgroundPhase.RETURNING) {
-                    videoCardTransitionBackgroundPhase = VideoCardTransitionBackgroundPhase.RETURNING
-                    val remainingBlur = videoCardTransitionBackgroundProgress.value
-                    videoCardTransitionBackgroundProgress.animateTo(
-                        targetValue = 0f,
-                        animationSpec = tween(
-                            durationMillis = resolveVideoCardTransitionBackgroundReturnDurationMs(
-                                startProgress = remainingBlur,
-                                fullDurationMs = videoSharedTransitionDurationMillis,
-                            ),
-                            easing = resolveVideoCardSharedTransitionReturnEasing(),
-                        ),
+                    val interruptedOpening = shouldInterruptVideoCardOpeningOnReturn(
+                        videoCardTransitionBackgroundPhase
                     )
-                    val parentSourceRoute = (currentTop as? BiliPaiNavKey.VideoDetail)?.sourceRoute
-                    if (isVideoCardReturnTargetRoute(parentSourceRoute)) {
-                        videoCardTransitionSourceRoute = parentSourceRoute
-                        videoCardTransitionBackgroundProgress.snapTo(1f)
-                        videoCardTransitionBackgroundPhase = VideoCardTransitionBackgroundPhase.HELD
-                    } else {
-                        videoCardTransitionBackgroundPhase = VideoCardTransitionBackgroundPhase.IDLE
+                    val remainingBlur = videoCardTransitionBackgroundProgress.value
+                    videoCardTransitionBackgroundPhase = VideoCardTransitionBackgroundPhase.RETURNING
+                    val fullDurationMs = resolveVideoCardTransitionReturnFullDurationMillis(
+                        baseDurationMillis = videoSharedTransitionDurationMillis,
+                        isQuickReturn = isQuickReturnFromDetail,
+                        interruptedOpening = interruptedOpening,
+                    )
+                    launchVideoCardDepthAnimation {
+                        videoCardTransitionBackgroundProgress.animateTo(
+                            targetValue = 0f,
+                            animationSpec = tween(
+                                durationMillis = resolveVideoCardTransitionBackgroundReturnDurationMs(
+                                    startProgress = remainingBlur,
+                                    fullDurationMs = fullDurationMs,
+                                ),
+                                easing = resolveVideoCardSharedTransitionReturnEasing(),
+                            ),
+                        )
+                        val parentSourceRoute =
+                            (currentTop as? BiliPaiNavKey.VideoDetail)?.sourceRoute
+                        if (isVideoCardReturnTargetRoute(parentSourceRoute)) {
+                            videoCardTransitionSourceRoute = parentSourceRoute
+                            videoCardTransitionBackgroundProgress.snapTo(1f)
+                            videoCardTransitionBackgroundPhase =
+                                VideoCardTransitionBackgroundPhase.HELD
+                        } else if (
+                            videoCardTransitionBackgroundPhase ==
+                            VideoCardTransitionBackgroundPhase.RETURNING
+                        ) {
+                            videoCardTransitionBackgroundPhase =
+                                VideoCardTransitionBackgroundPhase.IDLE
+                        }
                     }
                 }
             }
 
             currentTop !is BiliPaiNavKey.VideoDetail -> {
-                videoCardTransitionBackgroundProgress.animateTo(
-                    targetValue = 0f,
-                    animationSpec = tween(
-                        durationMillis = VIDEO_CARD_TRANSITION_BACKGROUND_CANCEL_DURATION_MS,
-                        easing = FastOutLinearInEasing
+                launchVideoCardDepthAnimation {
+                    videoCardTransitionBackgroundProgress.animateTo(
+                        targetValue = 0f,
+                        animationSpec = tween(
+                            durationMillis = VIDEO_CARD_TRANSITION_BACKGROUND_CANCEL_DURATION_MS,
+                            easing = FastOutLinearInEasing
+                        )
                     )
-                )
-                videoCardTransitionBackgroundPhase = VideoCardTransitionBackgroundPhase.IDLE
+                    videoCardTransitionBackgroundPhase = VideoCardTransitionBackgroundPhase.IDLE
+                }
             }
         }
     }
@@ -304,6 +356,9 @@ internal fun BiliPaiNavDisplayHost(
                 currentPageKey = safeBackStack.lastOrNull(),
             )
             predictiveBlurFadeJob?.join()
+            val interruptedOpening = shouldInterruptVideoCardOpeningOnReturn(
+                videoCardTransitionBackgroundPhase
+            )
             val isVideoCardActiveReturn = cardTransitionEnabled &&
                 (
                     videoCardTransitionBackgroundPhase == VideoCardTransitionBackgroundPhase.HELD ||
@@ -311,23 +366,48 @@ internal fun BiliPaiNavDisplayHost(
                     ) &&
                 currentBackKey is BiliPaiNavKey.VideoDetail &&
                 isVideoCardReturnTargetRoute(currentBackKey.sourceRoute)
+            // 先切断 OPENING Job，禁止进场补完后写入 HELD。
+            if (isVideoCardActiveReturn) {
+                cancelVideoCardDepthAnimation()
+            }
             val videoBlurFadeJob = if (isVideoCardActiveReturn) {
                 val blurAtCommit = videoCardBackgroundProgressProvider()
                 videoCardTransitionSourceRoute = currentBackKey.sourceRoute
                 videoCardTransitionBackgroundProgress.snapTo(blurAtCommit)
                 videoCardTransitionBackgroundPhase = VideoCardTransitionBackgroundPhase.RETURNING
-                launch {
+                val fullDurationMs = resolveVideoCardTransitionReturnFullDurationMillis(
+                    baseDurationMillis = videoSharedTransitionDurationMillis,
+                    isQuickReturn = isQuickReturnFromDetail,
+                    interruptedOpening = interruptedOpening,
+                )
+                // 用统一 Job：栈变化触发的 LaunchedEffect 返回路径见 phase==RETURNING 会跳过。
+                launchVideoCardDepthAnimation {
                     videoCardTransitionBackgroundProgress.animateTo(
                         targetValue = 0f,
                         animationSpec = tween(
                             durationMillis = resolveVideoCardTransitionBackgroundReturnDurationMs(
                                 startProgress = blurAtCommit,
-                                fullDurationMs = videoSharedTransitionDurationMillis,
+                                fullDurationMs = fullDurationMs,
                             ),
                             easing = resolveVideoCardSharedTransitionReturnEasing(),
                         ),
                     )
+                    val parentSourceRoute =
+                        (targetBackKey as? BiliPaiNavKey.VideoDetail)?.sourceRoute
+                    if (isVideoCardReturnTargetRoute(parentSourceRoute)) {
+                        videoCardTransitionSourceRoute = parentSourceRoute
+                        videoCardTransitionBackgroundProgress.snapTo(1f)
+                        videoCardTransitionBackgroundPhase =
+                            VideoCardTransitionBackgroundPhase.HELD
+                    } else if (
+                        videoCardTransitionBackgroundPhase ==
+                        VideoCardTransitionBackgroundPhase.RETURNING
+                    ) {
+                        videoCardTransitionBackgroundPhase =
+                            VideoCardTransitionBackgroundPhase.IDLE
+                    }
                 }
+                videoCardDepthAnimationJob
             } else {
                 null
             }
@@ -336,14 +416,6 @@ internal fun BiliPaiNavDisplayHost(
             commitTransitionCallBack()
             onBack()
             videoBlurFadeJob?.join()
-            val parentSourceRoute = (targetBackKey as? BiliPaiNavKey.VideoDetail)?.sourceRoute
-            if (isVideoCardActiveReturn && isVideoCardReturnTargetRoute(parentSourceRoute)) {
-                videoCardTransitionSourceRoute = parentSourceRoute
-                videoCardTransitionBackgroundProgress.snapTo(1f)
-                videoCardTransitionBackgroundPhase = VideoCardTransitionBackgroundPhase.HELD
-            } else if (isVideoCardActiveReturn) {
-                videoCardTransitionBackgroundPhase = VideoCardTransitionBackgroundPhase.IDLE
-            }
             predictiveBackBackgroundProgress.snapTo(0f)
         }
     }

@@ -183,6 +183,21 @@ internal fun resolveVideoSharedTransitionDurationMillis(
     }
 }
 
+/**
+ * 共享元素总时长：快速返回时与景深 [resolveVideoCardQuickReturnDurationMillis] 同源压缩。
+ */
+internal fun resolveVideoSharedTransitionDurationMillis(
+    speedSettings: VideoSharedTransitionSpeedSettings,
+    isQuickReturn: Boolean,
+): Int {
+    val base = resolveVideoSharedTransitionDurationMillis(speedSettings)
+    return if (isQuickReturn) {
+        resolveVideoCardQuickReturnDurationMillis(base)
+    } else {
+        base
+    }
+}
+
 internal fun resolveVideoSharedTransitionFullscreenDurationMillis(durationMillis: Int): Int {
     return durationMillis + 80
 }
@@ -345,7 +360,8 @@ internal fun resolveVideoSharedTransitionOwnership(
 internal fun resolveVideoCardSharedTransitionMotionSpec(
     sourceRoute: String?,
     transitionEnabled: Boolean,
-    speedSettings: VideoSharedTransitionSpeedSettings = VideoSharedTransitionSpeedSettings()
+    speedSettings: VideoSharedTransitionSpeedSettings = VideoSharedTransitionSpeedSettings(),
+    isQuickReturn: Boolean = false,
 ): VideoSharedTransitionMotionSpec {
     val enabled = transitionEnabled &&
         !sourceRoute?.substringBefore("?").isNullOrBlank()
@@ -362,13 +378,16 @@ internal fun resolveVideoCardSharedTransitionMotionSpec(
             returnEasing = VIDEO_CARD_RETURN_EASING
         )
     }
-    val durationMillis = resolveVideoSharedTransitionDurationMillis(speedSettings)
+    val durationMillis = resolveVideoSharedTransitionDurationMillis(
+        speedSettings = speedSettings,
+        isQuickReturn = isQuickReturn,
+    )
 
     return VideoSharedTransitionMotionSpec(
         enabled = true,
         durationMillis = durationMillis,
         fullscreenDurationMillis = resolveVideoSharedTransitionFullscreenDurationMillis(durationMillis),
-        contentDelayMillis = HOME_DETAIL_REVEAL_DELAY_MILLIS,
+        contentDelayMillis = if (isQuickReturn) 0 else HOME_DETAIL_REVEAL_DELAY_MILLIS,
         contentDurationMillis = resolveVideoSharedTransitionContentDurationMillis(durationMillis),
         contentSlideOffsetDp = HOME_DETAIL_REVEAL_SLIDE_OFFSET_DP,
         contentInitialScale = HOME_DETAIL_REVEAL_INITIAL_SCALE,

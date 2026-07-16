@@ -2803,6 +2803,7 @@ fun AppNavigation(
                     backStack = navigation3BackStack,
                     cardTransitionEnabled = cardTransitionEnabled,
                     videoSharedTransitionDurationMillis = videoSharedTransitionDurationMillis,
+                    isQuickReturnFromDetail = navigation3ReturnSession.isQuickReturnFromDetail,
                     predictiveBackEnabled = predictiveBackEnabled,
                     predictiveBackAnimationStyle = predictiveBackAnimationStyle,
                     predictiveBackExitDirectionOverride = predictiveBackExitDirection,

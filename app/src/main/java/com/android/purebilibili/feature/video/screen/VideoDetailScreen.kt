@@ -1195,12 +1195,14 @@ fun VideoDetailScreen(
     val homeSharedTransitionMotionSpec = remember(
         sourceRouteForSharedElement,
         transitionEnabled,
-        sharedTransitionSpeedSettings
+        sharedTransitionSpeedSettings,
+        isQuickReturningFromDetail,
     ) {
         resolveVideoCardSharedTransitionMotionSpec(
             sourceRoute = sourceRouteForSharedElement,
             transitionEnabled = transitionEnabled,
-            speedSettings = sharedTransitionSpeedSettings
+            speedSettings = sharedTransitionSpeedSettings,
+            isQuickReturn = isQuickReturningFromDetail,
         )
     }
     val sharedTransitionSourceCornerDp = remember(sourceRouteForSharedElement) {

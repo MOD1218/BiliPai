@@ -36,6 +36,9 @@ private val VIDEO_CARD_TRANSITION_LIGHT_SCRIM_TINT = Color(0xFF8E8E93)
 // 开场与返回时长由共享元素速度设置提供；取消仍固定为短恢复动画。
 internal const val VIDEO_CARD_TRANSITION_BACKGROUND_RETURN_DURATION_MS = 460
 internal const val VIDEO_CARD_TRANSITION_BACKGROUND_CANCEL_DURATION_MS = 160
+/** 快速返回 / 打断 OPENING 时，在基准时长上的压缩系数（HIG：可取消、短而准）。 */
+internal const val VIDEO_CARD_TRANSITION_QUICK_RETURN_DURATION_FACTOR = 0.6f
+internal const val VIDEO_CARD_TRANSITION_QUICK_RETURN_MIN_DURATION_MS = 200
 
 internal enum class VideoCardTransitionBackgroundPhase {
     IDLE,
@@ -211,6 +214,36 @@ internal fun resolveVideoCardTransitionBackgroundGestureBlurProgress(
 }
 
 /**
+ * 快速返回或打断 OPENING 时压缩基准时长，仍不低于 [VIDEO_CARD_TRANSITION_QUICK_RETURN_MIN_DURATION_MS]。
+ */
+internal fun resolveVideoCardQuickReturnDurationMillis(
+    baseDurationMillis: Int,
+    factor: Float = VIDEO_CARD_TRANSITION_QUICK_RETURN_DURATION_FACTOR,
+    minDurationMillis: Int = VIDEO_CARD_TRANSITION_QUICK_RETURN_MIN_DURATION_MS,
+): Int {
+    if (baseDurationMillis <= 0) return 0
+    return (baseDurationMillis * factor.coerceIn(0.35f, 1f))
+        .roundToInt()
+        .coerceIn(minDurationMillis, baseDurationMillis)
+}
+
+/**
+ * 景深返回用的「满进度时长」：快速返回或打断进场时缩短，再交给
+ * [resolveVideoCardTransitionBackgroundReturnDurationMs] 按剩余进度比例缩放。
+ */
+internal fun resolveVideoCardTransitionReturnFullDurationMillis(
+    baseDurationMillis: Int,
+    isQuickReturn: Boolean,
+    interruptedOpening: Boolean,
+): Int {
+    return if (isQuickReturn || interruptedOpening) {
+        resolveVideoCardQuickReturnDurationMillis(baseDurationMillis)
+    } else {
+        baseDurationMillis
+    }
+}
+
+/**
  * 返回动画提交时，若手势已消解部分虚化(startProgress < 1)，剩余 [RETURNING] 动画按比例缩短，
  * 保持与共享元素落位一致的视觉速度，避免手势拖到底后仍补一段完整时长的收尾。
  */
@@ -220,8 +253,16 @@ internal fun resolveVideoCardTransitionBackgroundReturnDurationMs(
     minDurationMs: Int = VIDEO_CARD_TRANSITION_BACKGROUND_CANCEL_DURATION_MS
 ): Int {
     val clamped = startProgress.coerceIn(0f, 1f)
-    return (fullDurationMs * clamped).roundToInt().coerceIn(minDurationMs, fullDurationMs)
+    val safeFull = fullDurationMs.coerceAtLeast(minDurationMs)
+    return (safeFull * clamped).roundToInt().coerceIn(minDurationMs, safeFull)
 }
+
+/**
+ * OPENING 中途被返回打断时，必须从当前 progress 反转，禁止先补完进场再关。
+ */
+internal fun shouldInterruptVideoCardOpeningOnReturn(
+    phase: VideoCardTransitionBackgroundPhase,
+): Boolean = phase == VideoCardTransitionBackgroundPhase.OPENING
 
 internal fun shouldApplyVideoCardTransitionBackgroundToRoute(
     entryRoute: String?,

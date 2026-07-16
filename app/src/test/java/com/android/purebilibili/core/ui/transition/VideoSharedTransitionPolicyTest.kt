@@ -293,6 +293,20 @@ class VideoSharedTransitionPolicyTest {
     }
 
     @Test
+    fun videoCardSharedTransitionMotion_shortensTimelineForQuickReturn() {
+        val motion = resolveVideoCardSharedTransitionMotionSpec(
+            sourceRoute = "home",
+            transitionEnabled = true,
+            isQuickReturn = true,
+        )
+
+        assertEquals(276, motion.durationMillis)
+        assertEquals(0, motion.contentDelayMillis)
+        assertTrue(motion.contentDurationMillis <= 276)
+        assertTrue(motion.fullscreenDurationMillis < 540)
+    }
+
+    @Test
     fun videoCardSharedTransitionMotion_supportsSlowTimelineOption() {
         val motion = resolveVideoCardSharedTransitionMotionSpec(
             sourceRoute = "home",

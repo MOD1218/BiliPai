@@ -411,6 +411,58 @@ class VideoCardTransitionBackgroundPolicyTest {
     }
 
     @Test
+    fun quickReturnDurationCompressesBaseButKeepsReadableFloor() {
+        assertEquals(460, resolveVideoCardQuickReturnDurationMillis(460, factor = 1f))
+        assertEquals(276, resolveVideoCardQuickReturnDurationMillis(460))
+        assertEquals(
+            VIDEO_CARD_TRANSITION_QUICK_RETURN_MIN_DURATION_MS,
+            resolveVideoCardQuickReturnDurationMillis(280, factor = 0.5f),
+        )
+        assertEquals(0, resolveVideoCardQuickReturnDurationMillis(0))
+    }
+
+    @Test
+    fun returnFullDurationShortensForQuickReturnOrInterruptedOpening() {
+        assertEquals(
+            460,
+            resolveVideoCardTransitionReturnFullDurationMillis(
+                baseDurationMillis = 460,
+                isQuickReturn = false,
+                interruptedOpening = false,
+            ),
+        )
+        assertEquals(
+            276,
+            resolveVideoCardTransitionReturnFullDurationMillis(
+                baseDurationMillis = 460,
+                isQuickReturn = true,
+                interruptedOpening = false,
+            ),
+        )
+        assertEquals(
+            276,
+            resolveVideoCardTransitionReturnFullDurationMillis(
+                baseDurationMillis = 460,
+                isQuickReturn = false,
+                interruptedOpening = true,
+            ),
+        )
+    }
+
+    @Test
+    fun openingPhaseIsInterruptedOnReturn() {
+        assertTrue(
+            shouldInterruptVideoCardOpeningOnReturn(VideoCardTransitionBackgroundPhase.OPENING)
+        )
+        assertFalse(
+            shouldInterruptVideoCardOpeningOnReturn(VideoCardTransitionBackgroundPhase.HELD)
+        )
+        assertFalse(
+            shouldInterruptVideoCardOpeningOnReturn(VideoCardTransitionBackgroundPhase.RETURNING)
+        )
+    }
+
+    @Test
     fun navBackdropVisibleOnlyDuringHeldOrOpeningOnVideoDetail() {
         assertTrue(
             shouldShowVideoCardTransitionNavBackdrop(
