@@ -33,6 +33,7 @@ internal fun shouldFadePlayerSurfaceOnDetailReturn(
     isLeaving: Boolean,
     playbackIntent: VideoSharedTransitionPlaybackIntent
 ): Boolean {
+    // CoverFirst 本身已是封面主导；Immediate 返回时要淡出 surface 露出 handoff 封面。
     return isLeaving && playbackIntent == VideoSharedTransitionPlaybackIntent.ImmediatePlayback
 }
 
@@ -40,7 +41,8 @@ internal fun shouldUseDetailReturnCoverCrossfade(
     isLeaving: Boolean,
     playbackIntent: VideoSharedTransitionPlaybackIntent
 ): Boolean {
-    return isLeaving && playbackIntent == VideoSharedTransitionPlaybackIntent.ImmediatePlayback
+    // 任意播放意图在返回时都叠封面，保证 morph 过程看得见封面而非黑底。
+    return isLeaving
 }
 
 internal enum class VideoSharedTransitionTargetMode {

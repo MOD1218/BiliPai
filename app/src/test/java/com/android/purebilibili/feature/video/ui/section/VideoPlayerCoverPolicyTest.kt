@@ -232,8 +232,8 @@ class VideoPlayerCoverPolicyTest {
     }
 
     @Test
-    fun detailReturnCoverCrossfade_skipsCoverFirstProfile() {
-        assertFalse(
+    fun detailReturnCoverCrossfade_showsCoverForCoverFirst_butDoesNotFadeAbsentPlayer() {
+        assertTrue(
             com.android.purebilibili.core.ui.transition.shouldUseDetailReturnCoverCrossfade(
                 isLeaving = true,
                 playbackIntent = com.android.purebilibili.core.ui.transition.VideoSharedTransitionPlaybackIntent.CoverFirst

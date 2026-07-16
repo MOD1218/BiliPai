@@ -160,17 +160,23 @@ class VideoDetailReturnCoverPolicyTest {
             shouldUseReturningVideoDetailVisualState(
                 forceCoverOnlyForReturn = false,
                 isCardReturnExitInProgress = false,
+                isSessionReturningToCard = false,
             )
         )
     }
 
     @Test
     fun `committed card return exit enables cover handoff without forceCoverOnly`() {
-        // PostExit + sharedBounds → 叠封面淡出 surface，但不 forceCoverOnly 拆 player bounds
         assertTrue(
             shouldUseReturningVideoDetailVisualState(
                 forceCoverOnlyForReturn = false,
                 isCardReturnExitInProgress = true,
+            )
+        )
+        assertTrue(
+            shouldUseReturningVideoDetailVisualState(
+                forceCoverOnlyForReturn = false,
+                isSessionReturningToCard = true,
             )
         )
         assertFalse(
@@ -179,6 +185,18 @@ class VideoDetailReturnCoverPolicyTest {
                 isCardReturnExitInProgress = true,
             )
         )
+    }
+
+    @Test
+    fun `return cover snaps on while player fades briefly`() {
+        assertEquals(0, resolveDetailReturnCoverHandoffDurationMillis(isLeaving = true))
+        assertEquals(0, resolveDetailReturnCoverHandoffDurationMillis(isLeaving = false))
+        val playerFade = resolveDetailReturnPlayerFadeDurationMillis(
+            isLeaving = true,
+            returnDurationMillis = 460,
+        )
+        assertTrue(playerFade in 80..180)
+        assertTrue(playerFade < 460)
     }
 
     @Test
@@ -192,14 +210,16 @@ class VideoDetailReturnCoverPolicyTest {
     }
 
     @Test
-    fun `returning visual is wired from card exit progress for handoff`() {
+    fun `returning visual is wired from exit progress and session for handoff`() {
         val source = File("src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt")
             .readText()
         val call = source
             .substringAfter("val useReturningVideoDetailVisualState = shouldUseReturningVideoDetailVisualState(")
-            .substringBefore(")")
+            .substringBefore("val handleTopBarAction")
         assertTrue(call.contains("isCardReturnExitInProgress = isCardReturnExitInProgress"))
-        assertTrue(call.contains("forceCoverOnlyForReturn = forceCoverOnlyForReturn"))
+        assertTrue(call.contains("isSessionReturningToCard = isReturningFromDetail"))
+        assertTrue(source.contains("resolveDetailReturnCoverHandoffDurationMillis("))
+        assertTrue(source.contains("resolveDetailReturnPlayerFadeDurationMillis("))
     }
 
     @Test

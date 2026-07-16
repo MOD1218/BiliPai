@@ -197,8 +197,8 @@ class VideoCardScrollLiteVisualPolicyTest {
     }
 
     @Test
-    fun homeCardCover_hiddenForOpeningFreezeAndActiveShellMorph() {
-        // OPENING：不依赖 isTransitionActive，保证冻结层 record 时封面已透明
+    fun homeCardCover_hiddenOnOpenAndGesture_butVisibleDuringCommittedReturn() {
+        // OPENING：冻结 record 时藏封面
         assertTrue(
             shouldHideHomeCardCoverDuringShellMorph(
                 useCardContainerSharedBounds = true,
@@ -209,8 +209,8 @@ class VideoCardScrollLiteVisualPolicyTest {
                 isVideoCardReturnGestureInProgress = false,
             )
         )
-        // shared morph 进行中（含返回）：overlay 独占
-        assertTrue(
+        // 提交返回：列表封面保持可见（过程中看得见封面）
+        assertFalse(
             shouldHideHomeCardCoverDuringShellMorph(
                 useCardContainerSharedBounds = true,
                 isSharedMorphSourceCard = true,
@@ -220,7 +220,7 @@ class VideoCardScrollLiteVisualPolicyTest {
                 isVideoCardReturnGestureInProgress = false,
             )
         )
-        // 预测返回手势
+        // 预测跟手（未 mark 返回 session）：藏列表封面
         assertTrue(
             shouldHideHomeCardCoverDuringShellMorph(
                 useCardContainerSharedBounds = true,
@@ -231,18 +231,7 @@ class VideoCardScrollLiteVisualPolicyTest {
                 isVideoCardReturnGestureInProgress = true,
             )
         )
-        // morph 结束：显示封面承接落位
-        assertFalse(
-            shouldHideHomeCardCoverDuringShellMorph(
-                useCardContainerSharedBounds = true,
-                isSharedMorphSourceCard = true,
-                isReturningFromDetail = true,
-                isSharedTransitionActive = false,
-                transitionBackgroundPhase = VideoCardTransitionBackgroundPhase.IDLE,
-                isVideoCardReturnGestureInProgress = false,
-            )
-        )
-        // 非源卡 / 未启用 shell：不隐藏
+        // 非源卡
         assertFalse(
             shouldHideHomeCardCoverDuringShellMorph(
                 useCardContainerSharedBounds = true,

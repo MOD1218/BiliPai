@@ -300,15 +300,36 @@ internal fun resolveForceCoverOnlyForReturn(
 /**
  * 返回视觉（封面叠层 + 播放器淡出）：
  * - 显式 forceCoverOnly
- * - 或已提交的卡片回收退出（PostExit + sharedBounds）——末段 handoff，避免 surface→列表封面闪帧
+ * - 已提交的卡片回收退出（PostExit + sharedBounds）
+ * - 或 session 已标记返回卡片（顶栏 markReturning 后 / 栈返回中）——尽早叠封面，
+ *   避免「整段 return 只有播放器/黑底，落位才出封面」
  *
- * 注意：不把预测拖动中（未 PostExit）算进来，拖动仍保持 live player。
+ * 预测拖动未提交时 isSessionReturningToCard 应为 false（尚未 markReturning）。
  */
 internal fun shouldUseReturningVideoDetailVisualState(
     forceCoverOnlyForReturn: Boolean,
     isCardReturnExitInProgress: Boolean = false,
+    isSessionReturningToCard: Boolean = false,
 ): Boolean {
-    return forceCoverOnlyForReturn || isCardReturnExitInProgress
+    return forceCoverOnlyForReturn ||
+        isCardReturnExitInProgress ||
+        isSessionReturningToCard
+}
+
+/** 返回时封面应立刻盖住 surface（0ms），不能跟 player 同长慢淡入。 */
+internal fun resolveDetailReturnCoverHandoffDurationMillis(isLeaving: Boolean): Int {
+    return if (isLeaving) 0 else 0
+}
+
+/**
+ * 播放器淡出略快于 shared 全长，让封面在收回过程中可读。
+ */
+internal fun resolveDetailReturnPlayerFadeDurationMillis(
+    isLeaving: Boolean,
+    returnDurationMillis: Int,
+): Int {
+    if (!isLeaving || returnDurationMillis <= 0) return returnDurationMillis.coerceAtLeast(0)
+    return (returnDurationMillis * 0.35f).toInt().coerceIn(80, returnDurationMillis.coerceAtMost(180))
 }
 
 internal fun shouldTreatVideoDetailCardExitAsReturning(
@@ -1901,11 +1922,15 @@ fun VideoDetailScreen(
         transitionEnabled = transitionEnabled,
         isCardReturnExitInProgress = isCardReturnExitInProgress
     )
-    // 提交返回后的 PostExit：叠已缓存封面并淡出 surface，但不 forceCoverOnly
+    // 提交返回 / session 已 mark 返回：叠已缓存封面并淡出 surface，但不 forceCoverOnly
     //（保留 shell/player 容器参与 sharedBounds，避免 key 被拆掉）。
     val useReturningVideoDetailVisualState = shouldUseReturningVideoDetailVisualState(
         forceCoverOnlyForReturn = forceCoverOnlyForReturn,
         isCardReturnExitInProgress = isCardReturnExitInProgress,
+        isSessionReturningToCard = isReturningFromDetail &&
+            transitionEnabled &&
+            sharedBoundsActive &&
+            !keepLoadedContentForBackPreview,
     )
 
     val handleTopBarAction = remember(
@@ -3645,6 +3670,14 @@ fun VideoDetailScreen(
                         } else {
                             0
                         }
+                        val coverHandoffDurationMillis = resolveDetailReturnCoverHandoffDurationMillis(
+                            isLeaving = isLeaving,
+                        )
+                        val playerFadeDurationMillis = resolveDetailReturnPlayerFadeDurationMillis(
+                            isLeaving = isLeaving,
+                            returnDurationMillis = returnAlphaDurationMillis,
+                        )
+                        // 返回：封面立即盖上（0ms）；播放器短淡出。进场保持封面 alpha=0。
                         val coverCrossfadeAlpha = animateFloatAsState(
                             targetValue = if (
                                 shouldUseDetailReturnCoverCrossfade(
@@ -3657,7 +3690,7 @@ fun VideoDetailScreen(
                                 0f
                             },
                             animationSpec = tween(
-                                durationMillis = returnAlphaDurationMillis,
+                                durationMillis = coverHandoffDurationMillis,
                                 easing = if (isLeaving) {
                                     homeSharedTransitionMotionSpec.returnEasing
                                 } else {
@@ -3678,7 +3711,7 @@ fun VideoDetailScreen(
                                 1f
                             },
                             animationSpec = tween(
-                                durationMillis = returnAlphaDurationMillis,
+                                durationMillis = playerFadeDurationMillis,
                                 easing = if (isLeaving) {
                                     homeSharedTransitionMotionSpec.returnEasing
                                 } else {

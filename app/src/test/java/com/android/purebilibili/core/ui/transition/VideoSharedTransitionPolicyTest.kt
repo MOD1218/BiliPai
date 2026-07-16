@@ -565,7 +565,7 @@ class VideoSharedTransitionPolicyTest {
     }
 
     @Test
-    fun detailReturnFade_onlyAppliesToImmediatePlaybackProfile() {
+    fun detailReturnFade_playerOnlyForImmediate_coverForAnyLeaving() {
         assertTrue(
             shouldFadePlayerSurfaceOnDetailReturn(
                 isLeaving = true,
@@ -584,16 +584,23 @@ class VideoSharedTransitionPolicyTest {
                 playbackIntent = VideoSharedTransitionPlaybackIntent.ImmediatePlayback
             )
         )
+        // 返回过程必须看得见封面（不限播放意图）
         assertTrue(
             shouldUseDetailReturnCoverCrossfade(
                 isLeaving = true,
                 playbackIntent = VideoSharedTransitionPlaybackIntent.ImmediatePlayback
             )
         )
-        assertFalse(
+        assertTrue(
             shouldUseDetailReturnCoverCrossfade(
                 isLeaving = true,
                 playbackIntent = VideoSharedTransitionPlaybackIntent.CoverFirst
+            )
+        )
+        assertFalse(
+            shouldUseDetailReturnCoverCrossfade(
+                isLeaving = false,
+                playbackIntent = VideoSharedTransitionPlaybackIntent.ImmediatePlayback
             )
         )
     }
