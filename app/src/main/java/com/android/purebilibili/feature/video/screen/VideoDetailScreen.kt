@@ -1398,7 +1398,7 @@ fun VideoDetailScreen(
     ) { mutableStateOf(false) }
     // 🔄 [Seamless Playback] Internal BVID state to support seamless switching in portrait mode
     var currentBvid by rememberSaveable(bvid) { mutableStateOf(bvid) }
-    var currentBvidCid by rememberSaveable { mutableLongStateOf(0L) }
+    var currentBvidCid by rememberSaveable(bvid) { mutableLongStateOf(0L) }
     val playbackTargetCid = resolveVideoDetailPlaybackTargetCid(
         routeBvid = bvid,
         routeCid = cid,
@@ -2717,14 +2717,14 @@ fun VideoDetailScreen(
         subtitlePreferenceSessionKey = subtitlePreferenceSession.key
     }
 
-    var hasAppliedInitialPageSwitch by remember(currentBvid, cid) { mutableStateOf(false) }
-    LaunchedEffect(uiState, currentBvid, cid, hasAppliedInitialPageSwitch) {
+    var hasAppliedInitialPageSwitch by remember(currentBvid, playbackTargetCid) { mutableStateOf(false) }
+    LaunchedEffect(uiState, currentBvid, playbackTargetCid, hasAppliedInitialPageSwitch) {
         if (hasAppliedInitialPageSwitch) return@LaunchedEffect
         val success = uiState as? VideoPlaybackUiState.Success ?: return@LaunchedEffect
         if (success.info.bvid != currentBvid) return@LaunchedEffect
 
         val targetPageIndex = resolveInitialPageIndex(
-            requestedCid = cid,
+            requestedCid = playbackTargetCid,
             currentCid = success.info.cid,
             pages = success.info.pages
         )

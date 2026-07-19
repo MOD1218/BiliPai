@@ -37,6 +37,8 @@ class VideoDetailMiniPlayerSyncStructureTest {
             .substringBefore("//  弹幕加载逻辑已移至 VideoPlayerState")
 
         assertTrue(playerStateBlock.contains("cid = playbackTargetCid"))
+        assertTrue(source.contains("var currentBvidCid by rememberSaveable(bvid)"))
+        assertTrue(source.contains("requestedCid = playbackTargetCid"))
         assertTrue(playerStateBlock.contains("playbackSessionActive = isVisible"))
         assertTrue(syncEffect.contains("miniPlayerManager != null && shouldCacheMiniPlayer && isVisible"))
     }
