@@ -157,6 +157,21 @@ class VideoDetailScreenMethodSizeStructureTest {
         assertTrue(holder.contains("VideoDetailCommonOverlayAdapter("))
     }
 
+    @Test
+    fun playerSettingsOverlayOwnsItsSettingsFlowsAndDanmakuListener() {
+        val holder = loadSource("VideoDetailScreenStateHolder.kt")
+        val adapter = loadSource("VideoDetailPlayerSettingsOverlayAdapter.kt")
+
+        assertTrue(adapter.lineSequence().count() <= 350)
+        assertTrue(adapter.contains("getQualitySwitchFailureDialogEnabled(context)"))
+        assertTrue(adapter.contains("getDanmakuBlockRulesRaw(context, activeDanmakuScope)"))
+        assertTrue(adapter.contains("LaunchedEffect(danmakuManager, viewModel)"))
+        assertFalse(holder.contains("getQualitySwitchFailureDialogEnabled(context)"))
+        assertFalse(holder.contains("getDanmakuBlockRulesRaw(context, activeDanmakuScope)"))
+        assertFalse(holder.contains("setOnDanmakuClickListener"))
+        assertTrue(holder.contains("VideoDetailPlayerSettingsOverlayAdapter("))
+    }
+
     private fun loadSource(name: String): String {
         val candidates = listOf(
             File("src/main/java/com/android/purebilibili/feature/video/screen/$name"),

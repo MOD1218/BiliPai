@@ -786,33 +786,6 @@ internal fun VideoDetailScreenStateHolder(
     val isFavoriteFoldersLoading by viewModel.isFavoriteFoldersLoading.collectAsStateWithLifecycle()
     val selectedFavoriteFolderIds by viewModel.favoriteSelectedFolderIds.collectAsStateWithLifecycle()
     val isSavingFavoriteFolders by viewModel.isSavingFavoriteFolders.collectAsStateWithLifecycle()
-    val qualitySwitchFailureDialog by viewModel.qualitySwitchFailureDialog.collectAsStateWithLifecycle()
-    val playerDiagnosticLoggingEnabled by com.android.purebilibili.core.store.SettingsManager
-        .getPlayerDiagnosticLoggingEnabled(context)
-        .collectAsStateWithLifecycle(
-            initialValue = true,
-            lifecycle = lifecycleOwner.lifecycle
-        )
-    val qualitySwitchFailureDialogEnabled by com.android.purebilibili.core.store.SettingsManager
-        .getQualitySwitchFailureDialogEnabled(context)
-        .collectAsStateWithLifecycle(
-            initialValue = true,
-            lifecycle = lifecycleOwner.lifecycle
-        )
-    val qualitySwitchFailureDialogOnceEnabled by com.android.purebilibili.core.store.SettingsManager
-        .getQualitySwitchFailureDialogOnceEnabled(context)
-        .collectAsStateWithLifecycle(
-            initialValue = false,
-            lifecycle = lifecycleOwner.lifecycle
-        )
-    val qualitySwitchFailureDialogShown by com.android.purebilibili.core.store.SettingsManager
-        .getQualitySwitchFailureDialogShown(context)
-        .collectAsStateWithLifecycle(
-            initialValue = false,
-            lifecycle = lifecycleOwner.lifecycle
-        )
-    val qualitySwitchDialogScope = rememberCoroutineScope()
-
     // [Blur] Haze State
     val hazeState = rememberRecoverableHazeState()
 
@@ -880,16 +853,6 @@ internal fun VideoDetailScreenStateHolder(
         isFullscreenMode = isFullscreenMode,
         onReleaseManualFullscreenRequest = { userRequestedFullscreen = false }
     )
-    val activeDanmakuScope = remember(isFullscreenMode) {
-        com.android.purebilibili.core.store.resolveDanmakuSettingsScope(isLandscape = isFullscreenMode)
-    }
-    val activeDanmakuBlockRulesRaw by com.android.purebilibili.core.store.SettingsManager
-        .getDanmakuBlockRulesRaw(context, activeDanmakuScope)
-        .collectAsStateWithLifecycle(
-            initialValue = "",
-            lifecycle = lifecycleOwner.lifecycle
-        )
-
     var previousPipMode by remember { mutableStateOf(isInPipMode) }
     LaunchedEffect(isInPipMode) { presentationState.syncPipMode(isInPipMode) }
     LaunchedEffect(isPipMode, subReplyState.visible) {
@@ -3302,32 +3265,12 @@ internal fun VideoDetailScreenStateHolder(
             )
         }
 
-        VideoDetailQualitySwitchFailureDialog(
+        VideoDetailPlayerSettingsOverlayAdapter(
             context = context,
             viewModel = viewModel,
-            qualitySwitchFailureDialog = qualitySwitchFailureDialog,
-            qualitySwitchFailureDialogEnabled = qualitySwitchFailureDialogEnabled,
-            qualitySwitchFailureDialogOnceEnabled = qualitySwitchFailureDialogOnceEnabled,
-            qualitySwitchFailureDialogShown = qualitySwitchFailureDialogShown,
-            playerDiagnosticLoggingEnabled = playerDiagnosticLoggingEnabled,
-            qualitySwitchDialogScope = qualitySwitchDialogScope
+            isFullscreenMode = isFullscreenMode,
+            danmakuManager = danmakuManager,
         )
-
-        VideoDetailDanmakuContextMenu(
-            context = context,
-            viewModel = viewModel,
-            activeDanmakuBlockRulesRaw = activeDanmakuBlockRulesRaw,
-            activeDanmakuScope = activeDanmakuScope,
-            sortPreferenceScope = sortPreferenceScope
-        )
-
-        // 🔗 绑定弹幕点击监听器
-        LaunchedEffect(danmakuManager) {
-            danmakuManager.setOnDanmakuClickListener { text, dmid, userHash, isSelf ->
-                android.util.Log.d("VideoDetailScreen", "👆 Danmaku clicked: $text")
-                viewModel.showDanmakuMenu(dmid, text, userHash, isSelf)
-            }
-        }
     }
 
     VideoDetailScreenContent(
