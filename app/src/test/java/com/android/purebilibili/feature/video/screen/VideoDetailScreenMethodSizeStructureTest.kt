@@ -2,6 +2,7 @@ package com.android.purebilibili.feature.video.screen
 
 import java.io.File
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -101,6 +102,29 @@ class VideoDetailScreenMethodSizeStructureTest {
         assertTrue(playerHost.contains("alpha = inlinePlayerAlpha.value"))
         assertTrue(playerHost.contains("scaleX = inlinePlayerScale.value"))
         assertFalse(playerHost.contains(".alpha(inlinePlayerAlpha)"))
+    }
+
+    @Test
+    fun inputAndDownloadOverlayFlowsLiveInBoundedAdapters() {
+        val holder = loadSource("VideoDetailScreenStateHolder.kt")
+        val inputAdapter = loadSource("VideoDetailInputOverlayAdapter.kt")
+        val downloadAdapter = loadSource("VideoDetailDownloadOverlayAdapter.kt")
+
+        assertTrue(inputAdapter.lineSequence().count() <= 700)
+        assertTrue(downloadAdapter.lineSequence().count() <= 700)
+        assertTrue(inputAdapter.contains("VideoDetailDanmakuInputOverlayContent("))
+        assertTrue(inputAdapter.contains("VideoDetailCommentInputOverlayContent("))
+        assertTrue(inputAdapter.contains("snapshot: DanmakuInputSnapshot"))
+        assertTrue(inputAdapter.contains("snapshot: CommentInputSnapshot"))
+        assertEquals(
+            1,
+            holder.split("viewModel.showDanmakuDialog.collectAsStateWithLifecycle()").size - 1,
+            "only the fullscreen inline composer may collect this state in the holder",
+        )
+        assertFalse(holder.contains("viewModel.isSendingComment.collectAsStateWithLifecycle()"))
+        assertFalse(holder.contains("viewModel.showDownloadDialog.collectAsStateWithLifecycle()"))
+        assertTrue(holder.contains("VideoDetailInputOverlayAdapter("))
+        assertTrue(holder.contains("VideoDetailDownloadOverlayAdapter("))
     }
 
     private fun loadSource(name: String): String {
