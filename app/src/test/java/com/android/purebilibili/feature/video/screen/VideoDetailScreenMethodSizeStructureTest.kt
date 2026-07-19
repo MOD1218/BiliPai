@@ -8,120 +8,75 @@ import kotlin.test.assertTrue
 class VideoDetailScreenMethodSizeStructureTest {
 
     @Test
-    fun videoDetailScreenDelegatesLargeDialogsAndMenusToChildComposables() {
-        val source = loadSource("app/src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt")
-        val videoDetailBody = source
-            .substringAfter("fun VideoDetailScreen(")
-            .substringBefore("@OptIn(ExperimentalHazeMaterialsApi::class)")
+    fun publicVideoDetailScreenRemainsAThinEntryPoint() {
+        val source = loadSource("VideoDetailScreen.kt")
 
-        assertTrue(videoDetailBody.contains("VideoDetailFollowGroupDialog(viewModel = viewModel)"))
-        assertTrue(videoDetailBody.contains("VideoDetailPlaybackEndedDialog("))
-        assertTrue(videoDetailBody.contains("VideoDetailQualitySwitchFailureDialog("))
-        assertTrue(videoDetailBody.contains("VideoDetailDanmakuContextMenu("))
-        assertTrue(source.contains("private fun VideoDetailFollowGroupDialog("))
-        assertTrue(source.contains("private fun VideoDetailPlaybackEndedDialog("))
-        assertTrue(source.contains("private fun VideoDetailQualitySwitchFailureDialog("))
-        assertTrue(source.contains("private fun VideoDetailDanmakuContextMenu("))
+        assertTrue(source.lineSequence().count() <= 350)
+        assertTrue(source.contains("fun VideoDetailScreen("))
+        assertTrue(source.contains("VideoDetailScreenStateHolder("))
+        assertFalse(source.contains("collectAsStateWithLifecycle"))
+        assertFalse(source.contains("LaunchedEffect("))
+        assertFalse(source.contains("VideoDetailRouteSheetHost("))
     }
 
     @Test
-    fun phoneSuccessContentLivesOutsideVideoDetailMainFile() {
-        val videoDetailSource = loadSource(
-            "app/src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt"
-        )
-        val phoneContentFile = listOf(
-            File("app/src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailPhoneContent.kt"),
-            File("src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailPhoneContent.kt")
-        ).firstOrNull { it.exists() }
-
-        assertFalse(videoDetailSource.contains("private fun VideoDetailPhoneSuccessContentLayer("))
-        assertTrue(phoneContentFile != null)
-        assertTrue(
-            requireNotNull(phoneContentFile).readText()
-                .contains("internal fun VideoDetailPhoneSuccessContentLayer(")
-        )
+    fun renderingEntrypointsDoNotAcceptViewModels() {
+        listOf(
+            "VideoDetailScreenContent.kt",
+            "VideoDetailPlayerTransitionHost.kt",
+            "VideoDetailPhoneContent.kt",
+            "TabletVideoLayout.kt",
+            "TabletCinemaLayout.kt"
+        ).forEach { name ->
+            val source = loadSource(name)
+            assertFalse(source.contains("ViewModel"), "$name must remain ViewModel-free")
+            assertFalse(source.contains("collectAsStateWithLifecycle"), "$name must not collect business state")
+        }
     }
 
     @Test
-    fun videoDetailScreenKeepsInlineCollapseStateBehindOneHolder() {
-        val source = loadSource("app/src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt")
-        val videoDetailBody = source
-            .substringAfter("fun VideoDetailScreen(")
-            .substringBefore("@OptIn(ExperimentalHazeMaterialsApi::class)")
+    fun playerAndDetailContentShareTheRootTransitionProgress() {
+        val holder = loadSource("VideoDetailScreenStateHolder.kt")
+        val transitionHost = loadSource("VideoDetailTransitionHost.kt")
+        val content = loadSource("VideoDetailScreenContent.kt")
 
-        assertTrue(videoDetailBody.contains("rememberInlinePortraitPlayerCollapseState(currentBvid)"))
-        assertFalse(videoDetailBody.contains("keepPlayerExpandedUntilNextScroll"))
-        assertFalse(videoDetailBody.contains("commentFirstVisibleItemIndex"))
-        assertFalse(videoDetailBody.contains("commentFirstVisibleItemScrollOffset"))
-        assertFalse(videoDetailBody.contains("onCommentScrollStateChange ="))
+        assertTrue(transitionHost.contains("label = \"video-detail-shared-transition-progress\""))
+        assertTrue(holder.contains("val detailTransitionProgress = transitionState.progress"))
+        assertTrue(holder.contains("resolveVideoDetailReturnCoverAlpha("))
+        assertTrue(holder.contains("resolveVideoDetailReturnPlayerAlpha("))
+        assertTrue(holder.contains("resolveVideoDetailReturnContentAlpha("))
+        assertTrue(content.contains("transitionState.routeSheetFrameProvider"))
     }
 
     @Test
-    fun routeSheetOverlaysRemainInsideBoxScopeContent() {
-        val source = loadSource("app/src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt")
-        val routeSheetContent = source
-            .substringAfter("fun BoxScope.VideoDetailRouteSheetOverlayContent()")
-            .substringBefore("VideoDetailRouteSheetHost(")
+    fun transitionConstantsLiveInTheTransitionPolicy() {
+        val policy = loadSource("VideoDetailTransitionPolicy.kt")
+        val host = loadSource("VideoDetailTransitionHost.kt")
+        val entry = loadSource("VideoDetailScreen.kt")
 
-        assertTrue(routeSheetContent.contains("VideoActionFeedbackHost("))
-        assertTrue(routeSheetContent.contains(".align(feedbackAnchorAlignment)"))
-        assertTrue(source.contains("fun BoxScope.VideoDetailRouteSheetMainContent()"))
-        assertTrue(source.contains("overlayContent = { VideoDetailRouteSheetOverlayContent() }"))
+        assertTrue(policy.contains("HOME_VIDEO_ROUTE_SHEET_MAIN_DURATION_MILLIS = 320"))
+        assertTrue(policy.contains("HOME_VIDEO_ROUTE_SHEET_SETTLE_DURATION_MILLIS"))
+        assertFalse(host.contains("HOME_VIDEO_ROUTE_SHEET_MAIN_DURATION_MILLIS"))
+        assertFalse(entry.contains("HOME_VIDEO_ROUTE_SHEET_MAIN_DURATION_MILLIS"))
     }
 
     @Test
-    fun videoDetailPlayerContainerUsesHomeSharedTransitionPolicy() {
-        val source = loadSource("app/src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt")
-        val playerContainerSource = source
-            .substringAfter("val playerContainerModifier = if (")
-            .substringBefore("//  播放器容器包含状态栏高度")
+    fun largeDialogsAndPlayerHostLiveOutsideTheStateHolder() {
+        val holder = loadSource("VideoDetailScreenStateHolder.kt")
+        val overlays = loadSource("VideoDetailOverlayHost.kt")
+        val playerHost = loadSource("VideoDetailPlayerTransitionHost.kt")
 
-        assertTrue(source.contains("resolveVideoCardSharedTransitionMotionSpec("))
-        assertTrue(source.contains("resolveVideoSharedTransitionVisualSpec("))
-        assertTrue(playerContainerSource.contains("homeSharedTransitionMotionSpec.enabled"))
-        assertTrue(playerContainerSource.contains("homeSharedTransitionMotionSpec.enabled && isFullscreenTarget"))
-        assertTrue(playerContainerSource.contains("homeSharedTransitionMotionSpec.durationMillis"))
-        assertTrue(playerContainerSource.contains("durationMillis = duration"))
-        assertTrue(playerContainerSource.contains("activeVideoSharedTransitionVisualSpec.targetCornerDp.dp"))
+        assertFalse(holder.contains("internal fun VideoDetailFollowGroupDialog("))
+        assertFalse(holder.contains("internal fun PortraitInlineVideoPlayerHost("))
+        assertTrue(overlays.contains("internal fun VideoDetailFollowGroupDialog("))
+        assertTrue(overlays.contains("internal fun VideoDetailPlaybackEndedDialog("))
+        assertTrue(playerHost.contains("internal fun PortraitInlineVideoPlayerHost("))
     }
 
-    @Test
-    fun videoDetailScreenUsesCentralSharedTransitionEnablePolicy() {
-        val source = loadSource("app/src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt")
-
-        assertTrue(
-            source.contains("import com.android.purebilibili.core.ui.transition.shouldEnableVideoCoverSharedTransition")
-        )
-        assertFalse(
-            source.contains("internal fun shouldEnableVideoCoverSharedTransition(")
-        )
-    }
-
-    @Test
-    fun videoDetailShellDoesNotAddEnterSettleRebound() {
-        val source = loadSource("app/src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt")
-
-        assertFalse(source.contains("resolveVideoDetailEnterSettleSpec("))
-        assertFalse(source.contains(".videoDetailEnterSettle("))
-    }
-
-    @Test
-    fun phoneAutoRotateDoesNotUseGlobalCandidateStabilizationDelay() {
-        val source = loadSource("app/src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt")
-
-        assertFalse(source.contains("PHONE_AUTO_ROTATE_STABILIZATION_DELAY_MS"))
-        assertFalse(source.contains("PhoneAutoRotatePendingTarget"))
-        assertFalse(source.contains("resolveStablePhoneAutoRotateTarget"))
-        assertTrue(source.contains("PHONE_AUTO_ROTATE_LANDSCAPE_SETTLE_MS"))
-        assertTrue(source.contains("resolvePhoneAutoRotateTargetToApply("))
-    }
-
-    private fun loadSource(path: String): String {
+    private fun loadSource(name: String): String {
         val candidates = listOf(
-            File(path),
-            File("app", path.removePrefix("app/")),
-            File(path.removePrefix("app/")),
-            File("..", path)
+            File("src/main/java/com/android/purebilibili/feature/video/screen/$name"),
+            File("app/src/main/java/com/android/purebilibili/feature/video/screen/$name")
         )
         return candidates.first { it.exists() }.readText()
     }

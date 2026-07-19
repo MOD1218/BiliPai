@@ -307,9 +307,12 @@ class VideoSharedTransitionPolicyTest {
 
     @Test
     fun videoDetailRootProvidesGlobalCardShellSharedBoundsTarget() {
-        val detailSource = File(
-            "src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt"
-        ).readText()
+        val detailSource = listOf(
+            "VideoDetailTransitionHost.kt",
+            "VideoDetailScreenStateHolder.kt"
+        ).joinToString("\n") { name ->
+            File("src/main/java/com/android/purebilibili/feature/video/screen/$name").readText()
+        }
 
         assertTrue(detailSource.contains("shouldUseVideoCardShellContainerTransform("))
         assertTrue(detailSource.contains("detailShellSharedBoundsEnabled"))

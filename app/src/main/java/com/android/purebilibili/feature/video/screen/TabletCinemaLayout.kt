@@ -64,7 +64,6 @@ import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -145,6 +144,11 @@ internal fun TabletCinemaLayout(
     engagementState: VideoEngagementUiState,
     subReplyState: SubReplyUiState,
     downloadProgress: Float,
+    tabletCommentPanelWidthPreset: TabletCommentPanelWidthPreset,
+    commentMemberDecorationsEnabled: Boolean,
+    videoAiSummaryEntryEnabled: Boolean,
+    videoNoteEnabled: Boolean,
+    videoNoteDefaultCollapsed: Boolean,
     playbackActions: VideoDetailPlaybackActions,
     engagementActions: VideoDetailEngagementActions,
     commentActions: VideoDetailCommentActions,
@@ -182,14 +186,6 @@ internal fun TabletCinemaLayout(
     predictiveBackCancelRecoveryGeneration: Int = 0
 ) {
     val appContext = LocalContext.current
-    val tabletCommentPanelWidthPreset by SettingsManager
-        .getTabletCommentPanelWidthPreset(appContext)
-        .collectAsStateWithLifecycle(initialValue = TabletCommentPanelWidthPreset.STANDARD
-        )
-    val commentMemberDecorationsEnabled by SettingsManager
-        .getCommentMemberDecorationsEnabled(appContext)
-        .collectAsStateWithLifecycle(initialValue = false
-        )
     val policy = remember(configuration.screenWidthDp, tabletCommentPanelWidthPreset) {
         resolveTabletCinemaLayoutPolicy(
             widthDp = configuration.screenWidthDp,
@@ -297,6 +293,9 @@ internal fun TabletCinemaLayout(
                         success = success.withEngagementUiState(engagementState),
                         engagement = engagementState,
                         downloadProgress = downloadProgress,
+                        videoAiSummaryEntryEnabled = videoAiSummaryEntryEnabled,
+                        videoNoteEnabled = videoNoteEnabled,
+                        videoNoteDefaultCollapsed = videoNoteDefaultCollapsed,
                         modifier = Modifier.weight(1f),
                         onFollowClick = engagementActions.toggleFollow,
                         onUpClick = onUpClick,
@@ -526,6 +525,9 @@ private fun CinemaMetaPanel(
     success: VideoPlaybackUiState.Success,
     engagement: VideoEngagementUiState,
     downloadProgress: Float,
+    videoAiSummaryEntryEnabled: Boolean,
+    videoNoteEnabled: Boolean,
+    videoNoteDefaultCollapsed: Boolean,
     modifier: Modifier = Modifier,
     onFollowClick: () -> Unit,
     onUpClick: (Long) -> Unit,
@@ -707,6 +709,9 @@ private fun CinemaMetaPanel(
                     CinemaMetaPanelBlock.INTRO -> {
                         CinemaVideoIntroSection(
                             success = success,
+                            videoAiSummaryEntryEnabled = videoAiSummaryEntryEnabled,
+                            videoNoteEnabled = videoNoteEnabled,
+                            videoNoteDefaultCollapsed = videoNoteDefaultCollapsed,
                             onOpenBilibiliLink = onOpenBilibiliLink,
                             onBgmClick = onBgmClick,
                             onRelatedVideoClick = onRelatedVideoClick,
@@ -830,6 +835,9 @@ private fun CinemaMetaUpInfo(
 @Composable
 private fun CinemaVideoIntroSection(
     success: VideoPlaybackUiState.Success,
+    videoAiSummaryEntryEnabled: Boolean,
+    videoNoteEnabled: Boolean,
+    videoNoteDefaultCollapsed: Boolean,
     onBgmClick: (BgmInfo) -> Unit = {},
     onOpenBilibiliLink: ((String) -> Unit)? = null,
     onRelatedVideoClick: (String, android.os.Bundle?) -> Unit = { _, _ -> },
@@ -841,12 +849,7 @@ private fun CinemaVideoIntroSection(
     onShareVideoNote: (VideoNoteEditorDocument) -> Unit = {},
     onPublicVideoNoteClick: (Long, String) -> Unit = { _, _ -> }
 ) {
-    val context = LocalContext.current
     val isDarkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-    val videoAiSummaryEntryEnabled by com.android.purebilibili.core.store.SettingsManager
-        .getVideoAiSummaryEntryEnabled(context)
-        .collectAsStateWithLifecycle(initialValue = true
-        )
 
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -888,10 +891,6 @@ private fun CinemaVideoIntroSection(
                 onActionClick = onRetryAiSummary
             )
         }
-        val videoNoteEnabled by SettingsManager.getVideoNoteEnabled(context)
-            .collectAsStateWithLifecycle(initialValue = true)
-        val videoNoteDefaultCollapsed by SettingsManager.getVideoNoteDefaultCollapsed(context)
-            .collectAsStateWithLifecycle(initialValue = false)
         if (shouldShowVideoNoteCard(videoNoteEnabled)) {
             VideoNoteCard(
                 noteState = success.videoNoteState,

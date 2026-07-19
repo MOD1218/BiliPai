@@ -9,7 +9,7 @@ class VideoDetailMiniPlayerSyncStructureTest {
 
     @Test
     fun videoInfoSyncHappensBeforeBackgroundUiStateCache() {
-        val source = loadSource("app/src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt")
+        val source = loadSource("app/src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreenStateHolder.kt")
         val miniPlayerSyncBlock = source
             .substringAfter("val shouldCacheMiniPlayer = lastCachedMiniPlayerBvid != currentBvid")
             .substringBefore("} else if (miniPlayerManager == null)")
@@ -28,7 +28,7 @@ class VideoDetailMiniPlayerSyncStructureTest {
 
     @Test
     fun backPreviewCannotReplaceTheCurrentMiniPlayerSession() {
-        val source = loadSource("app/src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt")
+        val source = loadSource("app/src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreenStateHolder.kt")
         val playerStateBlock = source
             .substringAfter("val playerState = rememberVideoPlayerState(")
             .substringBefore("val shouldKeepVideoScreenAwake")

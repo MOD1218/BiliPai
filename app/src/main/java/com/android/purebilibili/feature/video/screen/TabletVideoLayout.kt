@@ -61,7 +61,6 @@ import com.android.purebilibili.core.ui.LocalSharedTransitionScope
 import com.android.purebilibili.core.ui.LocalAnimatedVisibilityScope
 import com.android.purebilibili.core.ui.LocalSharedTransitionEnabled
 import com.android.purebilibili.core.ui.transition.VIDEO_SHARED_COVER_ASPECT_RATIO
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.purebilibili.feature.video.viewmodel.withEngagementUiState
 
 /**
@@ -80,6 +79,7 @@ internal fun TabletVideoLayout(
     engagementState: VideoEngagementUiState,
     subReplyState: SubReplyUiState,
     downloadProgress: Float,
+    commentMemberDecorationsEnabled: Boolean,
     playbackActions: VideoDetailPlaybackActions,
     engagementActions: VideoDetailEngagementActions,
     commentActions: VideoDetailCommentActions,
@@ -136,10 +136,6 @@ internal fun TabletVideoLayout(
     
     // 🖥️ [修复] 使用 LocalContext 获取 Activity，而非 playerState.context
     val context = LocalContext.current
-    val commentMemberDecorationsEnabled by com.android.purebilibili.core.store.SettingsManager
-        .getCommentMemberDecorationsEnabled(context)
-        .collectAsStateWithLifecycle(initialValue = false
-        )
     val activity = remember(context) {
         (context as? android.app.Activity)
             ?: (context as? android.content.ContextWrapper)?.baseContext as? android.app.Activity

@@ -27,9 +27,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.android.purebilibili.core.store.HomeSettings
-import com.android.purebilibili.core.store.SettingsManager
 import com.android.purebilibili.core.ui.AppShapes
 import com.android.purebilibili.core.ui.AppSurfaceTokens
 import com.android.purebilibili.core.ui.ContainerLevel
@@ -68,6 +65,7 @@ internal fun VideoDetailPhoneSuccessContentLayer(
     videoContentPagerState: PagerState,
     commentState: CommentUiState,
     engagementState: VideoEngagementUiState,
+    androidNativeLiquidGlassEnabled: Boolean,
     commentMemberDecorationsEnabled: Boolean,
     playbackActions: VideoDetailPlaybackActions,
     engagementActions: VideoDetailEngagementActions,
@@ -158,11 +156,8 @@ internal fun VideoDetailPhoneSuccessContentLayer(
                     }
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        val homeSettings by SettingsManager
-                            .getHomeSettings(context)
-                            .collectAsStateWithLifecycle(initialValue = HomeSettings())
                         val floatingLiquidBottomInputBar = shouldUseFloatingLiquidBottomInputBar(
-                            androidNativeLiquidGlassEnabled = homeSettings.androidNativeLiquidGlassEnabled
+                            androidNativeLiquidGlassEnabled = androidNativeLiquidGlassEnabled
                         )
                         // Capture scrolling detail content only; BottomInputBar stays outside
                         // so drawBackdrop does not self-sample (same contract as tab chrome).

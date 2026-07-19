@@ -1036,6 +1036,27 @@ internal fun VideoDetailScreenStateHolder(
             initialValue = false,
             lifecycle = lifecycleOwner.lifecycle
         )
+    val homeSettings by com.android.purebilibili.core.store.SettingsManager
+        .getHomeSettings(context)
+        .collectAsStateWithLifecycle(
+            initialValue = com.android.purebilibili.core.store.HomeSettings(),
+            lifecycle = lifecycleOwner.lifecycle
+        )
+    val tabletCommentPanelWidthPreset by com.android.purebilibili.core.store.SettingsManager
+        .getTabletCommentPanelWidthPreset(context)
+        .collectAsStateWithLifecycle(
+            initialValue = com.android.purebilibili.core.store.TabletCommentPanelWidthPreset.STANDARD,
+            lifecycle = lifecycleOwner.lifecycle
+        )
+    val videoAiSummaryEntryEnabled by com.android.purebilibili.core.store.SettingsManager
+        .getVideoAiSummaryEntryEnabled(context)
+        .collectAsStateWithLifecycle(initialValue = true, lifecycle = lifecycleOwner.lifecycle)
+    val videoNoteEnabled by com.android.purebilibili.core.store.SettingsManager
+        .getVideoNoteEnabled(context)
+        .collectAsStateWithLifecycle(initialValue = true, lifecycle = lifecycleOwner.lifecycle)
+    val videoNoteDefaultCollapsed by com.android.purebilibili.core.store.SettingsManager
+        .getVideoNoteDefaultCollapsed(context)
+        .collectAsStateWithLifecycle(initialValue = false, lifecycle = lifecycleOwner.lifecycle)
     val preferredCommentSortMode = remember(commentDefaultSortMode) {
         CommentSortMode.fromApiMode(commentDefaultSortMode)
     }
@@ -2828,6 +2849,11 @@ internal fun VideoDetailScreenStateHolder(
                             engagementState = engagementState,
                             subReplyState = subReplyState,
                             downloadProgress = downloadProgress,
+                            tabletCommentPanelWidthPreset = tabletCommentPanelWidthPreset,
+                            commentMemberDecorationsEnabled = commentMemberDecorationsEnabled,
+                            videoAiSummaryEntryEnabled = videoAiSummaryEntryEnabled,
+                            videoNoteEnabled = videoNoteEnabled,
+                            videoNoteDefaultCollapsed = videoNoteDefaultCollapsed,
                             playbackActions = playbackActions,
                             engagementActions = engagementActions,
                             commentActions = commentActions,
@@ -3372,6 +3398,8 @@ internal fun VideoDetailScreenStateHolder(
                                         videoContentPagerState = videoContentPagerState,
                                         commentState = commentState,
                                         engagementState = engagementState,
+                                        androidNativeLiquidGlassEnabled =
+                                            homeSettings.androidNativeLiquidGlassEnabled,
                                         commentMemberDecorationsEnabled = commentMemberDecorationsEnabled,
                                         playbackActions = playbackActions,
                                         engagementActions = engagementActions,
