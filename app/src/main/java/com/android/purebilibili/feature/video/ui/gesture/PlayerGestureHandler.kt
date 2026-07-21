@@ -28,7 +28,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.android.purebilibili.core.theme.LocalAndroidNativeVariant
+import com.android.purebilibili.core.theme.LocalUiPreset
 import com.android.purebilibili.core.util.FormatUtils
+import com.android.purebilibili.feature.video.ui.section.resolveBrightnessGestureIcon
+import com.android.purebilibili.feature.video.ui.section.resolveGestureLevelIconStyle
+import com.android.purebilibili.feature.video.ui.section.resolveVolumeGestureIcon
 import kotlin.math.abs
 
 /**
@@ -235,6 +240,15 @@ fun GestureIndicator(
             }
         }
         GestureMode.Brightness -> {
+            val uiPreset = LocalUiPreset.current
+            val androidNativeVariant = LocalAndroidNativeVariant.current
+            val iconStyle = remember(uiPreset, androidNativeVariant) {
+                resolveGestureLevelIconStyle(uiPreset, androidNativeVariant)
+            }
+            val brightnessIcon = resolveBrightnessGestureIcon(
+                percent = value,
+                iconStyle = iconStyle
+            )
             Surface(
                 modifier = modifier,
                 shape = RoundedCornerShape(12.dp),
@@ -244,8 +258,7 @@ fun GestureIndicator(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(24.dp)
                 ) {
-                    // 亮度图标：CupertinoIcons SunMax (iOS SF Symbols 风格)
-                    Icon(CupertinoIcons.Default.SunMax, null, tint = Color.White, modifier = Modifier.size(36.dp))
+                    Icon(brightnessIcon, null, tint = Color.White, modifier = Modifier.size(36.dp))
                     Spacer(Modifier.height(8.dp))
                     Text("亮度", color = Color.White, fontSize = 14.sp)
                     Spacer(Modifier.height(4.dp))
@@ -254,6 +267,15 @@ fun GestureIndicator(
             }
         }
         GestureMode.Volume -> {
+            val uiPreset = LocalUiPreset.current
+            val androidNativeVariant = LocalAndroidNativeVariant.current
+            val iconStyle = remember(uiPreset, androidNativeVariant) {
+                resolveGestureLevelIconStyle(uiPreset, androidNativeVariant)
+            }
+            val volumeIcon = resolveVolumeGestureIcon(
+                percent = value,
+                iconStyle = iconStyle
+            )
             Surface(
                 modifier = modifier,
                 shape = RoundedCornerShape(12.dp),
@@ -263,12 +285,6 @@ fun GestureIndicator(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(24.dp)
                 ) {
-                    // 动态音量图标：3 级
-                    val volumeIcon = when {
-                        value < 0.01f -> CupertinoIcons.Default.SpeakerSlash
-                        value < 0.5f -> CupertinoIcons.Default.Speaker
-                        else -> CupertinoIcons.Default.SpeakerWave2
-                    }
                     Icon(volumeIcon, null, tint = Color.White, modifier = Modifier.size(36.dp))
                     Spacer(Modifier.height(8.dp))
                     Text("音量", color = Color.White, fontSize = 14.sp)

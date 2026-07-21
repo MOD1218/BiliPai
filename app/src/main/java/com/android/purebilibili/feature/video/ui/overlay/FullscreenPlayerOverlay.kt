@@ -61,9 +61,14 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.android.purebilibili.core.store.DanmakuSettings
 import com.android.purebilibili.core.store.FullscreenAspectRatio
 import com.android.purebilibili.core.store.SettingsManager
+import com.android.purebilibili.core.theme.LocalAndroidNativeVariant
+import com.android.purebilibili.core.theme.LocalUiPreset
 import com.android.purebilibili.core.ui.blur.BlurSurfaceType
 import com.android.purebilibili.core.ui.blur.rememberRecoverableHazeState
 import com.android.purebilibili.core.ui.blur.unifiedBlur
+import com.android.purebilibili.feature.video.ui.section.resolveBrightnessGestureIcon
+import com.android.purebilibili.feature.video.ui.section.resolveGestureLevelIconStyle
+import com.android.purebilibili.feature.video.ui.section.resolveVolumeGestureIcon
 import androidx.media3.common.Player
 import androidx.media3.ui.PlayerView
 import com.android.purebilibili.core.util.FormatUtils
@@ -1287,6 +1292,14 @@ private fun GestureIndicator(
         animationSpec = tween(durationMillis = 120),
         label = "fullscreen-gesture-progress"
     )
+    val uiPreset = LocalUiPreset.current
+    val androidNativeVariant = LocalAndroidNativeVariant.current
+    val gestureLevelIconStyle = remember(uiPreset, androidNativeVariant) {
+        resolveGestureLevelIconStyle(
+            uiPreset = uiPreset,
+            androidNativeVariant = androidNativeVariant
+        )
+    }
     val accentColor = when (mode) {
         FullscreenGestureMode.Brightness -> Color(0xFFFFD54F)
         FullscreenGestureMode.Volume -> Color(0xFF80DEEA)
@@ -1341,7 +1354,11 @@ private fun GestureIndicator(
             ) {
                 when (mode) {
                     FullscreenGestureMode.Brightness -> {
-                        Icon(CupertinoIcons.Default.SunMax, null, tint = accentColor, modifier = Modifier.size(36.dp))
+                        val brightnessIcon = resolveBrightnessGestureIcon(
+                            percent = value,
+                            iconStyle = gestureLevelIconStyle
+                        )
+                        Icon(brightnessIcon, null, tint = accentColor, modifier = Modifier.size(36.dp))
                         Spacer(Modifier.height(8.dp))
                         Text("亮度", color = Color.White.copy(alpha = 0.9f), fontSize = 14.sp)
                         Spacer(Modifier.height(4.dp))
@@ -1373,11 +1390,10 @@ private fun GestureIndicator(
                         }
                     }
                     FullscreenGestureMode.Volume -> {
-                        val volumeIcon = when {
-                            value < 0.01f -> CupertinoIcons.Default.SpeakerSlash
-                            value < 0.5f -> CupertinoIcons.Default.Speaker
-                            else -> CupertinoIcons.Default.SpeakerWave2
-                        }
+                        val volumeIcon = resolveVolumeGestureIcon(
+                            percent = value,
+                            iconStyle = gestureLevelIconStyle
+                        )
                         Icon(volumeIcon, null, tint = accentColor, modifier = Modifier.size(36.dp))
                         Spacer(Modifier.height(8.dp))
                         Text("音量", color = Color.White.copy(alpha = 0.9f), fontSize = 14.sp)

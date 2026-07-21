@@ -44,10 +44,15 @@ import androidx.media3.ui.PlayerView
 import com.android.purebilibili.data.model.response.Page
 import com.android.purebilibili.core.util.FormatUtils
 import com.android.purebilibili.feature.video.danmaku.DanmakuManager
+import com.android.purebilibili.core.theme.LocalAndroidNativeVariant
+import com.android.purebilibili.core.theme.LocalUiPreset
 import com.android.purebilibili.feature.video.ui.components.AnimatedGesturePercentText
 import com.android.purebilibili.feature.video.ui.components.SponsorSkipButton
 import com.android.purebilibili.feature.video.ui.components.VideoAspectRatio
 import com.android.purebilibili.feature.video.ui.overlay.PlaybackDebugInfo
+import com.android.purebilibili.feature.video.ui.section.resolveBrightnessGestureIcon
+import com.android.purebilibili.feature.video.ui.section.resolveGestureLevelIconStyle
+import com.android.purebilibili.feature.video.ui.section.resolveVolumeGestureIcon
 import com.android.purebilibili.feature.video.ui.section.resolveSystemStreamVolumeFromGesture
 import com.android.purebilibili.feature.video.util.captureAndSaveVideoScreenshot
 import com.android.purebilibili.data.model.response.SponsorSegment
@@ -479,6 +484,14 @@ fun BangumiGestureIndicator(
     duration: Long,
     modifier: Modifier = Modifier
 ) {
+    val uiPreset = LocalUiPreset.current
+    val androidNativeVariant = LocalAndroidNativeVariant.current
+    val gestureLevelIconStyle = remember(uiPreset, androidNativeVariant) {
+        resolveGestureLevelIconStyle(
+            uiPreset = uiPreset,
+            androidNativeVariant = androidNativeVariant
+        )
+    }
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(18.dp),
@@ -493,8 +506,11 @@ fun BangumiGestureIndicator(
         ) {
             when (mode) {
                 BangumiGestureMode.Brightness -> {
-                    //  亮度图标：CupertinoIcons SunMax (iOS SF Symbols 风格)
-                    Icon(CupertinoIcons.Default.SunMax, null, tint = Color.White, modifier = Modifier.size(36.dp))
+                    val brightnessIcon = resolveBrightnessGestureIcon(
+                        percent = value,
+                        iconStyle = gestureLevelIconStyle
+                    )
+                    Icon(brightnessIcon, null, tint = Color.White, modifier = Modifier.size(36.dp))
                     Spacer(Modifier.height(8.dp))
                     Text("亮度", color = Color.White, fontSize = 14.sp)
                     Spacer(Modifier.height(4.dp))
@@ -507,12 +523,10 @@ fun BangumiGestureIndicator(
                     )
                 }
                 BangumiGestureMode.Volume -> {
-                    //  动态音量图标：3 级
-                    val volumeIcon = when {
-                        value < 0.01f -> CupertinoIcons.Default.SpeakerSlash
-                        value < 0.5f -> CupertinoIcons.Default.Speaker
-                        else -> CupertinoIcons.Default.SpeakerWave2
-                    }
+                    val volumeIcon = resolveVolumeGestureIcon(
+                        percent = value,
+                        iconStyle = gestureLevelIconStyle
+                    )
                     Icon(volumeIcon, null, tint = Color.White, modifier = Modifier.size(36.dp))
                     Spacer(Modifier.height(8.dp))
                     Text("音量", color = Color.White, fontSize = 14.sp)

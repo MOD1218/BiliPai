@@ -1,12 +1,24 @@
 package com.android.purebilibili.feature.video.ui.section
 
-import io.github.alexzhirkevich.cupertino.icons.CupertinoIcons
-import io.github.alexzhirkevich.cupertino.icons.filled.*
-import io.github.alexzhirkevich.cupertino.icons.outlined.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.VolumeDown
+import androidx.compose.material.icons.automirrored.filled.VolumeMute
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.Brightness4
+import androidx.compose.material.icons.filled.Brightness7
+import androidx.compose.material.icons.filled.BrightnessHigh
+import androidx.compose.material.icons.filled.BrightnessLow
+import androidx.compose.material.icons.filled.BrightnessMedium
 import androidx.compose.ui.graphics.Color
+import com.android.purebilibili.core.theme.AndroidNativeVariant
+import com.android.purebilibili.core.theme.UiPreset
 import com.android.purebilibili.feature.video.ui.components.GesturePercentTransitionDirection
 import com.android.purebilibili.feature.video.ui.components.resolveGesturePercentTransitionDirection
 import com.android.purebilibili.feature.video.ui.components.shouldTriggerGesturePercentHaptic
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.VolumeOff
+import top.yukonga.miuix.kmp.icon.extended.VolumeUp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -40,42 +52,154 @@ class VideoGestureFeedbackPolicyTest {
     }
 
     @Test
-    fun `resolveGestureDisplayIcon maps brightness level`() {
+    fun `resolveGestureLevelIconStyle shares material ladder for md3 and ios`() {
         assertEquals(
-            CupertinoIcons.Outlined.SunMax,
-            resolveGestureDisplayIcon(VideoGestureMode.Brightness, 0.2f, null)
+            GestureLevelIconStyle.SharedMaterial,
+            resolveGestureLevelIconStyle(
+                uiPreset = UiPreset.MD3,
+                androidNativeVariant = AndroidNativeVariant.MATERIAL3
+            )
         )
         assertEquals(
-            CupertinoIcons.Default.SunMax,
-            resolveGestureDisplayIcon(VideoGestureMode.Brightness, 0.52f, null)
+            GestureLevelIconStyle.SharedMaterial,
+            resolveGestureLevelIconStyle(
+                uiPreset = UiPreset.IOS,
+                androidNativeVariant = AndroidNativeVariant.MATERIAL3
+            )
         )
         assertEquals(
-            CupertinoIcons.Default.SunMax,
-            resolveGestureDisplayIcon(VideoGestureMode.Brightness, 0.92f, null)
+            GestureLevelIconStyle.SharedMaterial,
+            resolveGestureLevelIconStyle(
+                uiPreset = UiPreset.IOS,
+                androidNativeVariant = AndroidNativeVariant.MIUIX
+            )
         )
     }
 
     @Test
-    fun `resolveGestureDisplayIcon maps volume level`() {
+    fun `resolveGestureLevelIconStyle uses miuix ladder only for native miuix`() {
         assertEquals(
-            CupertinoIcons.Default.SpeakerSlash,
-            resolveGestureDisplayIcon(VideoGestureMode.Volume, 0f, null)
+            GestureLevelIconStyle.Miuix,
+            resolveGestureLevelIconStyle(
+                uiPreset = UiPreset.MD3,
+                androidNativeVariant = AndroidNativeVariant.MIUIX
+            )
+        )
+    }
+
+    @Test
+    fun `resolveGestureDisplayIcon maps brightness level for shared material`() {
+        assertEquals(
+            Icons.Filled.BrightnessLow,
+            resolveGestureDisplayIcon(
+                mode = VideoGestureMode.Brightness,
+                percent = 0.2f,
+                fallbackIcon = null,
+                iconStyle = GestureLevelIconStyle.SharedMaterial
+            )
         )
         assertEquals(
-            CupertinoIcons.Default.Speaker,
-            resolveGestureDisplayIcon(VideoGestureMode.Volume, 0.3f, null)
+            Icons.Filled.BrightnessMedium,
+            resolveGestureDisplayIcon(
+                mode = VideoGestureMode.Brightness,
+                percent = 0.52f,
+                fallbackIcon = null,
+                iconStyle = GestureLevelIconStyle.SharedMaterial
+            )
         )
         assertEquals(
-            CupertinoIcons.Default.SpeakerWave2,
-            resolveGestureDisplayIcon(VideoGestureMode.Volume, 0.9f, null)
+            Icons.Filled.BrightnessHigh,
+            resolveGestureDisplayIcon(
+                mode = VideoGestureMode.Brightness,
+                percent = 0.92f,
+                fallbackIcon = null,
+                iconStyle = GestureLevelIconStyle.SharedMaterial
+            )
+        )
+    }
+
+    @Test
+    fun `resolveGestureDisplayIcon maps volume level for shared material`() {
+        assertEquals(
+            Icons.AutoMirrored.Filled.VolumeOff,
+            resolveGestureDisplayIcon(
+                mode = VideoGestureMode.Volume,
+                percent = 0f,
+                fallbackIcon = null,
+                iconStyle = GestureLevelIconStyle.SharedMaterial
+            )
+        )
+        assertEquals(
+            Icons.AutoMirrored.Filled.VolumeMute,
+            resolveGestureDisplayIcon(
+                mode = VideoGestureMode.Volume,
+                percent = 0.2f,
+                fallbackIcon = null,
+                iconStyle = GestureLevelIconStyle.SharedMaterial
+            )
+        )
+        assertEquals(
+            Icons.AutoMirrored.Filled.VolumeDown,
+            resolveGestureDisplayIcon(
+                mode = VideoGestureMode.Volume,
+                percent = 0.5f,
+                fallbackIcon = null,
+                iconStyle = GestureLevelIconStyle.SharedMaterial
+            )
+        )
+        assertEquals(
+            Icons.AutoMirrored.Filled.VolumeUp,
+            resolveGestureDisplayIcon(
+                mode = VideoGestureMode.Volume,
+                percent = 0.9f,
+                fallbackIcon = null,
+                iconStyle = GestureLevelIconStyle.SharedMaterial
+            )
+        )
+    }
+
+    @Test
+    fun `resolveGestureDisplayIcon maps miuix volume and brightness ladders`() {
+        assertEquals(
+            MiuixIcons.VolumeOff,
+            resolveVolumeGestureIcon(
+                percent = 0f,
+                iconStyle = GestureLevelIconStyle.Miuix
+            )
+        )
+        assertEquals(
+            MiuixIcons.VolumeUp,
+            resolveVolumeGestureIcon(
+                percent = 0.9f,
+                iconStyle = GestureLevelIconStyle.Miuix
+            )
+        )
+        assertEquals(
+            Icons.Filled.Brightness4,
+            resolveBrightnessGestureIcon(
+                percent = 0.1f,
+                iconStyle = GestureLevelIconStyle.Miuix
+            )
+        )
+        assertEquals(
+            Icons.Filled.Brightness7,
+            resolveBrightnessGestureIcon(
+                percent = 0.9f,
+                iconStyle = GestureLevelIconStyle.Miuix
+            )
         )
     }
 
     @Test
     fun `resolveGestureDisplayIcon falls back for unsupported mode`() {
         assertEquals(
-            CupertinoIcons.Filled.SunMax,
-            resolveGestureDisplayIcon(VideoGestureMode.Seek, 0.5f, null)
+            Icons.Filled.BrightnessHigh,
+            resolveGestureDisplayIcon(
+                mode = VideoGestureMode.Seek,
+                percent = 0.5f,
+                fallbackIcon = null,
+                iconStyle = GestureLevelIconStyle.SharedMaterial
+            )
         )
     }
 

@@ -28,9 +28,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.android.purebilibili.core.theme.LocalAndroidNativeVariant
+import com.android.purebilibili.core.theme.LocalUiPreset
+import com.android.purebilibili.feature.video.ui.section.resolveBrightnessGestureIcon
+import com.android.purebilibili.feature.video.ui.section.resolveGestureLevelIconStyle
+import com.android.purebilibili.feature.video.ui.section.resolveVolumeGestureIcon
 import io.github.alexzhirkevich.cupertino.icons.CupertinoIcons
-import io.github.alexzhirkevich.cupertino.icons.filled.SpeakerWave2
-import io.github.alexzhirkevich.cupertino.icons.filled.SunMax
 import io.github.alexzhirkevich.cupertino.icons.outlined.ChevronBackward
 import io.github.alexzhirkevich.cupertino.icons.outlined.Pause
 import io.github.alexzhirkevich.cupertino.icons.outlined.Play
@@ -150,6 +153,14 @@ fun LivePlayerControls(
     val context = LocalContext.current
     val activity = context as? Activity
     val audioManager = remember { context.getSystemService(android.content.Context.AUDIO_SERVICE) as AudioManager }
+    val uiPreset = LocalUiPreset.current
+    val androidNativeVariant = LocalAndroidNativeVariant.current
+    val gestureLevelIconStyle = remember(uiPreset, androidNativeVariant) {
+        resolveGestureLevelIconStyle(
+            uiPreset = uiPreset,
+            androidNativeVariant = androidNativeVariant
+        )
+    }
     
     Box(
         modifier = modifier
@@ -214,7 +225,10 @@ fun LivePlayerControls(
                             lp?.screenBrightness = targetBrightness
                             activity?.window?.attributes = lp
                             
-                            gestureIcon = CupertinoIcons.Filled.SunMax
+                            gestureIcon = resolveBrightnessGestureIcon(
+                                percent = targetBrightness,
+                                iconStyle = gestureLevelIconStyle
+                            )
                             gestureText = "${(targetBrightness * 100).toInt()}%"
                         } else {
                             // 调节音量 (maxVolume 比如 15)
@@ -231,7 +245,15 @@ fun LivePlayerControls(
                                     // 注意：不要在这里重置 volumeAccumulator，否则会丢失小数部分导致卡顿
                                 }
                                 
-                                gestureIcon = CupertinoIcons.Filled.SpeakerWave2
+                                val volumePercent = if (maxVolume > 0) {
+                                    newVolInt.toFloat() / maxVolume.toFloat()
+                                } else {
+                                    0f
+                                }
+                                gestureIcon = resolveVolumeGestureIcon(
+                                    percent = volumePercent,
+                                    iconStyle = gestureLevelIconStyle
+                                )
                                 gestureText = "${(newVolInt * 100 / maxVolume)}%"
                             }
                         }

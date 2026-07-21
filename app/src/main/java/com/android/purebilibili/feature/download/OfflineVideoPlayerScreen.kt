@@ -39,11 +39,16 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
+import com.android.purebilibili.core.theme.LocalAndroidNativeVariant
+import com.android.purebilibili.core.theme.LocalUiPreset
 import com.android.purebilibili.core.theme.resolveAdaptivePrimaryAccentColors
 import com.android.purebilibili.core.util.FormatUtils
 import com.android.purebilibili.feature.video.player.MiniPlayerManager
 import com.android.purebilibili.feature.video.danmaku.configureAsPassiveDanmakuOverlay
 import com.android.purebilibili.feature.video.danmaku.rememberDanmakuManager
+import com.android.purebilibili.feature.video.ui.section.resolveBrightnessGestureIcon
+import com.android.purebilibili.feature.video.ui.section.resolveGestureLevelIconStyle
+import com.android.purebilibili.feature.video.ui.section.resolveVolumeGestureIcon
 import com.bytedance.danmaku.render.engine.DanmakuView
 import io.github.alexzhirkevich.cupertino.icons.CupertinoIcons
 import io.github.alexzhirkevich.cupertino.icons.filled.*
@@ -78,6 +83,14 @@ fun OfflineVideoPlayerScreen(
     val maxVolume = remember { audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) }
     val miniPlayerManager = remember(context) { MiniPlayerManager.getInstance(context) }
     val danmakuManager = rememberDanmakuManager()
+    val uiPreset = LocalUiPreset.current
+    val androidNativeVariant = LocalAndroidNativeVariant.current
+    val gestureLevelIconStyle = remember(uiPreset, androidNativeVariant) {
+        resolveGestureLevelIconStyle(
+            uiPreset = uiPreset,
+            androidNativeVariant = androidNativeVariant
+        )
+    }
     
     val tasks by DownloadManager.tasks.collectAsStateWithLifecycle()
     var currentTaskId by remember(taskId) { mutableStateOf(taskId) }
@@ -501,7 +514,10 @@ fun OfflineVideoPlayerScreen(
                                         }
                                         gesturePercent = newBrightness
                                     }
-                                    gestureIcon = CupertinoIcons.Default.SunMax
+                                    gestureIcon = resolveBrightnessGestureIcon(
+                                        percent = gesturePercent,
+                                        iconStyle = gestureLevelIconStyle
+                                    )
                                 }
                                 GestureMode.Volume -> {
                                     totalDragDistanceY -= dragAmount.y
@@ -512,11 +528,10 @@ fun OfflineVideoPlayerScreen(
                                     audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVol, 0)
                                     gesturePercent = newVolPercent
                                     
-                                    gestureIcon = when {
-                                        gesturePercent < 0.01f -> CupertinoIcons.Default.SpeakerSlash
-                                        gesturePercent < 0.5f -> CupertinoIcons.Default.Speaker
-                                        else -> CupertinoIcons.Default.SpeakerWave2
-                                    }
+                                    gestureIcon = resolveVolumeGestureIcon(
+                                        percent = gesturePercent,
+                                        iconStyle = gestureLevelIconStyle
+                                    )
                                 }
                                 else -> {}
                             }
@@ -658,7 +673,10 @@ fun OfflineVideoPlayerScreen(
                         }
                     } else {
                         Icon(
-                            imageVector = gestureIcon ?: CupertinoIcons.Default.SunMax,
+                            imageVector = gestureIcon ?: resolveBrightnessGestureIcon(
+                                percent = 1f,
+                                iconStyle = gestureLevelIconStyle
+                            ),
                             contentDescription = null,
                             tint = Color.White,
                             modifier = Modifier.size(48.dp)

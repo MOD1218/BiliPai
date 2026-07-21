@@ -124,6 +124,8 @@ import androidx.media3.common.VideoSize
 import androidx.media3.ui.PlayerView
 import com.android.purebilibili.core.store.FullscreenAspectRatio
 import com.android.purebilibili.core.store.SettingsManager
+import com.android.purebilibili.core.theme.LocalAndroidNativeVariant
+import com.android.purebilibili.core.theme.LocalUiPreset
 import com.android.purebilibili.core.ui.performance.TrackJankStateFlag
 import com.android.purebilibili.core.ui.performance.TrackJankStateValue
 import com.android.purebilibili.core.ui.blur.unifiedBlur
@@ -868,6 +870,14 @@ fun VideoPlayerSection(
     var orientationHintText by remember { mutableStateOf(resolveOrientationSwitchHintText(isFullscreen)) }
     var hasObservedOrientationChange by remember { mutableStateOf(false) }
     val gestureMotionSpec = remember { resolveVideoGestureMotionSpec() }
+    val uiPreset = LocalUiPreset.current
+    val androidNativeVariant = LocalAndroidNativeVariant.current
+    val gestureLevelIconStyle = remember(uiPreset, androidNativeVariant) {
+        resolveGestureLevelIconStyle(
+            uiPreset = uiPreset,
+            androidNativeVariant = androidNativeVariant
+        )
+    }
     val forceCoverDuringReturnAnimation = shouldForceCoverDuringReturnAnimation(
         forceCoverOnly = forceCoverOnly
     )
@@ -1651,7 +1661,10 @@ fun VideoPlayerSection(
                                     when (gestureMode) {
                                         VideoGestureMode.Brightness -> {
                                             gesturePercent = startBrightness.coerceIn(0f, 1f)
-                                            gestureIcon = CupertinoIcons.Default.SunMax
+                                            gestureIcon = resolveBrightnessGestureIcon(
+                                                percent = gesturePercent,
+                                                iconStyle = gestureLevelIconStyle
+                                            )
                                         }
                                         VideoGestureMode.Volume -> {
                                             val maxVolumeStep = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
@@ -1660,11 +1673,10 @@ fun VideoPlayerSection(
                                             } else {
                                                 0f
                                             }
-                                            gestureIcon = when {
-                                                gesturePercent < 0.01f -> CupertinoIcons.Default.SpeakerSlash
-                                                gesturePercent < 0.5f -> CupertinoIcons.Default.Speaker
-                                                else -> CupertinoIcons.Default.SpeakerWave2
-                                            }
+                                            gestureIcon = resolveVolumeGestureIcon(
+                                                percent = gesturePercent,
+                                                iconStyle = gestureLevelIconStyle
+                                            )
                                         }
                                         else -> Unit
                                     }
@@ -1744,8 +1756,10 @@ fun VideoPlayerSection(
                                         }
                                         gesturePercent = newBrightness
                                     }
-                                    //  亮度图标：CupertinoIcons SunMax (iOS SF Symbols 风格)
-                                    gestureIcon = CupertinoIcons.Default.SunMax
+                                    gestureIcon = resolveBrightnessGestureIcon(
+                                        percent = gesturePercent,
+                                        iconStyle = gestureLevelIconStyle
+                                    )
                                 }
                                 VideoGestureMode.Volume -> {
                                     val maxVolumeStep = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
@@ -1766,12 +1780,10 @@ fun VideoPlayerSection(
                                     } else {
                                         0f
                                     }
-                                    //  动态音量图标：3 级
-                                    gestureIcon = when {
-                                        gesturePercent < 0.01f -> CupertinoIcons.Default.SpeakerSlash
-                                        gesturePercent < 0.5f -> CupertinoIcons.Default.Speaker
-                                        else -> CupertinoIcons.Default.SpeakerWave2
-                                    }
+                                    gestureIcon = resolveVolumeGestureIcon(
+                                        percent = gesturePercent,
+                                        iconStyle = gestureLevelIconStyle
+                                    )
                                 }
                                 else -> {}
                             }
@@ -3622,7 +3634,8 @@ fun VideoPlayerSection(
             val dynamicGestureIcon = resolveGestureDisplayIcon(
                 mode = gestureMode,
                 percent = gesturePercent,
-                fallbackIcon = gestureIcon
+                fallbackIcon = gestureIcon,
+                iconStyle = gestureLevelIconStyle
             )
             val visualPolicy = resolveGestureLevelOverlayVisualPolicy(
                 mode = gestureMode,
