@@ -71,6 +71,13 @@ class VideoPlayerCoverPolicyTest {
             )
         )
         assertTrue(
+            shouldCommitSmoothCoverReveal(
+                isFirstFrameRendered = true,
+                forceCoverDuringReturnAnimation = false,
+                shouldKeepCoverForManualStart = false,
+            )
+        )
+        assertTrue(
             shouldHoldEntryCoverUnderlay(
                 isFirstFrameRendered = true,
                 forceCoverDuringReturnAnimation = false,
@@ -94,6 +101,29 @@ class VideoPlayerCoverPolicyTest {
         )
         assertFalse(fresh.isFirstFrameRendered)
         assertFalse(fresh.hasStartedSmoothReveal)
+    }
+
+    @Test
+    fun smoothRevealReset_onlyWhenForcedCoverOrManualStart() {
+        assertTrue(
+            shouldResetSmoothCoverReveal(
+                forceCoverDuringReturnAnimation = true,
+                shouldKeepCoverForManualStart = false,
+            )
+        )
+        assertTrue(
+            shouldResetSmoothCoverReveal(
+                forceCoverDuringReturnAnimation = false,
+                shouldKeepCoverForManualStart = true,
+            )
+        )
+        // 首帧尚未到 / 仅缺 isFirstFrame 时不得清掉揭开标记
+        assertFalse(
+            shouldResetSmoothCoverReveal(
+                forceCoverDuringReturnAnimation = false,
+                shouldKeepCoverForManualStart = false,
+            )
+        )
     }
 
     @Test

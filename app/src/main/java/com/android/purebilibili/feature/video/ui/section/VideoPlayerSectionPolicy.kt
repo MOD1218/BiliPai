@@ -975,8 +975,7 @@ internal data class VideoPlayerCoverBootstrapState(
  *
  * - 可复用已渲染首帧时：跳过等待 FIRST_FRAME 事件，但 **不** 直接把 smooth reveal 置 true。
  *   否则「详情已出画 → 回首页 → 再进详情」会瞬间揭开画面，封面→画面过渡丢失。
- * - 快速返回再进时若首帧标志短暂清空，会重新走完整 reveal；两条路径应统一为：
- *   先垫封面，再 delay 后 hasStartedSmoothReveal=true。
+ * - 两条路径统一：先垫封面，再由 [shouldCommitSmoothCoverReveal] 在 hold 后揭开。
  */
 internal fun resolveVideoPlayerCoverBootstrapState(
     forceCoverDuringReturnAnimation: Boolean,
@@ -988,7 +987,6 @@ internal fun resolveVideoPlayerCoverBootstrapState(
         hasPersistedRenderedFirstFrame
     return VideoPlayerCoverBootstrapState(
         isFirstFrameRendered = shouldReuseRenderedFrame,
-        // 始终从封面垫底起步，由 shouldStartSmoothCoverReveal + hold delay 触发过渡。
         hasStartedSmoothReveal = false,
     )
 }
@@ -1002,6 +1000,31 @@ internal fun shouldStartSmoothCoverReveal(
         !forceCoverDuringReturnAnimation &&
         !shouldKeepCoverForManualStart
 }
+
+/**
+ * 是否应把 [hasStartedSmoothReveal] 清回 false。
+ * 仅在「强制封面 / 手动起播垫底」时回退；首帧标志短暂抖动不得清掉已排程的揭开。
+ */
+internal fun shouldResetSmoothCoverReveal(
+    forceCoverDuringReturnAnimation: Boolean,
+    shouldKeepCoverForManualStart: Boolean,
+): Boolean {
+    return forceCoverDuringReturnAnimation || shouldKeepCoverForManualStart
+}
+
+/**
+ * hold delay 结束后是否提交揭开。
+ * 与 [shouldStartSmoothCoverReveal] 相同门闩，单独命名便于单测「提交」语义。
+ */
+internal fun shouldCommitSmoothCoverReveal(
+    isFirstFrameRendered: Boolean,
+    forceCoverDuringReturnAnimation: Boolean,
+    shouldKeepCoverForManualStart: Boolean,
+): Boolean = shouldStartSmoothCoverReveal(
+    isFirstFrameRendered = isFirstFrameRendered,
+    forceCoverDuringReturnAnimation = forceCoverDuringReturnAnimation,
+    shouldKeepCoverForManualStart = shouldKeepCoverForManualStart,
+)
 
 internal fun shouldKeepCoverForManualStart(
     playWhenReady: Boolean,
@@ -1275,10 +1298,11 @@ internal fun shouldPromoteFirstFrameByPlaybackFallback(
 ): Boolean {
     if (isFirstFrameRendered || forceCoverDuringReturnAnimation) return false
     val hasVideoTrack = videoWidth > 0 && videoHeight > 0
+    // READY + 有画面尺寸即可提升，避免重进时迟迟等不到 RENDERED_FIRST_FRAME 卡封面。
     return hasVideoTrack &&
         playWhenReady &&
         playbackState == Player.STATE_READY &&
-        currentPositionMs > 300L
+        currentPositionMs >= 0L
 }
 
 internal fun shouldAutoHidePlayerChromeOnPlaybackStart(

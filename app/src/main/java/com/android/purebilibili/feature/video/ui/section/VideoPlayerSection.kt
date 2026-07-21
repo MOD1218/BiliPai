@@ -2586,38 +2586,31 @@ fun VideoPlayerSection(
             hasManualStartPlaybackIntent = true
             playPlayerFromUserAction(playerState.player)
         }
-        val coverBootstrapState = remember(
-            bvid,
-            forceCoverDuringReturnAnimation,
-            persistedRenderedFirstFrame,
-            playerState.player.playWhenReady,
-            playerState.player.currentPosition,
-            autoPlayOnOpenEnabled,
-            hasManualStartPlaybackIntent
-        ) {
-            resolveVideoPlayerCoverBootstrapState(
-                forceCoverDuringReturnAnimation = forceCoverDuringReturnAnimation,
-                shouldKeepCoverForManualStart = shouldKeepCoverForManualStart(
-                    playWhenReady = playerState.player.playWhenReady,
-                    currentPositionMs = playerState.player.currentPosition,
-                    autoPlayEnabled = autoPlayOnOpenEnabled,
-                    hasManualStartPlaybackIntent = hasManualStartPlaybackIntent
-                ),
-                hasPersistedRenderedFirstFrame = persistedRenderedFirstFrame
-            )
-        }
-        var isFirstFrameRendered by remember(bvid) {
-            mutableStateOf(coverBootstrapState.isFirstFrameRendered)
-        }
-        var hasStartedSmoothReveal by remember(bvid, forceCoverDuringReturnAnimation) {
-            mutableStateOf(coverBootstrapState.hasStartedSmoothReveal)
-        }
         val keepCoverForManualStart = shouldKeepCoverForManualStart(
             playWhenReady = playerState.player.playWhenReady,
             currentPositionMs = playerState.player.currentPosition,
             autoPlayEnabled = autoPlayOnOpenEnabled,
             hasManualStartPlaybackIntent = hasManualStartPlaybackIntent
         )
+        // 勿把 currentPosition 放进 remember key：进度推进会反复重建 bootstrap，打乱揭开状态机。
+        val coverBootstrapState = remember(
+            bvid,
+            forceCoverDuringReturnAnimation,
+            persistedRenderedFirstFrame,
+            keepCoverForManualStart,
+        ) {
+            resolveVideoPlayerCoverBootstrapState(
+                forceCoverDuringReturnAnimation = forceCoverDuringReturnAnimation,
+                shouldKeepCoverForManualStart = keepCoverForManualStart,
+                hasPersistedRenderedFirstFrame = persistedRenderedFirstFrame
+            )
+        }
+        var isFirstFrameRendered by remember(bvid) {
+            mutableStateOf(coverBootstrapState.isFirstFrameRendered)
+        }
+        var hasStartedSmoothReveal by remember(bvid) {
+            mutableStateOf(false)
+        }
         val revealMotionSpec = remember {
             resolveVideoPlayerRevealMotionSpec()
         }
@@ -2805,8 +2798,11 @@ fun VideoPlayerSection(
             if (coverBootstrapState.isFirstFrameRendered) {
                 isFirstFrameRendered = true
             }
-            if (coverBootstrapState.hasStartedSmoothReveal) {
-                hasStartedSmoothReveal = true
+        }
+        // 换片或返回强制封面时清掉揭开标记，保证下次进场重新走封面→画面。
+        LaunchedEffect(bvid, forceCoverDuringReturnAnimation) {
+            if (forceCoverDuringReturnAnimation) {
+                hasStartedSmoothReveal = false
             }
         }
     
@@ -2846,32 +2842,37 @@ fun VideoPlayerSection(
             delay(120L)
         }
     }
+    // 封面揭开状态机：仅在 forceCover / 手动起播垫底时回退；首帧抖动不得清掉揭开。
     LaunchedEffect(
         bvid,
         isFirstFrameRendered,
         forceCoverDuringReturnAnimation,
-        keepCoverForManualStart
+        keepCoverForManualStart,
     ) {
         if (
-            !shouldStartSmoothCoverReveal(
-                isFirstFrameRendered = isFirstFrameRendered,
+            shouldResetSmoothCoverReveal(
                 forceCoverDuringReturnAnimation = forceCoverDuringReturnAnimation,
-                shouldKeepCoverForManualStart = keepCoverForManualStart
+                shouldKeepCoverForManualStart = keepCoverForManualStart,
             )
         ) {
             hasStartedSmoothReveal = false
             return@LaunchedEffect
         }
+        if (!isFirstFrameRendered) {
+            // 等首帧；不要把 hasStartedSmoothReveal 清掉（避免与 bootstrap 竞态）
+            return@LaunchedEffect
+        }
         if (hasStartedSmoothReveal) return@LaunchedEffect
         delay(revealMotionSpec.coverRevealHoldDelayMillis.toLong())
         if (
-            shouldStartSmoothCoverReveal(
+            shouldCommitSmoothCoverReveal(
                 isFirstFrameRendered = isFirstFrameRendered,
                 forceCoverDuringReturnAnimation = forceCoverDuringReturnAnimation,
-                shouldKeepCoverForManualStart = keepCoverForManualStart
+                shouldKeepCoverForManualStart = keepCoverForManualStart,
             )
         ) {
             hasStartedSmoothReveal = true
+            android.util.Log.d("VideoPlayerCover", "✨ Smooth cover reveal committed for bvid=$bvid")
         }
     }
     val holdEntryCoverUnderlay = shouldHoldEntryCoverUnderlay(
@@ -2967,8 +2968,8 @@ fun VideoPlayerSection(
             holdEntryCoverUnderlay = holdEntryCoverUnderlay,
         )
     }
-    // 即播垫底硬切进出；CoverFirst 手动起播前也不和 Hero 抢淡入淡出。
-    val disableCoverFadeAnimation = !coverMotionSpec.shouldAnimateFade || !keepCoverForManualStart
+    // 返回强制封面 / 垫底 hold 时硬切；揭开阶段允许淡出，避免「永远盖着封面」。
+    val disableCoverFadeAnimation = !coverMotionSpec.shouldAnimateFade
     val coverOverlaySharedBoundsEnabled = shouldEnableCoverOverlaySharedBounds(
         useCoverOverlaySharedBounds = entryPresentationSpec.coverUsesSharedBounds,
         transitionEnabled = transitionEnabled,
