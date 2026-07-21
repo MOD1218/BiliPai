@@ -48,6 +48,7 @@ import com.android.purebilibili.core.store.BottomBarSearchAutoExpandMode
 import com.android.purebilibili.core.store.BottomBarSearchLayoutMode
 import com.android.purebilibili.core.store.CommonListHeaderCollapseMode
 import com.android.purebilibili.core.store.HomeCardBadgeEffectMode
+import com.android.purebilibili.core.store.HomeCardInfoGlassMode
 import com.android.purebilibili.core.store.HomeDurationStyle
 import com.android.purebilibili.core.store.HomeFeedCardStyle
 import com.android.purebilibili.core.store.HomeWallpaperEffectMode
@@ -431,6 +432,9 @@ fun AppearanceSettingsContent(
     val homeCardBadgeEffectMode by SettingsManager
         .getHomeCardBadgeEffectMode(context)
         .collectAsStateWithLifecycle(initialValue = HomeCardBadgeEffectMode.SOFT_GLASS)
+    val homeCardInfoGlassMode by SettingsManager
+        .getHomeCardInfoGlassMode(context)
+        .collectAsStateWithLifecycle(initialValue = HomeCardInfoGlassMode.OFF)
     val homeFeedCardStyle by SettingsManager
         .getHomeFeedCardStyle(context)
         .collectAsStateWithLifecycle(initialValue = HomeFeedCardStyle.CURRENT)
@@ -1531,6 +1535,20 @@ fun AppearanceSettingsContent(
                                 onSelectionChange = {
                                     scope.launch {
                                         SettingsManager.setHomeCardBadgeEffectMode(context, it)
+                                    }
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            IOSSlidingSegmentedSetting(
+                                title = "卡片信息区：${homeCardInfoGlassMode.label}",
+                                subtitle = homeCardInfoGlassMode.subtitle,
+                                options = HomeCardInfoGlassMode.entries.map {
+                                    PlaybackSegmentOption(it, it.label)
+                                },
+                                selectedValue = homeCardInfoGlassMode,
+                                onSelectionChange = {
+                                    scope.launch {
+                                        SettingsManager.setHomeCardInfoGlassMode(context, it)
                                     }
                                 }
                             )

@@ -49,6 +49,7 @@ import com.android.purebilibili.core.util.CardPositionManager
 import com.android.purebilibili.data.model.response.VideoItem
 import com.android.purebilibili.core.theme.BiliPink
 import com.android.purebilibili.core.store.HomeCardBadgeEffectMode
+import com.android.purebilibili.core.store.HomeCardInfoGlassMode
 import com.android.purebilibili.core.store.HomeDurationStyle
 import com.android.purebilibili.core.ui.LocalWallpaperHazeState
 import com.android.purebilibili.core.ui.blur.BlurSurfaceType
@@ -65,6 +66,11 @@ import com.android.purebilibili.core.ui.LocalAnimatedVisibilityScope
 import com.android.purebilibili.core.ui.LocalSharedTransitionEnabled
 import com.android.purebilibili.core.ui.AppShapes
 import com.android.purebilibili.core.ui.AppSurfaceTokens
+import com.android.purebilibili.feature.home.LocalHomeLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
 import com.android.purebilibili.core.ui.ContainerLevel
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
@@ -334,6 +340,7 @@ fun ElegantVideoCard(
     showCoverGlassBadges: Boolean = true,
     showInfoGlassBadges: Boolean = true,
     badgeEffectMode: HomeCardBadgeEffectMode = HomeCardBadgeEffectMode.SOFT_GLASS,
+    infoGlassMode: HomeCardInfoGlassMode = HomeCardInfoGlassMode.OFF,
     wallpaperTintEnabled: Boolean = false,
     wallpaperEffectMode: HomeWallpaperEffectMode = HomeWallpaperEffectMode.SOFT_BLUR,
     showUpBadge: Boolean = true,
@@ -394,6 +401,7 @@ fun ElegantVideoCard(
     val showDurationOutside = homeDurationStyle == HomeDurationStyle.OUTSIDE_COVER
     val inlinePillBaseColor = AppSurfaceTokens.cardContainer()
     val wallpaperHazeState = LocalWallpaperHazeState.current
+    val homeLayerBackdrop = LocalHomeLayerBackdrop.current
     val badgeEffectVisual = remember(badgeEffectMode, scrollLiteModeEnabled, wallpaperHazeState != null) {
         resolveHomeCardBadgeEffectVisual(
             mode = badgeEffectMode,
@@ -418,8 +426,9 @@ fun ElegantVideoCard(
         wallpaperEffectMode,
         isDarkCardTheme,
         isDataSaverActive,
-        badgeEffectMode,
+        infoGlassMode,
         wallpaperHazeState != null,
+        homeLayerBackdrop != null,
         blurEnabled
     ) {
         resolveHomeCardInfoSurfaceAppearance(
@@ -427,8 +436,9 @@ fun ElegantVideoCard(
             wallpaperEffectMode = wallpaperEffectMode,
             isDarkTheme = isDarkCardTheme,
             isDataSaverActive = isDataSaverActive,
-            badgeEffectMode = badgeEffectMode,
+            infoGlassMode = infoGlassMode,
             hasWallpaperHazeState = wallpaperHazeState != null,
+            hasLayerBackdrop = homeLayerBackdrop != null,
             blurEnabled = blurEnabled
         )
     }
@@ -1007,15 +1017,14 @@ fun ElegantVideoCard(
             )
         }
         val infoContainerModifier = if (infoSurfaceAppearance.useTintedSurface) {
-            // Wallpaper-only HazeState (sibling source) — never main content HazeState.
-            val infoGlassModifier = if (
+            // Wallpaper-only Haze for realtime blur (never main content HazeState).
+            val hazeModifier = if (
                 infoSurfaceAppearance.useRealtimeHaze && wallpaperHazeState != null
             ) {
                 Modifier.unifiedBlur(
                     hazeState = wallpaperHazeState,
                     shape = infoSurfaceShape,
                     surfaceType = BlurSurfaceType.BOTTOM_BAR,
-                    // Match bottom bar: keep frosted sampling while the feed scrolls.
                     isScrolling = false,
                     isTransitionRunning = false,
                     forceLowBudget = false
@@ -1023,16 +1032,37 @@ fun ElegantVideoCard(
             } else {
                 Modifier
             }
+            // LayerBackdrop liquid glass — independent of Haze, samples home feed layer.
+            val liquidModifier = if (
+                infoSurfaceAppearance.useRealtimeLiquidGlass && homeLayerBackdrop != null
+            ) {
+                Modifier.drawBackdrop(
+                    backdrop = homeLayerBackdrop,
+                    shape = { infoSurfaceShape },
+                    effects = {
+                        vibrancy()
+                        blur(22.dp.toPx())
+                        lens(
+                            refractionHeight = 8.dp.toPx(),
+                            refractionAmount = 14.dp.toPx()
+                        )
+                    }
+                )
+            } else {
+                Modifier
+            }
             Modifier
                 .fillMaxWidth()
-                .then(infoGlassModifier)
+                .clip(infoSurfaceShape)
+                .then(hazeModifier)
+                .then(liquidModifier)
                 .background(
                     color = AppSurfaceTokens.cardContainer().copy(alpha = infoSurfaceAppearance.containerAlpha),
                     shape = infoSurfaceShape
                 )
                 .border(
                     width = 0.8.dp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = infoSurfaceAppearance.borderAlpha),
+                    color = Color.White.copy(alpha = infoSurfaceAppearance.borderAlpha),
                     shape = infoSurfaceShape
                 )
                 .padding(

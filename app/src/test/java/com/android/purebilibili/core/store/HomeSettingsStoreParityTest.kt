@@ -42,6 +42,7 @@ class HomeSettingsStoreParityTest {
         assertTrue(result.showHomeCoverGlassBadges)
         assertTrue(result.showHomeInfoGlassBadges)
         assertEquals(HomeCardBadgeEffectMode.SOFT_GLASS, result.homeCardBadgeEffectMode)
+        assertEquals(HomeCardInfoGlassMode.OFF, result.homeCardInfoGlassMode)
         assertEquals(HomeWallpaperEffectMode.SOFT_BLUR, result.homeWallpaperEffectMode)
         assertEquals(HomeWallpaperEffectScope.HOME_ONLY, result.homeWallpaperEffectScope)
         assertTrue(result.showHomeUpBadges)
@@ -52,6 +53,7 @@ class HomeSettingsStoreParityTest {
     fun `home settings honor explicit card badge effect mode`() {
         val prefs = mutablePreferencesOf(
             intPreferencesKey("home_card_badge_effect_mode") to HomeCardBadgeEffectMode.LIGHT_BLUR.value,
+            intPreferencesKey("home_card_info_glass_mode") to HomeCardInfoGlassMode.REALTIME_BLUR.value,
             intPreferencesKey("home_wallpaper_effect_mode") to HomeWallpaperEffectMode.OFF.value,
             intPreferencesKey("home_wallpaper_effect_scope") to HomeWallpaperEffectScope.GLOBAL.value,
             booleanPreferencesKey("home_up_badges_visible") to false,
@@ -63,10 +65,20 @@ class HomeSettingsStoreParityTest {
         assertTrue(result.showHomeCoverGlassBadges)
         assertTrue(result.showHomeInfoGlassBadges)
         assertEquals(HomeCardBadgeEffectMode.LIGHT_BLUR, result.homeCardBadgeEffectMode)
+        assertEquals(HomeCardInfoGlassMode.REALTIME_BLUR, result.homeCardInfoGlassMode)
         assertEquals(HomeWallpaperEffectMode.OFF, result.homeWallpaperEffectMode)
         assertEquals(HomeWallpaperEffectScope.GLOBAL, result.homeWallpaperEffectScope)
         assertEquals(false, result.showHomeUpBadges)
         assertEquals(HomeDurationStyle.HIDDEN, result.homeDurationStyle)
+    }
+
+    @Test
+    fun `home settings migrate light blur badge mode to info realtime blur`() {
+        val prefs = mutablePreferencesOf(
+            intPreferencesKey("home_card_badge_effect_mode") to HomeCardBadgeEffectMode.LIGHT_BLUR.value
+        )
+        val result = mapHomeSettingsFromPreferences(prefs)
+        assertEquals(HomeCardInfoGlassMode.REALTIME_BLUR, result.homeCardInfoGlassMode)
     }
 
     @Test

@@ -155,6 +155,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 // [新增] 全局回顶事件通道
 val LocalHomeScrollChannel = compositionLocalOf<Channel<Unit>?> { null }
 
+/** Home feed LayerBackdrop for card info liquid glass (sibling capture, not nested SO). */
+val LocalHomeLayerBackdrop = staticCompositionLocalOf<com.kyant.backdrop.backdrops.LayerBackdrop?> { null }
+
 // [New] Global Scroll Offset for Liquid Glass Effect
 // Used to pass scroll position from HomeScreen to BottomBar without causing recomposition
 val LocalHomeScrollOffset = compositionLocalOf { androidx.compose.runtime.mutableFloatStateOf(0f) }
@@ -1393,6 +1396,7 @@ fun HomeScreen(
                    // [Refactor] Use Box to allow overlay and proper blur nesting
                    // [新增] Video Preview State (Long Press)
 
+                    CompositionLocalProvider(LocalHomeLayerBackdrop provides homeBackdrop) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -1725,6 +1729,7 @@ fun HomeScreen(
                                      showCoverGlassBadges = homeSettings.showHomeCoverGlassBadges,
                                      showInfoGlassBadges = homeSettings.showHomeInfoGlassBadges,
                                      badgeEffectMode = homeSettings.homeCardBadgeEffectMode,
+                                     infoGlassMode = homeSettings.homeCardInfoGlassMode,
                                      wallpaperTintEnabled = homeWallpaperBackdropAppearance.visible,
                                      wallpaperEffectMode = homeSettings.homeWallpaperEffectMode,
                                      showUpBadges = homeSettings.showHomeUpBadges,
@@ -1805,6 +1810,7 @@ fun HomeScreen(
                         }
                 } // Close HorizontalPager lambda
             } // Close Box wrapper
+                    } // Close LocalHomeLayerBackdrop provider
         } // Close Scaffold lambda
         
         //  ===== Header Overlay (毛玻璃效果) =====

@@ -408,6 +408,32 @@ enum class HomeCardBadgeEffectMode(
     }
 }
 
+/**
+ * Card info strip (title + UP under cover) glass — independent of cover badge pills.
+ * Realtime blur (Haze) and realtime liquid glass (LayerBackdrop) are separate modes.
+ */
+enum class HomeCardInfoGlassMode(
+    val value: Int,
+    val label: String,
+    val subtitle: String
+) {
+    OFF(0, "关闭", "实色/轻 tint，性能最好"),
+    REALTIME_BLUR(1, "实时模糊", "Haze 采样壁纸，滚动保持磨砂"),
+    REALTIME_LIQUID_GLASS(2, "实时液态玻璃", "底栏同款折射液态玻璃"),
+    BLUR_AND_LIQUID(3, "模糊+液态", "Haze 磨砂叠加液态折射");
+
+    val usesRealtimeBlur: Boolean
+        get() = this == REALTIME_BLUR || this == BLUR_AND_LIQUID
+
+    val usesRealtimeLiquidGlass: Boolean
+        get() = this == REALTIME_LIQUID_GLASS || this == BLUR_AND_LIQUID
+
+    companion object {
+        fun fromValue(value: Int): HomeCardInfoGlassMode =
+            entries.find { it.value == value } ?: OFF
+    }
+}
+
 enum class BottomBarLiquidGlassPreset(
     val value: Int,
     val label: String,
@@ -476,6 +502,8 @@ data class HomeSettings(
     val showHomeCoverGlassBadges: Boolean = true, // 兼容旧字段：由 [homeCardBadgeEffectMode] 推导
     val showHomeInfoGlassBadges: Boolean = true, // 兼容旧字段：由 [homeCardBadgeEffectMode] 推导
     val homeCardBadgeEffectMode: HomeCardBadgeEffectMode = HomeCardBadgeEffectMode.SOFT_GLASS,
+    /** Title/UP strip under cover — blur and liquid glass are independent. */
+    val homeCardInfoGlassMode: HomeCardInfoGlassMode = HomeCardInfoGlassMode.OFF,
     val homeWallpaperEffectMode: HomeWallpaperEffectMode = HomeWallpaperEffectMode.SOFT_BLUR,
     val homeWallpaperEffectScope: HomeWallpaperEffectScope = HomeWallpaperEffectScope.HOME_ONLY,
     val showHomeUpBadges: Boolean = true, // 首页和相关推荐 UP 主标识显示
@@ -1219,6 +1247,7 @@ object SettingsManager {
     private val KEY_HOME_COVER_GLASS_BADGES_VISIBLE = booleanPreferencesKey("home_cover_glass_badges_visible")
     private val KEY_HOME_INFO_GLASS_BADGES_VISIBLE = booleanPreferencesKey("home_info_glass_badges_visible")
     private val KEY_HOME_CARD_BADGE_EFFECT_MODE = intPreferencesKey("home_card_badge_effect_mode")
+    private val KEY_HOME_CARD_INFO_GLASS_MODE = intPreferencesKey("home_card_info_glass_mode")
     private val KEY_HOME_WALLPAPER_URI = stringPreferencesKey("home_wallpaper_uri")
     private val KEY_HOME_WALLPAPER_EFFECT_MODE = intPreferencesKey("home_wallpaper_effect_mode")
     private val KEY_HOME_WALLPAPER_EFFECT_SCOPE = intPreferencesKey("home_wallpaper_effect_scope")
@@ -1353,6 +1382,7 @@ object SettingsManager {
             showHomeInfoGlassBadges = resolveHomeCardBadgeEffectMode(preferences)
                 != HomeCardBadgeEffectMode.OFF,
             homeCardBadgeEffectMode = resolveHomeCardBadgeEffectMode(preferences),
+            homeCardInfoGlassMode = resolveHomeCardInfoGlassMode(preferences),
             homeWallpaperEffectMode = HomeWallpaperEffectMode.fromValue(
                 preferences[KEY_HOME_WALLPAPER_EFFECT_MODE] ?: HomeWallpaperEffectMode.SOFT_BLUR.value
             ),
@@ -2553,6 +2583,29 @@ object SettingsManager {
             HomeCardBadgeEffectMode.OFF
         } else {
             HomeCardBadgeEffectMode.SOFT_GLASS
+        }
+    }
+
+    fun getHomeCardInfoGlassMode(context: Context): Flow<HomeCardInfoGlassMode> =
+        context.settingsDataStore.data.map { preferences ->
+            resolveHomeCardInfoGlassMode(preferences)
+        }
+
+    suspend fun setHomeCardInfoGlassMode(context: Context, mode: HomeCardInfoGlassMode) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[KEY_HOME_CARD_INFO_GLASS_MODE] = mode.value
+        }
+    }
+
+    private fun resolveHomeCardInfoGlassMode(preferences: Preferences): HomeCardInfoGlassMode {
+        preferences[KEY_HOME_CARD_INFO_GLASS_MODE]?.let { raw ->
+            return HomeCardInfoGlassMode.fromValue(raw)
+        }
+        // Migrate: old LIGHT_BLUR badge mode implied users wanted frosted chrome.
+        return if (resolveHomeCardBadgeEffectMode(preferences) == HomeCardBadgeEffectMode.LIGHT_BLUR) {
+            HomeCardInfoGlassMode.REALTIME_BLUR
+        } else {
+            HomeCardInfoGlassMode.OFF
         }
     }
 
