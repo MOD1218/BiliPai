@@ -207,8 +207,13 @@ internal fun resolveVideoCardLiveMorphSecondaryContentAlphaFromSettle(
 }
 
 /**
- * 返回会话 ownership 锁定：进入离开态时采样一次，会话结束前不变。
- * 防止中途首帧到达导致 LIVE↔RESIDENT 对切闪封面。
+ * 返回会话 ownership 稳定策略（保留实时画面优先）：
+ *
+ * - 会话外：不锁，跟 candidate
+ * - 会话内首次：采样 candidate
+ * - **允许 RESIDENT/FALLBACK → LIVE 升级**（首帧就绪后一镜到底跟壳缩，不能锁死封面）
+ * - **禁止 LIVE → RESIDENT 降级**（中途 forceCover / 短暂无帧不得掐掉实时画面）
+ * - 其它降级/同级：保持已锁值，避免 cover↔player 来回对切
  *
  * @return first = 写入 state 的 lock（非返回中为 null），second = 本帧生效 ownership
  */
@@ -220,8 +225,36 @@ internal fun resolveReturnSessionLockedCoverOwnership(
     if (!isReturnSessionActive) {
         return null to candidateOwnership
     }
-    val locked = lockedOwnership ?: candidateOwnership
+    val locked = lockedOwnership
+    if (locked == null) {
+        return candidateOwnership to candidateOwnership
+    }
+    // 升级到 LIVE：实时 surface 可用时必须放开，否则进入/返回一镜到底变死封面。
+    if (candidateOwnership == VideoCardReturnCoverOwnership.LIVE_SURFACE) {
+        return VideoCardReturnCoverOwnership.LIVE_SURFACE to
+            VideoCardReturnCoverOwnership.LIVE_SURFACE
+    }
+    // 已是 LIVE：禁止降级到封面路径。
+    if (locked == VideoCardReturnCoverOwnership.LIVE_SURFACE) {
+        return locked to locked
+    }
+    // RESIDENT/FALLBACK 之间保持首次采样，避免无意义抖动。
     return locked to locked
+}
+
+/**
+ * 是否应对播放器强制封面-only（掐 live surface）。
+ * live ownership 时永远 false，保证 shell morph 实时画面。
+ */
+internal fun shouldForceCoverOnlyForReturnOwnership(
+    ownership: VideoCardReturnCoverOwnership,
+    useReturningVisualState: Boolean,
+    forceCoverOnlyOnReturn: Boolean,
+): Boolean {
+    if (isVideoCardLiveReturnMorphOwnership(ownership)) return false
+    if (forceCoverOnlyOnReturn) return true
+    return useReturningVisualState &&
+        ownership != VideoCardReturnCoverOwnership.LIVE_SURFACE
 }
 
 /**

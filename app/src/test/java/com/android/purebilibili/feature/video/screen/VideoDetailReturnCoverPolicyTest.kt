@@ -361,23 +361,29 @@ class VideoDetailReturnCoverPolicyTest {
     }
 
     @Test
-    fun `return session locks ownership so first-frame cannot flip LIVE to RESIDENT mid-return`() {
-        val lockedLive = resolveVideoDetailReturnSessionLockedOwnership(
+    fun `return session prefers LIVE upgrade and blocks LIVE demotion`() {
+        val lockedResident = resolveVideoDetailReturnSessionLockedOwnership(
             lockedOwnership = null,
+            isReturnSessionActive = true,
+            candidateOwnership = com.android.purebilibili.core.ui.transition.VideoCardReturnCoverOwnership.RESIDENT_COVER,
+        )
+        assertEquals(
+            com.android.purebilibili.core.ui.transition.VideoCardReturnCoverOwnership.RESIDENT_COVER,
+            lockedResident.second,
+        )
+        // 首帧到达：升 LIVE，实时画面跟壳缩
+        val upgraded = resolveVideoDetailReturnSessionLockedOwnership(
+            lockedOwnership = lockedResident.first,
             isReturnSessionActive = true,
             candidateOwnership = com.android.purebilibili.core.ui.transition.VideoCardReturnCoverOwnership.LIVE_SURFACE,
         )
         assertEquals(
             com.android.purebilibili.core.ui.transition.VideoCardReturnCoverOwnership.LIVE_SURFACE,
-            lockedLive.first,
+            upgraded.second,
         )
-        assertEquals(
-            com.android.purebilibili.core.ui.transition.VideoCardReturnCoverOwnership.LIVE_SURFACE,
-            lockedLive.second,
-        )
-        // 中途 candidate 变 RESIDENT：仍用 lock
+        // 中途 candidate 变 RESIDENT：不得掐 live
         val stillLive = resolveVideoDetailReturnSessionLockedOwnership(
-            lockedOwnership = lockedLive.first,
+            lockedOwnership = upgraded.first,
             isReturnSessionActive = true,
             candidateOwnership = com.android.purebilibili.core.ui.transition.VideoCardReturnCoverOwnership.RESIDENT_COVER,
         )
@@ -385,7 +391,6 @@ class VideoDetailReturnCoverPolicyTest {
             com.android.purebilibili.core.ui.transition.VideoCardReturnCoverOwnership.LIVE_SURFACE,
             stillLive.second,
         )
-        // 会话结束清 lock
         val cleared = resolveVideoDetailReturnSessionLockedOwnership(
             lockedOwnership = stillLive.first,
             isReturnSessionActive = false,

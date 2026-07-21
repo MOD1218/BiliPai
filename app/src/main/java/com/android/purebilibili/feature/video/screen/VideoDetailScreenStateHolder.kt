@@ -181,6 +181,7 @@ import com.android.purebilibili.core.ui.transition.resolveVideoSharedTransitionP
 import com.android.purebilibili.core.ui.transition.resolveVideoSharedTransitionSourceCornerDp
 import com.android.purebilibili.core.ui.transition.resolveVideoSharedTransitionVisualSpec
 import com.android.purebilibili.core.ui.transition.shouldEnableVideoCoverSharedTransition
+import com.android.purebilibili.core.ui.transition.shouldForceCoverOnlyForReturnOwnership
 import com.android.purebilibili.core.ui.transition.shouldTreatLiveSurfaceRenderableForReturnMorph
 import com.android.purebilibili.core.ui.transition.shouldUseVideoCardShellContainerTransform
 import com.android.purebilibili.core.ui.transition.VideoCardShellSharedBoundsRole
@@ -1443,7 +1444,7 @@ internal fun VideoDetailScreenStateHolder(
         hasResidentCover = hasResidentReturnCover,
         hasRenderableLiveFrame = hasRenderableLiveFrameForReturn,
     )
-    // 返回会话锁定 ownership：中途首帧到达不得 LIVE↔RESIDENT 对切闪封面。
+    // 返回会话 ownership：可升 LIVE（保实时画面），禁止 LIVE 降级（防闪）。
     var lockedReturnCoverOwnership by remember(bvid) {
         mutableStateOf<com.android.purebilibili.core.ui.transition.VideoCardReturnCoverOwnership?>(null)
     }
@@ -1465,6 +1466,12 @@ internal fun VideoDetailScreenStateHolder(
         ownership = returnCoverOwnership,
         useReturningVisualState = useReturningVideoDetailVisualState,
         hasResidentCover = hasResidentReturnCover,
+    )
+    // live morph 时绝不 forceCoverOnly，避免 shell 一镜到底被封面盖死。
+    val forceCoverOnlyForLiveSafeReturn = shouldForceCoverOnlyForReturnOwnership(
+        ownership = returnCoverOwnership,
+        useReturningVisualState = useReturningVideoDetailVisualState,
+        forceCoverOnlyOnReturn = forceCoverOnlyForReturn,
     )
     val videoCardDepthBackgroundState = LocalVideoCardTransitionBackgroundState.current
     val routedCommentInteractionActive =
@@ -2392,7 +2399,7 @@ internal fun VideoDetailScreenStateHolder(
                     onFavoritePlaylistClick = {
                         showExternalPlaylistQueueSheet = true
                     },
-                    forceCoverOnly = forceCoverOnlyForReturn || useResidentCoverForCommittedReturn,
+                    forceCoverOnly = forceCoverOnlyForLiveSafeReturn,
                     useTextureSurfaceForNavigation = transitionEnabled,
                     predictiveBackCancelRecoveryGeneration = predictiveBackCancelRecoveryGeneration,
                     allowLivePlayerSharedElement = true,
@@ -2468,8 +2475,7 @@ internal fun VideoDetailScreenStateHolder(
                             // 🔁 [新增] 播放模式
                             currentPlayMode = currentPlayMode,
                             onPlayModeClick = { com.android.purebilibili.feature.video.player.PlaylistManager.togglePlayMode() },
-                            forceCoverOnlyOnReturn =
-                                forceCoverOnlyForReturn || useResidentCoverForCommittedReturn,
+                            forceCoverOnlyOnReturn = forceCoverOnlyForLiveSafeReturn,
                             predictiveBackCancelRecoveryGeneration = predictiveBackCancelRecoveryGeneration
                         )
                     } else {
@@ -2916,8 +2922,7 @@ internal fun VideoDetailScreenStateHolder(
                                     presentationState.markNavigatingToAudioMode()
                                     onNavigateToAudioMode()
                                 },
-                                forceCoverOnly = forceCoverOnlyForReturn ||
-                                    useResidentCoverForCommittedReturn ||
+                                forceCoverOnly = forceCoverOnlyForLiveSafeReturn ||
                                     shouldForceBackPreviewPlayerCover(
                                         keepLoadedContentForBackPreview = keepLoadedContentForBackPreview,
                                         bindLivePlayerForBackPreview = bindLivePlayerForBackPreview

@@ -82,26 +82,52 @@ class VideoCardReturnTimelineTest {
     }
 
     @Test
-    fun returnSessionLock_freezesOwnershipUntilSessionEnds() {
+    fun returnSessionLock_allowsUpgradeToLiveAndBlocksDemotion() {
         val first = resolveReturnSessionLockedCoverOwnership(
             lockedOwnership = null,
             isReturnSessionActive = true,
             candidateOwnership = VideoCardReturnCoverOwnership.RESIDENT_COVER,
         )
         assertEquals(VideoCardReturnCoverOwnership.RESIDENT_COVER, first.second)
-        val flippedCandidate = resolveReturnSessionLockedCoverOwnership(
+        // 首帧就绪：必须升到 LIVE，保留一镜到底实时画面
+        val upgraded = resolveReturnSessionLockedCoverOwnership(
             lockedOwnership = first.first,
             isReturnSessionActive = true,
             candidateOwnership = VideoCardReturnCoverOwnership.LIVE_SURFACE,
         )
-        assertEquals(VideoCardReturnCoverOwnership.RESIDENT_COVER, flippedCandidate.second)
+        assertEquals(VideoCardReturnCoverOwnership.LIVE_SURFACE, upgraded.second)
+        // LIVE 不得降回封面
+        val noDemote = resolveReturnSessionLockedCoverOwnership(
+            lockedOwnership = upgraded.first,
+            isReturnSessionActive = true,
+            candidateOwnership = VideoCardReturnCoverOwnership.RESIDENT_COVER,
+        )
+        assertEquals(VideoCardReturnCoverOwnership.LIVE_SURFACE, noDemote.second)
         val ended = resolveReturnSessionLockedCoverOwnership(
-            lockedOwnership = flippedCandidate.first,
+            lockedOwnership = noDemote.first,
             isReturnSessionActive = false,
-            candidateOwnership = VideoCardReturnCoverOwnership.LIVE_SURFACE,
+            candidateOwnership = VideoCardReturnCoverOwnership.RESIDENT_COVER,
         )
         assertEquals(null, ended.first)
-        assertEquals(VideoCardReturnCoverOwnership.LIVE_SURFACE, ended.second)
+        assertEquals(VideoCardReturnCoverOwnership.RESIDENT_COVER, ended.second)
+    }
+
+    @Test
+    fun forceCoverOnly_neverWhenLiveOwnership() {
+        assertFalse(
+            shouldForceCoverOnlyForReturnOwnership(
+                ownership = VideoCardReturnCoverOwnership.LIVE_SURFACE,
+                useReturningVisualState = true,
+                forceCoverOnlyOnReturn = true,
+            )
+        )
+        assertTrue(
+            shouldForceCoverOnlyForReturnOwnership(
+                ownership = VideoCardReturnCoverOwnership.RESIDENT_COVER,
+                useReturningVisualState = true,
+                forceCoverOnlyOnReturn = false,
+            )
+        )
     }
 
     @Test
