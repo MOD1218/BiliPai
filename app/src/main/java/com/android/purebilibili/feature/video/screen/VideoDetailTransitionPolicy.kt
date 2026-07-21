@@ -169,6 +169,25 @@ internal fun shouldTreatVideoDetailCardExitAsReturning(
         !keepLoadedContentForBackPreview
 }
 
+/**
+ * 返回 morph 期间是否保活播放会话（surface）。
+ *
+ * 预测返回 **轻滑即松手** 时：栈先 pop → 入口 `isVisible=false`，但详情仍在
+ * sharedBounds overlay 里缩回。若此时掐掉 playbackSession，surface 变黑，
+ * 慢放可见「动画前半段卡片消失」；手指拖到一半再松手时，seek 阶段仍 visible，
+ * 所以往往复现不了。
+ *
+ * 规则：栈顶可见 **或**（shell shared 且正在 exit transition）→ 保活。
+ */
+internal fun shouldKeepPlaybackSessionActiveForSharedReturnMorph(
+    isVisible: Boolean,
+    sharedBoundsActive: Boolean,
+    isExitTransitionInProgress: Boolean,
+): Boolean {
+    if (isVisible) return true
+    return sharedBoundsActive && isExitTransitionInProgress
+}
+
 internal fun shouldForceBackPreviewPlayerCover(
     keepLoadedContentForBackPreview: Boolean,
     bindLivePlayerForBackPreview: Boolean

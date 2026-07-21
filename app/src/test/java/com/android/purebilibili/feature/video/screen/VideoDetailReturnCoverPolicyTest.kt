@@ -66,6 +66,39 @@ class VideoDetailReturnCoverPolicyTest {
     }
 
     @Test
+    fun `shared return morph keeps playback session after stack pop`() {
+        // 轻滑即松：栈已非详情但 exit morph 仍在 → 必须保活，否则前半段黑壳。
+        assertTrue(
+            shouldKeepPlaybackSessionActiveForSharedReturnMorph(
+                isVisible = false,
+                sharedBoundsActive = true,
+                isExitTransitionInProgress = true,
+            ),
+        )
+        assertTrue(
+            shouldKeepPlaybackSessionActiveForSharedReturnMorph(
+                isVisible = true,
+                sharedBoundsActive = false,
+                isExitTransitionInProgress = false,
+            ),
+        )
+        assertFalse(
+            shouldKeepPlaybackSessionActiveForSharedReturnMorph(
+                isVisible = false,
+                sharedBoundsActive = true,
+                isExitTransitionInProgress = false,
+            ),
+        )
+        assertFalse(
+            shouldKeepPlaybackSessionActiveForSharedReturnMorph(
+                isVisible = false,
+                sharedBoundsActive = false,
+                isExitTransitionInProgress = true,
+            ),
+        )
+    }
+
+    @Test
     fun `predictive cancel keeps the cover until the detail exit transition has settled`() {
         assertTrue(
             shouldTreatVideoDetailCardExitAsReturning(
@@ -255,10 +288,10 @@ class VideoDetailReturnCoverPolicyTest {
             resolveVideoDetailReturnPlayerAlpha(0.8f, true, true, liveReturnMorph = true),
             0.0001f,
         )
-        // 中段（settle=0.2 < yield）：正文仍可见随壳收缩
+        // 中段（settle=0.15 < yield 0.18）：正文仍可见随壳收缩
         assertEquals(
             1f,
-            resolveVideoDetailReturnContentAlpha(0.8f, true, liveReturnMorph = true),
+            resolveVideoDetailReturnContentAlpha(0.85f, true, liveReturnMorph = true),
             0.0001f,
         )
         // 末段（settle=0.7 > yield）：正文让位给源卡标题，alpha 下降
@@ -299,7 +332,7 @@ class VideoDetailReturnCoverPolicyTest {
         )
         assertEquals(
             1f,
-            resolveVideoDetailReturnContentAlpha(0.8f, false, liveReturnMorph = true),
+            resolveVideoDetailReturnContentAlpha(0.85f, false, liveReturnMorph = true),
             0.0001f,
         )
     }
@@ -547,7 +580,7 @@ class VideoDetailReturnCoverPolicyTest {
             .substringBefore("val handleTopBarAction")
         assertTrue(call.contains("isCardReturnExitInProgress = isCardReturnExitInProgress"))
         assertTrue(call.contains("isSessionReturningToCard = isReturningFromDetail"))
-        assertTrue(transitionHostSource.contains("video-detail-shared-transition-progress"))
+        assertTrue(transitionHostSource.contains("video-detail-shared-morph-clock"))
     }
 
     @Test

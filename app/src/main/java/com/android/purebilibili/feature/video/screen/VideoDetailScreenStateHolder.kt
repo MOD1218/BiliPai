@@ -1380,6 +1380,12 @@ internal fun VideoDetailScreenStateHolder(
     var hasDeferredPortraitRestoreAfterExternalNavigation by rememberSaveable { mutableStateOf(false) }
     var pendingMainReloadBvidAfterPortrait by rememberSaveable { mutableStateOf<String?>(null) }
     var portraitPendingSelectionBvid by rememberSaveable { mutableStateOf<String?>(null) }
+    // 返回 morph 中栈已 pop 时 isVisible=false，仍须保活 surface，避免壳缩前半段黑掉。
+    val playbackSessionActiveForMorph = shouldKeepPlaybackSessionActiveForSharedReturnMorph(
+        isVisible = isVisible,
+        sharedBoundsActive = sharedBoundsActive,
+        isExitTransitionInProgress = isExitTransitionInProgress,
+    )
     // 初始化播放器状态
     val playerState = rememberVideoPlayerState(
         context = context,
@@ -1389,7 +1395,7 @@ internal fun VideoDetailScreenStateHolder(
         fallbackResumePositionMs = resumePositionMsFromRoute,
         startPaused = isPortraitFullscreen && !useSharedPortraitPlayer,
         entryTransitionFinished = entryTransitionFinished,
-        playbackSessionActive = isVisible,
+        playbackSessionActive = playbackSessionActiveForMorph,
     )
     VideoDetailKeepScreenOnEffect(
         window = window,
