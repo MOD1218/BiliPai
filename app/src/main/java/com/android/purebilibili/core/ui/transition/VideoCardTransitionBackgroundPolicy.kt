@@ -22,11 +22,14 @@ import kotlin.math.roundToInt
 
 // 景深标定（Hero 氛围，非完整 App 开合）：
 // - 背景下沉约 2.2%，跟放大可读、又不抢 Hero；过大返回时像列表回弹
-// - 峰值 blur 20px：冻结层上进度驱动 BlurEffect（动态模糊观感，避免 live 重录掉帧）
+// - 峰值 blur 按 MotionTier 分档：Enhanced 20px / Normal 12px / Reduced 0
+//   （冻结层上进度驱动 BlurEffect，避免 live 重录掉帧；低端只保留 scrim）
 // - 压暗全程保留（含 HELD），避免打开完成后景深断裂
 // - 返回：轻度 SoftClear，避免二次方中段滞留造成落位回弹感
-private const val VIDEO_CARD_TRANSITION_MAX_BLUR_RADIUS_PX = 20f
-private const val VIDEO_CARD_TRANSITION_BLUR_QUANTUM_PX = 1f
+private const val VIDEO_CARD_TRANSITION_MAX_BLUR_RADIUS_ENHANCED_PX = 20f
+private const val VIDEO_CARD_TRANSITION_MAX_BLUR_RADIUS_NORMAL_PX = 12f
+private const val VIDEO_CARD_TRANSITION_BLUR_QUANTUM_ENHANCED_PX = 1f
+private const val VIDEO_CARD_TRANSITION_BLUR_QUANTUM_NORMAL_PX = 2f
 private const val VIDEO_CARD_TRANSITION_MAX_SCRIM_ALPHA_DARK = 0.22f
 private const val VIDEO_CARD_TRANSITION_MAX_SCRIM_ALPHA_LIGHT = 0.11f
 private const val VIDEO_CARD_TRANSITION_LIGHT_REDUCED_OPENING_SCRIM_ALPHA = 0.07f
@@ -122,19 +125,24 @@ internal fun resolveVideoCardTransitionBackgroundFrame(
         phase = phase,
     )
     val blurStrength = resolveVideoCardTransitionBlurStrength(depthProgress)
+    val maxBlurRadiusPx = resolveVideoCardTransitionMaxBlurRadiusPx(motionTier)
     // 低端/省电/无障碍减弱动画(Reduced)时跳过整帧 GPU 实时模糊与景深缩放，仅保留 scrim。
     val rawBlurRadiusPx = if (
         phase != VideoCardTransitionBackgroundPhase.IDLE &&
-        motionTier != MotionTier.Reduced &&
+        maxBlurRadiusPx > 0f &&
         sdkInt >= Build.VERSION_CODES.S
     ) {
-        VIDEO_CARD_TRANSITION_MAX_BLUR_RADIUS_PX * blurStrength
+        maxBlurRadiusPx * blurStrength
     } else {
         0f
     }
 
     return VideoCardTransitionBackgroundFrame(
-        blurRadiusPx = quantizeVideoCardTransitionBlurRadius(rawBlurRadiusPx),
+        blurRadiusPx = quantizeVideoCardTransitionBlurRadius(
+            radiusPx = rawBlurRadiusPx,
+            motionTier = motionTier,
+            maxRadiusPx = maxBlurRadiusPx,
+        ),
         scrimAlpha = when (phase) {
             VideoCardTransitionBackgroundPhase.OPENING,
             VideoCardTransitionBackgroundPhase.HELD,
@@ -641,11 +649,42 @@ private fun resolveVideoCardTransitionBlurStrength(progress: Float): Float {
     return progress.coerceIn(0f, 1f)
 }
 
-private fun quantizeVideoCardTransitionBlurRadius(radiusPx: Float): Float {
-    if (radiusPx <= 0f) return 0f
-    return ((radiusPx / VIDEO_CARD_TRANSITION_BLUR_QUANTUM_PX).roundToInt() *
-        VIDEO_CARD_TRANSITION_BLUR_QUANTUM_PX)
-        .coerceIn(0f, VIDEO_CARD_TRANSITION_MAX_BLUR_RADIUS_PX)
+/**
+ * 开合景深峰值模糊半径。
+ * - Reduced：0（仅 scrim，跳过 GraphicsLayer + BlurEffect）
+ * - Normal：12px，覆盖大多数手机的「有景深」观感，显著低于 20px 的 GPU 成本
+ * - Enhanced：20px，平板/高内存机完整氛围
+ */
+internal fun resolveVideoCardTransitionMaxBlurRadiusPx(
+    motionTier: MotionTier,
+): Float {
+    return when (motionTier) {
+        MotionTier.Reduced -> 0f
+        MotionTier.Normal -> VIDEO_CARD_TRANSITION_MAX_BLUR_RADIUS_NORMAL_PX
+        MotionTier.Enhanced -> VIDEO_CARD_TRANSITION_MAX_BLUR_RADIUS_ENHANCED_PX
+    }
+}
+
+internal fun resolveVideoCardTransitionBlurQuantumPx(
+    motionTier: MotionTier,
+): Float {
+    return when (motionTier) {
+        MotionTier.Reduced -> VIDEO_CARD_TRANSITION_BLUR_QUANTUM_ENHANCED_PX
+        // Normal 用 2px 步进，减少每帧 renderEffect 重建次数。
+        MotionTier.Normal -> VIDEO_CARD_TRANSITION_BLUR_QUANTUM_NORMAL_PX
+        MotionTier.Enhanced -> VIDEO_CARD_TRANSITION_BLUR_QUANTUM_ENHANCED_PX
+    }
+}
+
+private fun quantizeVideoCardTransitionBlurRadius(
+    radiusPx: Float,
+    motionTier: MotionTier,
+    maxRadiusPx: Float,
+): Float {
+    if (radiusPx <= 0f || maxRadiusPx <= 0f) return 0f
+    val quantum = resolveVideoCardTransitionBlurQuantumPx(motionTier)
+    return ((radiusPx / quantum).roundToInt() * quantum)
+        .coerceIn(0f, maxRadiusPx)
 }
 
 private fun normalizeVideoCardTransitionRoute(route: String?): String? {

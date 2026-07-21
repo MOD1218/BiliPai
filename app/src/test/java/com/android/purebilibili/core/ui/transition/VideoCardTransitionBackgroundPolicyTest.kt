@@ -109,6 +109,7 @@ class VideoCardTransitionBackgroundPolicyTest {
         val frame = resolveVideoCardTransitionBackgroundFrame(
             progress = 1f,
             phase = VideoCardTransitionBackgroundPhase.OPENING,
+            motionTier = MotionTier.Enhanced,
             isLightBackground = false,
             sdkInt = 35
         )
@@ -121,10 +122,35 @@ class VideoCardTransitionBackgroundPolicyTest {
     }
 
     @Test
+    fun normalMotionTierUsesLowerBlurBudgetThanEnhanced() {
+        val normal = resolveVideoCardTransitionBackgroundFrame(
+            progress = 1f,
+            phase = VideoCardTransitionBackgroundPhase.OPENING,
+            motionTier = MotionTier.Normal,
+            sdkInt = 35,
+        )
+        val enhanced = resolveVideoCardTransitionBackgroundFrame(
+            progress = 1f,
+            phase = VideoCardTransitionBackgroundPhase.OPENING,
+            motionTier = MotionTier.Enhanced,
+            sdkInt = 35,
+        )
+
+        assertEquals(12f, normal.blurRadiusPx)
+        assertEquals(20f, enhanced.blurRadiusPx)
+        assertEquals(12f, resolveVideoCardTransitionMaxBlurRadiusPx(MotionTier.Normal))
+        assertEquals(20f, resolveVideoCardTransitionMaxBlurRadiusPx(MotionTier.Enhanced))
+        assertEquals(0f, resolveVideoCardTransitionMaxBlurRadiusPx(MotionTier.Reduced))
+        assertEquals(2f, resolveVideoCardTransitionBlurQuantumPx(MotionTier.Normal))
+        assertEquals(1f, resolveVideoCardTransitionBlurQuantumPx(MotionTier.Enhanced))
+    }
+
+    @Test
     fun lightOpeningUsesReducedScrimAndWarmTint() {
         val frame = resolveVideoCardTransitionBackgroundFrame(
             progress = 1f,
             phase = VideoCardTransitionBackgroundPhase.OPENING,
+            motionTier = MotionTier.Enhanced,
             isLightBackground = true,
             sdkInt = 35
         )
@@ -187,16 +213,19 @@ class VideoCardTransitionBackgroundPolicyTest {
         val start = resolveVideoCardTransitionBackgroundFrame(
             progress = 1f,
             phase = VideoCardTransitionBackgroundPhase.RETURNING,
+            motionTier = MotionTier.Enhanced,
             sdkInt = 35
         )
         val middle = resolveVideoCardTransitionBackgroundFrame(
             progress = 0.5f,
             phase = VideoCardTransitionBackgroundPhase.RETURNING,
+            motionTier = MotionTier.Enhanced,
             sdkInt = 35
         )
         val end = resolveVideoCardTransitionBackgroundFrame(
             progress = 0f,
             phase = VideoCardTransitionBackgroundPhase.RETURNING,
+            motionTier = MotionTier.Enhanced,
             sdkInt = 35
         )
 
@@ -229,6 +258,7 @@ class VideoCardTransitionBackgroundPolicyTest {
         val frame = resolveVideoCardTransitionBackgroundFrame(
             progress = 1f,
             phase = VideoCardTransitionBackgroundPhase.HELD,
+            motionTier = MotionTier.Enhanced,
             isLightBackground = false,
             sdkInt = 35
         )
