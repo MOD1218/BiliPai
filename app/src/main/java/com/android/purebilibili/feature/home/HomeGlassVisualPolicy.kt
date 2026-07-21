@@ -3,6 +3,7 @@ package com.android.purebilibili.feature.home
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import com.android.purebilibili.core.store.HomeCardBadgeEffectMode
 import com.android.purebilibili.core.store.HomeWallpaperEffectMode
 import com.android.purebilibili.core.store.HomeWallpaperEffectScope
 import com.android.purebilibili.core.ui.AppSurfaceTokens
@@ -103,7 +104,12 @@ data class HomeCardInfoSurfaceAppearance(
     val useTintedSurface: Boolean,
     val containerAlpha: Float,
     val borderAlpha: Float,
-    val highlightAlpha: Float
+    val highlightAlpha: Float,
+    /**
+     * Sample [LocalWallpaperHazeState] (wallpaper-only source) like the bottom bar.
+     * Must never use the main content HazeState — cards live inside that source tree.
+     */
+    val useRealtimeHaze: Boolean = false
 )
 
 internal fun resolveHomeGlassChromeStyle(
@@ -316,39 +322,101 @@ internal fun resolveHomeWallpaperDecodeSizePx(
     return min(shortSide, maxShortSide) to min(longSide, maxLongSide)
 }
 
+/**
+ * Card info strip (title + UP meta under cover) glass — matches bottom-bar frosted look.
+ *
+ * Realtime Haze is only allowed with a wallpaper-only [hasWallpaperHazeState]; never the
+ * main content source (would recurse and SO on prepareTree).
+ */
+internal fun shouldUseRealtimeHomeCardInfoGlass(
+    wallpaperTintEnabled: Boolean,
+    wallpaperEffectMode: HomeWallpaperEffectMode,
+    badgeEffectMode: HomeCardBadgeEffectMode,
+    hasWallpaperHazeState: Boolean,
+    blurEnabled: Boolean,
+    isDataSaverActive: Boolean
+): Boolean {
+    if (!hasWallpaperHazeState || !blurEnabled || isDataSaverActive) return false
+    if (wallpaperEffectMode == HomeWallpaperEffectMode.OFF) return false
+    // Light-blur badge mode always prefers realtime frosted info when wallpaper source exists.
+    if (badgeEffectMode == HomeCardBadgeEffectMode.LIGHT_BLUR) return true
+    // Wallpaper-tinted cards: frosted info that tracks wallpaper while scrolling.
+    return wallpaperTintEnabled
+}
+
 internal fun resolveHomeCardInfoSurfaceAppearance(
     wallpaperTintEnabled: Boolean,
     wallpaperEffectMode: HomeWallpaperEffectMode = HomeWallpaperEffectMode.SOFT_BLUR,
     isDarkTheme: Boolean,
-    isDataSaverActive: Boolean
+    isDataSaverActive: Boolean,
+    badgeEffectMode: HomeCardBadgeEffectMode = HomeCardBadgeEffectMode.SOFT_GLASS,
+    hasWallpaperHazeState: Boolean = false,
+    blurEnabled: Boolean = true
 ): HomeCardInfoSurfaceAppearance {
     if (!wallpaperTintEnabled || wallpaperEffectMode == HomeWallpaperEffectMode.OFF) {
-        return HomeCardInfoSurfaceAppearance(
-            useTintedSurface = false,
-            containerAlpha = 1f,
-            borderAlpha = 0f,
-            highlightAlpha = 0f
+        // Still allow light-blur info glass without full wallpaper tint mode.
+        val realtimeOnly = shouldUseRealtimeHomeCardInfoGlass(
+            wallpaperTintEnabled = false,
+            wallpaperEffectMode = wallpaperEffectMode,
+            badgeEffectMode = badgeEffectMode,
+            hasWallpaperHazeState = hasWallpaperHazeState,
+            blurEnabled = blurEnabled,
+            isDataSaverActive = isDataSaverActive
         )
+        if (!realtimeOnly) {
+            return HomeCardInfoSurfaceAppearance(
+                useTintedSurface = false,
+                containerAlpha = 1f,
+                borderAlpha = 0f,
+                highlightAlpha = 0f,
+                useRealtimeHaze = false
+            )
+        }
+        return HomeCardInfoSurfaceAppearance(
+            useTintedSurface = true,
+            containerAlpha = if (isDarkTheme) 0.28f else 0.18f,
+            borderAlpha = if (isDarkTheme) 0.14f else 0.16f,
+            highlightAlpha = if (isDarkTheme) 0.05f else 0.08f,
+            useRealtimeHaze = true
+        )
+    }
+
+    val useRealtimeHaze = shouldUseRealtimeHomeCardInfoGlass(
+        wallpaperTintEnabled = wallpaperTintEnabled,
+        wallpaperEffectMode = wallpaperEffectMode,
+        badgeEffectMode = badgeEffectMode,
+        hasWallpaperHazeState = hasWallpaperHazeState,
+        blurEnabled = blurEnabled,
+        isDataSaverActive = isDataSaverActive
+    )
+
+    // Realtime haze already frosts the backdrop — keep fill lighter so liquid-glass edges read.
+    val baseContainerAlpha = when {
+        wallpaperEffectMode == HomeWallpaperEffectMode.ORIGINAL && isDarkTheme -> 0.26f
+        wallpaperEffectMode == HomeWallpaperEffectMode.ORIGINAL -> 0.12f
+        wallpaperEffectMode == HomeWallpaperEffectMode.STRONG_BLUR && isDarkTheme -> 0.50f
+        wallpaperEffectMode == HomeWallpaperEffectMode.STRONG_BLUR -> 0.32f
+        isDataSaverActive -> if (isDarkTheme) 0.56f else 0.36f
+        isDarkTheme -> 0.36f
+        else -> 0.16f
     }
 
     return HomeCardInfoSurfaceAppearance(
         useTintedSurface = true,
-        containerAlpha = when {
-            wallpaperEffectMode == HomeWallpaperEffectMode.ORIGINAL && isDarkTheme -> 0.26f
-            wallpaperEffectMode == HomeWallpaperEffectMode.ORIGINAL -> 0.12f
-            wallpaperEffectMode == HomeWallpaperEffectMode.STRONG_BLUR && isDarkTheme -> 0.50f
-            wallpaperEffectMode == HomeWallpaperEffectMode.STRONG_BLUR -> 0.32f
-            isDataSaverActive -> if (isDarkTheme) 0.56f else 0.36f
-            isDarkTheme -> 0.36f
-            else -> 0.16f
+        containerAlpha = if (useRealtimeHaze) {
+            (baseContainerAlpha * 0.55f).coerceIn(0.08f, 0.34f)
+        } else {
+            baseContainerAlpha
         },
         borderAlpha = when {
             wallpaperEffectMode == HomeWallpaperEffectMode.ORIGINAL && isDarkTheme -> 0.18f
             wallpaperEffectMode == HomeWallpaperEffectMode.ORIGINAL -> 0.22f
+            useRealtimeHaze -> if (isDarkTheme) 0.16f else 0.18f
             isDarkTheme -> 0.12f
             else -> 0.14f
         },
-        highlightAlpha = if (isDarkTheme) 0.04f else 0.06f
+        highlightAlpha = if (isDarkTheme) 0.04f else 0.06f,
+        useRealtimeHaze = useRealtimeHaze
     )
 }
 

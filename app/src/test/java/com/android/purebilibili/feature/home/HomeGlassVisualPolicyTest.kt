@@ -2,6 +2,7 @@ package com.android.purebilibili.feature.home
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import com.android.purebilibili.core.store.HomeCardBadgeEffectMode
 import com.android.purebilibili.core.store.HomeWallpaperEffectMode
 import com.android.purebilibili.core.store.HomeWallpaperEffectScope
 import com.android.purebilibili.core.ui.transition.VideoCardTransitionBackgroundPhase
@@ -425,6 +426,61 @@ class HomeGlassVisualPolicyTest {
         )
 
         assertTrue(strongBlur.containerAlpha > softBlur.containerAlpha)
+    }
+
+    @Test
+    fun cardInfoSurfaceUsesRealtimeWallpaperHazeLikeBottomBarWhenSourceExists() {
+        val soft = resolveHomeCardInfoSurfaceAppearance(
+            wallpaperTintEnabled = true,
+            wallpaperEffectMode = HomeWallpaperEffectMode.SOFT_BLUR,
+            isDarkTheme = false,
+            isDataSaverActive = false,
+            badgeEffectMode = HomeCardBadgeEffectMode.SOFT_GLASS,
+            hasWallpaperHazeState = true,
+            blurEnabled = true
+        )
+        val lightBlur = resolveHomeCardInfoSurfaceAppearance(
+            wallpaperTintEnabled = true,
+            wallpaperEffectMode = HomeWallpaperEffectMode.SOFT_BLUR,
+            isDarkTheme = false,
+            isDataSaverActive = false,
+            badgeEffectMode = HomeCardBadgeEffectMode.LIGHT_BLUR,
+            hasWallpaperHazeState = true,
+            blurEnabled = true
+        )
+        assertTrue(soft.useRealtimeHaze)
+        assertTrue(lightBlur.useRealtimeHaze)
+        // Realtime frosted path keeps a lighter fill so liquid-glass edges remain readable.
+        assertTrue(soft.containerAlpha < 0.16f)
+    }
+
+    @Test
+    fun cardInfoRealtimeHazeNeverUsesMainSourceWithoutWallpaperHazeState() {
+        val appearance = resolveHomeCardInfoSurfaceAppearance(
+            wallpaperTintEnabled = true,
+            wallpaperEffectMode = HomeWallpaperEffectMode.SOFT_BLUR,
+            isDarkTheme = false,
+            isDataSaverActive = false,
+            badgeEffectMode = HomeCardBadgeEffectMode.LIGHT_BLUR,
+            hasWallpaperHazeState = false,
+            blurEnabled = true
+        )
+        assertFalse(appearance.useRealtimeHaze)
+        assertEquals(0.16f, appearance.containerAlpha)
+    }
+
+    @Test
+    fun cardInfoRealtimeHazeDisabledInDataSaverEvenWithWallpaperSource() {
+        assertFalse(
+            shouldUseRealtimeHomeCardInfoGlass(
+                wallpaperTintEnabled = true,
+                wallpaperEffectMode = HomeWallpaperEffectMode.SOFT_BLUR,
+                badgeEffectMode = HomeCardBadgeEffectMode.LIGHT_BLUR,
+                hasWallpaperHazeState = true,
+                blurEnabled = true,
+                isDataSaverActive = true
+            )
+        )
     }
 
     @Test

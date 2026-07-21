@@ -413,12 +413,23 @@ fun ElegantVideoCard(
     val coverPillColors = pillColors.cover
     val inlinePillColors = pillColors.inline
     val isDarkCardTheme = AppSurfaceTokens.chromeBackground().luminance() < 0.5f
-    val infoSurfaceAppearance = remember(wallpaperTintEnabled, wallpaperEffectMode, isDarkCardTheme, isDataSaverActive) {
+    val infoSurfaceAppearance = remember(
+        wallpaperTintEnabled,
+        wallpaperEffectMode,
+        isDarkCardTheme,
+        isDataSaverActive,
+        badgeEffectMode,
+        wallpaperHazeState != null,
+        blurEnabled
+    ) {
         resolveHomeCardInfoSurfaceAppearance(
             wallpaperTintEnabled = wallpaperTintEnabled,
             wallpaperEffectMode = wallpaperEffectMode,
             isDarkTheme = isDarkCardTheme,
-            isDataSaverActive = isDataSaverActive
+            isDataSaverActive = isDataSaverActive,
+            badgeEffectMode = badgeEffectMode,
+            hasWallpaperHazeState = wallpaperHazeState != null,
+            blurEnabled = blurEnabled
         )
     }
     val scrollLitePolicy = remember(scrollLiteModeEnabled, compactStatsOnCover) {
@@ -996,8 +1007,25 @@ fun ElegantVideoCard(
             )
         }
         val infoContainerModifier = if (infoSurfaceAppearance.useTintedSurface) {
+            // Wallpaper-only HazeState (sibling source) — never main content HazeState.
+            val infoGlassModifier = if (
+                infoSurfaceAppearance.useRealtimeHaze && wallpaperHazeState != null
+            ) {
+                Modifier.unifiedBlur(
+                    hazeState = wallpaperHazeState,
+                    shape = infoSurfaceShape,
+                    surfaceType = BlurSurfaceType.BOTTOM_BAR,
+                    // Match bottom bar: keep frosted sampling while the feed scrolls.
+                    isScrolling = false,
+                    isTransitionRunning = false,
+                    forceLowBudget = false
+                )
+            } else {
+                Modifier
+            }
             Modifier
                 .fillMaxWidth()
+                .then(infoGlassModifier)
                 .background(
                     color = AppSurfaceTokens.cardContainer().copy(alpha = infoSurfaceAppearance.containerAlpha),
                     shape = infoSurfaceShape
