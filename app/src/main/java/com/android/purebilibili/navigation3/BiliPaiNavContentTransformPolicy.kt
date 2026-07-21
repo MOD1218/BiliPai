@@ -70,13 +70,35 @@ internal fun resolveBiliPaiNavPopContentTransform(
     }
 }
 
+/**
+ * @param directionSign -1 = source left (enter from left / exit to left)
+ *                      +1 = source right (enter from right / exit to right)
+ */
 private fun disabledVideoDirectionForwardTransform(directionSign: Int): ContentTransform {
     return (
         slideInHorizontally(
-            animationSpec = tween(NAV3_DISABLED_VIDEO_DIRECTION_MILLIS, easing = AppMotionEasing.EmphasizedEnter),
-            initialOffsetX = { width -> directionSign * width / 4 }
-        ) + fadeIn(animationSpec = tween(NAV3_DISABLED_VIDEO_DIRECTION_MILLIS, easing = AppMotionEasing.EmphasizedEnter))
-    ) togetherWith fadeOut(animationSpec = tween(NAV3_DISABLED_VIDEO_DIRECTION_MILLIS))
+            animationSpec = tween(
+                NAV3_DISABLED_VIDEO_DIRECTION_MILLIS,
+                easing = AppMotionEasing.EmphasizedEnter
+            ),
+            // Full-width entrance so left/right origin is obvious when morph is off.
+            initialOffsetX = { width -> directionSign * width }
+        ) + fadeIn(
+            animationSpec = tween(
+                NAV3_DISABLED_VIDEO_DIRECTION_MILLIS,
+                easing = AppMotionEasing.EmphasizedEnter
+            )
+        )
+    ) togetherWith (
+        slideOutHorizontally(
+            animationSpec = tween(
+                NAV3_DISABLED_VIDEO_DIRECTION_MILLIS,
+                easing = AppMotionEasing.EmphasizedExit
+            ),
+            // Opposite nudge for the list page under the detail.
+            targetOffsetX = { width -> -directionSign * width / 6 }
+        ) + fadeOut(animationSpec = tween(NAV3_DISABLED_VIDEO_DIRECTION_MILLIS))
+    )
 }
 
 private fun spaceForwardTransform(): ContentTransform {
@@ -125,20 +147,37 @@ private fun settingsIosPushForwardTransform(): ContentTransform =
 private fun settingsIosPushPopTransform(): ContentTransform =
     resolveSettingsIosPushPopContentTransform(durationMillis = SETTINGS_IOS_PUSH_DURATION_MS)
 
+/**
+ * Return to card side:
+ * - directionSign -1: detail exits left (left card), list re-enters from the right
+ * - directionSign +1: detail exits right (right card), list re-enters from the left
+ */
 private fun disabledVideoDirectionReturnTransform(directionSign: Int): ContentTransform {
-    return EnterTransition.None togetherWith
-        (
-            slideOutHorizontally(
-                animationSpec = tween(
-                    durationMillis = NAV3_DISABLED_VIDEO_RETURN_MILLIS,
-                    easing = AppMotionEasing.EmphasizedExit
-                ),
-                targetOffsetX = { width -> directionSign * width }
-            ) + fadeOut(
-                animationSpec = tween(
-                    durationMillis = NAV3_DISABLED_VIDEO_RETURN_MILLIS,
-                    easing = AppMotionEasing.EmphasizedExit
-                )
+    return (
+        slideInHorizontally(
+            animationSpec = tween(
+                durationMillis = NAV3_DISABLED_VIDEO_RETURN_MILLIS,
+                easing = AppMotionEasing.EmphasizedEnter
+            ),
+            initialOffsetX = { width -> -directionSign * width / 6 }
+        ) + fadeIn(
+            animationSpec = tween(
+                durationMillis = NAV3_DISABLED_VIDEO_RETURN_MILLIS,
+                easing = AppMotionEasing.EmphasizedEnter
             )
         )
+    ) togetherWith (
+        slideOutHorizontally(
+            animationSpec = tween(
+                durationMillis = NAV3_DISABLED_VIDEO_RETURN_MILLIS,
+                easing = AppMotionEasing.EmphasizedExit
+            ),
+            targetOffsetX = { width -> directionSign * width }
+        ) + fadeOut(
+            animationSpec = tween(
+                durationMillis = NAV3_DISABLED_VIDEO_RETURN_MILLIS,
+                easing = AppMotionEasing.EmphasizedExit
+            )
+        )
+    )
 }

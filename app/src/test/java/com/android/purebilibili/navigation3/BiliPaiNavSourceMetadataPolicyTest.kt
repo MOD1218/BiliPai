@@ -64,4 +64,35 @@ class BiliPaiNavSourceMetadataPolicyTest {
         assertTrue(metadata.sharedTransitionEntryReady)
         assertTrue(metadata.sharedTransitionReady)
     }
+
+    @Test
+    fun cardSourceDirection_splitsDualColumnAtMidScreenEvenWhenPartiallyVisible() {
+        assertEquals(
+            BiliPaiNavCardSourceDirection.SOURCE_LEFT,
+            resolveBiliPaiNavCardSourceDirection(
+                clickedBoundsRecorded = true,
+                cardFullyVisible = false,
+                isSingleColumnCard = false,
+                normalizedCenterX = 0.25f
+            )
+        )
+        assertEquals(
+            BiliPaiNavCardSourceDirection.SOURCE_RIGHT,
+            resolveBiliPaiNavCardSourceDirection(
+                clickedBoundsRecorded = true,
+                cardFullyVisible = false,
+                isSingleColumnCard = false,
+                normalizedCenterX = 0.75f
+            )
+        )
+        assertEquals(
+            BiliPaiNavCardSourceDirection.NONE,
+            resolveBiliPaiNavCardSourceDirection(
+                clickedBoundsRecorded = true,
+                cardFullyVisible = true,
+                isSingleColumnCard = true,
+                normalizedCenterX = 0.2f
+            )
+        )
+    }
 }

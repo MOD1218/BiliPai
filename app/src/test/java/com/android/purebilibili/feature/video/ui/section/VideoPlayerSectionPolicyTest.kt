@@ -328,7 +328,41 @@ class VideoPlayerSectionPolicyTest {
             0,
             resolveDanmakuLayerTopOffsetPx(
                 isFullscreen = true,
-                statusBarHeightPx = 96
+                statusBarHeightPx = 96,
+                useScreenTopSurface = false
+            )
+        )
+        assertEquals(
+            96,
+            resolveDanmakuLayerTopOffsetPx(
+                isFullscreen = true,
+                statusBarHeightPx = 96,
+                useScreenTopSurface = true
+            )
+        )
+    }
+
+    @Test
+    fun screenTopDanmakuSurface_onlyAppliesOutsideLandscapeFullscreen() {
+        assertTrue(
+            shouldUseScreenTopDanmakuSurface(
+                portraitDisplayAreaMode =
+                    com.android.purebilibili.core.store.PortraitDanmakuDisplayAreaMode.SCREEN_TOP,
+                isLandscapeFullscreen = false
+            )
+        )
+        assertFalse(
+            shouldUseScreenTopDanmakuSurface(
+                portraitDisplayAreaMode =
+                    com.android.purebilibili.core.store.PortraitDanmakuDisplayAreaMode.SCREEN_TOP,
+                isLandscapeFullscreen = true
+            )
+        )
+        assertFalse(
+            shouldUseScreenTopDanmakuSurface(
+                portraitDisplayAreaMode =
+                    com.android.purebilibili.core.store.PortraitDanmakuDisplayAreaMode.VIDEO_VIEWPORT,
+                isLandscapeFullscreen = false
             )
         )
     }
@@ -1278,18 +1312,18 @@ class VideoPlayerSectionPolicyTest {
         val dragStartBlock = source
             .substringAfter("onDragStart = { offset ->")
             .substringBefore("onDragEnd = {")
-        val volumeGestureBlock = source
-            .substringAfter("VideoGestureMode.Volume -> {")
-            .substringBefore("VideoGestureMode.Seek ->")
-            .substringBefore("else ->")
+        val systemVolumeGestureBlock = source
+            .substringAfter("resolveSystemStreamVolumeFromGesture(")
+            .substringBefore("audioManager.setStreamVolume(")
+            .let { "resolveSystemStreamVolumeFromGesture($it" }
 
         assertTrue(dragStartBlock.contains("startVolumeStep = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)"))
-        assertTrue(volumeGestureBlock.contains("resolveSystemStreamVolumeFromGesture("))
-        assertTrue(volumeGestureBlock.contains("screenHeightPx = context.resources.displayMetrics.heightPixels.toFloat()"))
-        assertFalse(volumeGestureBlock.contains("screenHeightPx = size.height.toFloat()"))
-        assertTrue(volumeGestureBlock.contains("audioManager.setStreamVolume("))
-        assertTrue(volumeGestureBlock.contains("AudioManager.STREAM_MUSIC"))
-        assertFalse(volumeGestureBlock.contains("playerState.player.volume ="))
+        assertTrue(source.contains("resolveSystemStreamVolumeFromGesture("))
+        assertTrue(systemVolumeGestureBlock.contains("screenHeightPx = context.resources.displayMetrics.heightPixels.toFloat()"))
+        assertFalse(systemVolumeGestureBlock.contains("screenHeightPx = size.height.toFloat()"))
+        assertTrue(source.contains("audioManager.setStreamVolume("))
+        assertTrue(source.contains("AudioManager.STREAM_MUSIC"))
+        assertFalse(source.contains("playerState.player.volume ="))
         assertFalse(source.contains("SettingsManager.setPreferredPlayerVolume("))
     }
 

@@ -324,8 +324,11 @@ internal fun resolveBiliPaiNavEntryRouteTransitions(
     val recordedMatchingVideoSource = isSharedReadyCardMorphPush(key, sourceMetadata)
     val sharedReadyVideoPush = recordedMatchingVideoSource &&
         sourceMetadata.sharedTransitionEntryReady
+    // Card-disabled directional enter only needs recorded bounds + left/right origin.
+    // Do not require full visibility under top chrome, otherwise left/right slides never fire.
     val directionalVideoPushReady = recordedMatchingVideoSource &&
-        sourceMetadata.sharedTransitionReady
+        sourceMetadata.sharedTransitionEntryReady &&
+        sourceMetadata.cardSourceDirection != BiliPaiNavCardSourceDirection.NONE
     val sharedReadyFavoriteCollection =
         key is BiliPaiNavKey.SeasonSeriesDetail && key.sharedElementTransition
     val relatedVideoDetail = key is BiliPaiNavKey.VideoDetail &&
@@ -348,6 +351,9 @@ internal fun resolveBiliPaiNavEntryRouteTransitions(
         cardTransitionEnabled && sharedReadyFavoriteCollection ->
             BiliPaiNavRouteTransition.LIGHT_SIBLING_POP
         // Story 返回不用 NO_OP shared：没有 sharedBounds 对端，NO_OP 会黑底卡死。
+        // 关闭整卡过渡时，把方向化 pop 写进 entry metadata 默认值，避免仅依赖 pop 路径解析。
+        !cardTransitionEnabled && directionalVideoPushReady ->
+            resolveCardDisabledReturnTransition(sourceMetadata.cardSourceDirection)
         else -> BiliPaiNavRouteTransition.FALLBACK
     }
     return BiliPaiNavEntryRouteTransitions(

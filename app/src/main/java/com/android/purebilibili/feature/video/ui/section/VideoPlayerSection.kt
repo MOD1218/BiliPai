@@ -3097,10 +3097,15 @@ fun VideoPlayerSection(
                 }
             }
             
-            //  非全屏时的顶部偏移量
+            // 竖屏「屏幕顶部」模式：弹幕覆盖整个播放器容器；默认仍贴合视频画面，避免落在黑边里。
+            val useScreenTopDanmakuSurface = shouldUseScreenTopDanmakuSurface(
+                portraitDisplayAreaMode = portraitDanmakuDisplayAreaMode,
+                isLandscapeFullscreen = isFullscreen && !isPortraitFullscreen
+            )
             val topOffset = resolveDanmakuLayerTopOffsetPx(
                 isFullscreen = isFullscreen,
-                statusBarHeightPx = statusBarHeightPx
+                statusBarHeightPx = statusBarHeightPx,
+                useScreenTopSurface = useScreenTopDanmakuSurface
             )
             
             //  [修复] 移除 key(isFullscreen)，避免横竖屏切换时重建 DanmakuView 导致弹幕消失
@@ -3109,14 +3114,18 @@ fun VideoPlayerSection(
             BoxWithConstraints(
                 modifier = playerContentModifier
                     .then(
-                        if (!isFullscreen) {
+                        if (topOffset > 0) {
                             Modifier.padding(top = with(LocalContext.current.resources.displayMetrics) {
                                 (topOffset / density).dp
                             })
                         } else Modifier
                     )
                     .clipToBounds(),
-                contentAlignment = Alignment.Center
+                contentAlignment = if (useScreenTopDanmakuSurface) {
+                    Alignment.TopCenter
+                } else {
+                    Alignment.Center
+                }
             ) {
                 val density = LocalDensity.current
                 val viewportLayout = remember(maxWidth, maxHeight, viewportAspectRatio) {
@@ -3125,6 +3134,16 @@ fun VideoPlayerSection(
                             containerWidth = maxWidth.roundToPx(),
                             containerHeight = maxHeight.roundToPx(),
                             aspectRatio = viewportAspectRatio
+                        )
+                    }
+                }
+                val danmakuSurfaceModifier = if (useScreenTopDanmakuSurface) {
+                    Modifier.fillMaxSize()
+                } else {
+                    with(density) {
+                        Modifier.size(
+                            width = viewportLayout.width.toDp(),
+                            height = viewportLayout.height.toDp()
                         )
                     }
                 }
@@ -3153,12 +3172,7 @@ fun VideoPlayerSection(
                             }
                         }
                     },
-                    modifier = with(density) {
-                        Modifier.size(
-                            width = viewportLayout.width.toDp(),
-                            height = viewportLayout.height.toDp()
-                        )
-                    }
+                    modifier = danmakuSurfaceModifier
                 )
             }
         }
