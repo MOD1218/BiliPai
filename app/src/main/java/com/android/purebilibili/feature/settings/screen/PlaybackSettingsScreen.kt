@@ -1868,19 +1868,58 @@ private fun PlaybackFullscreenGestureSettingsSection(
             iconTint = com.android.purebilibili.core.theme.iOSGreen
         )
         IOSDivider()
+        val autoExitFullscreenMode by com.android.purebilibili.core.store.SettingsManager
+            .getAutoExitFullscreenMode(context)
+            .collectAsStateWithLifecycle(
+                initialValue = com.android.purebilibili.core.store.AutoExitFullscreenMode.ALL_PARTS
+            )
 	        IOSSwitchItem(
 	            icon = rememberSettingsSemanticIcon(SettingsIconRole.AUTO_EXIT_FULLSCREEN),
             title = "自动退出全屏",
-            subtitle = "视频结束播放后自动退出全屏",
-            checked = autoExitFullscreen,
-            onCheckedChange = {
+            subtitle = autoExitFullscreenMode.subtitle,
+            checked = autoExitFullscreenMode !=
+                com.android.purebilibili.core.store.AutoExitFullscreenMode.OFF,
+            onCheckedChange = { enabled ->
                 scope.launch {
-                    com.android.purebilibili.core.store.SettingsManager
-                        .setAutoExitFullscreen(context, it)
+                    com.android.purebilibili.core.store.SettingsManager.setAutoExitFullscreenMode(
+                        context,
+                        if (enabled) {
+                            com.android.purebilibili.core.store.AutoExitFullscreenMode.ALL_PARTS
+                        } else {
+                            com.android.purebilibili.core.store.AutoExitFullscreenMode.OFF
+                        },
+                    )
                 }
             },
             iconTint = iOSOrange
         )
+        if (
+            autoExitFullscreenMode !=
+            com.android.purebilibili.core.store.AutoExitFullscreenMode.OFF
+        ) {
+            IOSDivider()
+            IOSSlidingSegmentedSetting(
+                title = "退出时机：${autoExitFullscreenMode.label}",
+                subtitle = autoExitFullscreenMode.subtitle,
+                options = listOf(
+                    PlaybackSegmentOption(
+                        com.android.purebilibili.core.store.AutoExitFullscreenMode.CURRENT_PART,
+                        "当前P",
+                    ),
+                    PlaybackSegmentOption(
+                        com.android.purebilibili.core.store.AutoExitFullscreenMode.ALL_PARTS,
+                        "全部完",
+                    ),
+                ),
+                selectedValue = autoExitFullscreenMode,
+                onSelectionChange = { mode ->
+                    scope.launch {
+                        com.android.purebilibili.core.store.SettingsManager
+                            .setAutoExitFullscreenMode(context, mode)
+                    }
+                },
+            )
+        }
         IOSDivider()
 	        IOSSwitchItem(
 	            icon = rememberSettingsSemanticIcon(SettingsIconRole.FULLSCREEN_LOCK),

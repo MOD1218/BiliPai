@@ -549,10 +549,52 @@ fun VideoPlayerSection(
     val fullscreenGestureReverse = playerInteractionSettings.fullscreenGestureReverse
     val autoEnterFullscreenEnabled = playerInteractionSettings.autoEnterFullscreenEnabled
     val autoExitFullscreenEnabled = playerInteractionSettings.autoExitFullscreenEnabled
+    val autoExitFullscreenMode = playerInteractionSettings.autoExitFullscreenMode
     val allowPlaybackStateAutoFullscreen = remember(configuration.smallestScreenWidthDp) {
         shouldAllowPlaybackStateAutoFullscreen(
             smallestScreenWidthDp = configuration.smallestScreenWidthDp
         )
+    }
+    val playbackCompletionBehavior by com.android.purebilibili.core.store.SettingsManager
+        .getPlaybackCompletionBehavior(context)
+        .collectAsStateWithLifecycle(
+            initialValue = com.android.purebilibili.core.store.PlaybackCompletionBehavior.CONTINUE_CURRENT_LOGIC,
+            lifecycle = lifecycleOwner.lifecycle
+        )
+    val willContinueToNextAfterEnd = remember(uiState, playbackCompletionBehavior) {
+        val success = uiState as? VideoPlaybackUiState.Success
+        if (success == null) {
+            false
+        } else {
+            val pages = success.info.pages
+            val currentIndex = pages.indexOfFirst { it.cid == success.info.cid }
+            val hasNextPage = pages.size > 1 && currentIndex >= 0 && currentIndex < pages.lastIndex
+            val hasUgcSeasonNext = success.info.ugc_season?.let { season ->
+                val episodes = season.sections.flatMap { it.episodes }
+                if (episodes.isEmpty()) {
+                    false
+                } else {
+                    val idx = episodes.indexOfFirst {
+                        it.bvid == success.info.bvid || it.cid == success.info.cid
+                    }
+                    idx >= 0 && idx < episodes.lastIndex
+                }
+            } ?: false
+            val hasPlaylistNext = com.android.purebilibili.feature.video.player.PlaylistManager
+                .isExternalPlaylist.value &&
+                com.android.purebilibili.feature.video.player.PlaylistManager.hasNext()
+            val completionAdvances = playbackCompletionBehavior !=
+                com.android.purebilibili.core.store.PlaybackCompletionBehavior.STOP_AFTER_CURRENT &&
+                playbackCompletionBehavior !=
+                com.android.purebilibili.core.store.PlaybackCompletionBehavior.REPEAT_ONE
+            resolveWillContinuePlaybackAfterCurrentItem(
+                pageCount = pages.size,
+                currentPageIndex = currentIndex,
+                hasUgcSeasonNext = hasUgcSeasonNext,
+                hasPlaylistNext = hasPlaylistNext,
+                completionAdvancesToNext = completionAdvances || hasNextPage || hasUgcSeasonNext,
+            )
+        }
     }
     val fixedFullscreenAspectRatio = playerInteractionSettings.fixedFullscreenAspectRatio
     val subtitleAutoPreference = playerInteractionSettings.subtitleAutoPreference
@@ -745,11 +787,15 @@ fun VideoPlayerSection(
 
     val latestIsFullscreen by rememberUpdatedState(isFullscreen)
     val latestOnToggleFullscreen by rememberUpdatedState(onToggleFullscreen)
+    val latestWillContinueToNextAfterEnd by rememberUpdatedState(willContinueToNextAfterEnd)
+    val latestAutoExitFullscreenMode by rememberUpdatedState(autoExitFullscreenMode)
     LaunchedEffect(
         playerState.player,
         autoEnterFullscreenEnabled,
         autoExitFullscreenEnabled,
+        autoExitFullscreenMode,
         allowPlaybackStateAutoFullscreen,
+        willContinueToNextAfterEnd,
         bvid,
         isFullscreen
     ) {
@@ -762,7 +808,9 @@ fun VideoPlayerSection(
                 playbackState = playbackState,
                 playWhenReady = playWhenReady,
                 hasAutoEnteredFullscreen = hasAutoEnteredFullscreen,
-                isFullscreen = latestIsFullscreen
+                isFullscreen = latestIsFullscreen,
+                willContinueToNextItem = latestWillContinueToNextAfterEnd,
+                autoExitFullscreenMode = latestAutoExitFullscreenMode,
             )
         ) {
             if (playbackState == Player.STATE_READY && playWhenReady && !latestIsFullscreen) {
@@ -775,7 +823,9 @@ fun VideoPlayerSection(
         playerState.player,
         autoEnterFullscreenEnabled,
         autoExitFullscreenEnabled,
+        autoExitFullscreenMode,
         allowPlaybackStateAutoFullscreen,
+        willContinueToNextAfterEnd,
         bvid
     ) {
         previousPlayWhenReady = playerState.player.playWhenReady
@@ -789,7 +839,9 @@ fun VideoPlayerSection(
                         playWhenReady = playerState.player.playWhenReady,
                         hasAutoEnteredFullscreen = hasAutoEnteredFullscreen,
                         isFullscreen = latestIsFullscreen,
-                        previousPlayWhenReady = previousPlayWhenReady
+                        previousPlayWhenReady = previousPlayWhenReady,
+                        willContinueToNextItem = latestWillContinueToNextAfterEnd,
+                        autoExitFullscreenMode = latestAutoExitFullscreenMode,
                     )
                 ) {
                     if (
@@ -815,7 +867,9 @@ fun VideoPlayerSection(
                         playWhenReady = playWhenReady,
                         hasAutoEnteredFullscreen = hasAutoEnteredFullscreen,
                         isFullscreen = latestIsFullscreen,
-                        previousPlayWhenReady = previousValue
+                        previousPlayWhenReady = previousValue,
+                        willContinueToNextItem = latestWillContinueToNextAfterEnd,
+                        autoExitFullscreenMode = latestAutoExitFullscreenMode,
                     )
                 ) {
                     hasAutoEnteredFullscreen = true

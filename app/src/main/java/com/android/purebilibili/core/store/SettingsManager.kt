@@ -833,6 +833,35 @@ data class HomeTopTabSettings(
     val visibleIds: Set<String> = setOf("RECOMMEND", "FOLLOW", "POPULAR", "LIVE", "GAME", "PARTITION")
 )
 
+/**
+ * 自动退出全屏策略。
+ * - [OFF]：不自动退
+ * - [CURRENT_PART]：当前分P/单视频结束就退（旧「开」语义中的激进行为）
+ * - [ALL_PARTS]：还有下一段可连播时保持全屏，全部播完再退（默认）
+ */
+enum class AutoExitFullscreenMode(val value: Int, val label: String, val subtitle: String) {
+    OFF(0, "关闭", "播放结束不自动退出全屏"),
+    CURRENT_PART(1, "当前分P结束", "每个分P/视频播完就退出全屏"),
+    ALL_PARTS(2, "全部连播结束", "合集/分P/列表全部播完再退出全屏");
+
+    companion object {
+        fun fromValue(value: Int): AutoExitFullscreenMode =
+            entries.find { it.value == value } ?: ALL_PARTS
+
+        /** 兼容旧布尔：true→全部结束再退，false→关闭 */
+        fun fromLegacyEnabled(enabled: Boolean): AutoExitFullscreenMode =
+            if (enabled) ALL_PARTS else OFF
+    }
+}
+
+internal fun resolveAutoExitFullscreenMode(
+    modeValue: Int?,
+    legacyEnabled: Boolean?,
+): AutoExitFullscreenMode {
+    if (modeValue != null) return AutoExitFullscreenMode.fromValue(modeValue)
+    return AutoExitFullscreenMode.fromLegacyEnabled(legacyEnabled ?: true)
+}
+
 data class PlayerInteractionSettings(
     val gestureSensitivity: Float = 1.0f,
     val doubleTapLikeEnabled: Boolean = true,
@@ -853,6 +882,11 @@ data class PlayerInteractionSettings(
         TabletCommentPanelWidthPreset.STANDARD,
     val autoEnterFullscreenEnabled: Boolean = false,
     val autoExitFullscreenEnabled: Boolean = true,
+    /**
+     * 自动退出全屏粒度。旧布尔 [autoExitFullscreenEnabled]=true 映射为 [ALL_PARTS]，
+     * 避免连播下一P 时被 STATE_ENDED 踢回竖屏。
+     */
+    val autoExitFullscreenMode: AutoExitFullscreenMode = AutoExitFullscreenMode.ALL_PARTS,
     val fixedFullscreenAspectRatio: FullscreenAspectRatio = FullscreenAspectRatio.FIT,
     val subtitleAutoPreference: SubtitleAutoPreference = SubtitleAutoPreference.OFF,
     val longPressSpeed: Float = 2.0f,
@@ -1454,6 +1488,10 @@ object SettingsManager {
             ),
             autoEnterFullscreenEnabled = preferences[KEY_AUTO_ENTER_FULLSCREEN] ?: false,
             autoExitFullscreenEnabled = preferences[KEY_AUTO_EXIT_FULLSCREEN] ?: true,
+            autoExitFullscreenMode = resolveAutoExitFullscreenMode(
+                modeValue = preferences[KEY_AUTO_EXIT_FULLSCREEN_MODE],
+                legacyEnabled = preferences[KEY_AUTO_EXIT_FULLSCREEN],
+            ),
             fixedFullscreenAspectRatio = FullscreenAspectRatio.fromValue(
                 preferences[KEY_FULLSCREEN_ASPECT_RATIO] ?: FullscreenAspectRatio.FIT.value
             ),
@@ -5427,6 +5465,7 @@ object SettingsManager {
         intPreferencesKey("tablet_comment_panel_width_preset")
     private val KEY_AUTO_ENTER_FULLSCREEN = booleanPreferencesKey("auto_enter_fullscreen")
     private val KEY_AUTO_EXIT_FULLSCREEN = booleanPreferencesKey("auto_exit_fullscreen")
+    private val KEY_AUTO_EXIT_FULLSCREEN_MODE = intPreferencesKey("auto_exit_fullscreen_mode")
     private val KEY_SHOW_FULLSCREEN_LOCK_BUTTON = booleanPreferencesKey("show_fullscreen_lock_button")
     private val KEY_SHOW_FULLSCREEN_SCREENSHOT_BUTTON = booleanPreferencesKey("show_fullscreen_screenshot_button")
     private val KEY_APP_GESTURE_SCREENSHOT_ENABLED =
@@ -5641,11 +5680,32 @@ object SettingsManager {
     }
 
     fun getAutoExitFullscreen(context: Context): Flow<Boolean> = context.settingsDataStore.data
-        .map { preferences -> preferences[KEY_AUTO_EXIT_FULLSCREEN] ?: true }
+        .map { preferences ->
+            resolveAutoExitFullscreenMode(
+                modeValue = preferences[KEY_AUTO_EXIT_FULLSCREEN_MODE],
+                legacyEnabled = preferences[KEY_AUTO_EXIT_FULLSCREEN],
+            ) != AutoExitFullscreenMode.OFF
+        }
+
+    fun getAutoExitFullscreenMode(context: Context): Flow<AutoExitFullscreenMode> =
+        context.settingsDataStore.data.map { preferences ->
+            resolveAutoExitFullscreenMode(
+                modeValue = preferences[KEY_AUTO_EXIT_FULLSCREEN_MODE],
+                legacyEnabled = preferences[KEY_AUTO_EXIT_FULLSCREEN],
+            )
+        }
 
     suspend fun setAutoExitFullscreen(context: Context, enabled: Boolean) {
+        setAutoExitFullscreenMode(
+            context,
+            AutoExitFullscreenMode.fromLegacyEnabled(enabled),
+        )
+    }
+
+    suspend fun setAutoExitFullscreenMode(context: Context, mode: AutoExitFullscreenMode) {
         context.settingsDataStore.edit { preferences ->
-            preferences[KEY_AUTO_EXIT_FULLSCREEN] = enabled
+            preferences[KEY_AUTO_EXIT_FULLSCREEN_MODE] = mode.value
+            preferences[KEY_AUTO_EXIT_FULLSCREEN] = mode != AutoExitFullscreenMode.OFF
         }
     }
 

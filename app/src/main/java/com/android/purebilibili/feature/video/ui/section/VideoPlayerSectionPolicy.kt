@@ -579,7 +579,14 @@ internal fun shouldToggleAutoFullscreenForCurrentPlaybackSnapshot(
     playbackState: Int,
     playWhenReady: Boolean,
     hasAutoEnteredFullscreen: Boolean,
-    isFullscreen: Boolean
+    isFullscreen: Boolean,
+    willContinueToNextItem: Boolean = false,
+    autoExitFullscreenMode: com.android.purebilibili.core.store.AutoExitFullscreenMode =
+        if (autoExitFullscreenEnabled) {
+            com.android.purebilibili.core.store.AutoExitFullscreenMode.ALL_PARTS
+        } else {
+            com.android.purebilibili.core.store.AutoExitFullscreenMode.OFF
+        },
 ): Boolean {
     return shouldToggleAutoFullscreenForPlaybackEvent(
         autoEnterFullscreenEnabled = autoEnterFullscreenEnabled,
@@ -589,7 +596,9 @@ internal fun shouldToggleAutoFullscreenForCurrentPlaybackSnapshot(
         playWhenReady = playWhenReady,
         hasAutoEnteredFullscreen = hasAutoEnteredFullscreen,
         isFullscreen = isFullscreen,
-        previousPlayWhenReady = false
+        previousPlayWhenReady = false,
+        willContinueToNextItem = willContinueToNextItem,
+        autoExitFullscreenMode = autoExitFullscreenMode,
     )
 }
 
@@ -601,7 +610,14 @@ internal fun shouldToggleAutoFullscreenForPlaybackEvent(
     playWhenReady: Boolean,
     hasAutoEnteredFullscreen: Boolean,
     isFullscreen: Boolean,
-    previousPlayWhenReady: Boolean = playWhenReady
+    previousPlayWhenReady: Boolean = playWhenReady,
+    willContinueToNextItem: Boolean = false,
+    autoExitFullscreenMode: com.android.purebilibili.core.store.AutoExitFullscreenMode =
+        if (autoExitFullscreenEnabled) {
+            com.android.purebilibili.core.store.AutoExitFullscreenMode.ALL_PARTS
+        } else {
+            com.android.purebilibili.core.store.AutoExitFullscreenMode.OFF
+        },
 ): Boolean {
     if (!allowPlaybackStateAutoFullscreen) return false
 
@@ -614,9 +630,49 @@ internal fun shouldToggleAutoFullscreenForPlaybackEvent(
             (!previousPlayWhenReady || playbackState == Player.STATE_READY)
     if (shouldEnterFullscreen) return true
 
-    return autoExitFullscreenEnabled &&
-        playbackState == Player.STATE_ENDED &&
-        isFullscreen
+    return shouldAutoExitFullscreenOnPlaybackEnded(
+        mode = autoExitFullscreenMode,
+        isFullscreen = isFullscreen,
+        playbackState = playbackState,
+        willContinueToNextItem = willContinueToNextItem,
+    )
+}
+
+/**
+ * 播放结束是否应退出全屏。
+ * - OFF：不退出
+ * - CURRENT_PART：当前分P/视频结束即退
+ * - ALL_PARTS：仍有下一段（分P/合集/队列）可连播时保持全屏
+ */
+internal fun shouldAutoExitFullscreenOnPlaybackEnded(
+    mode: com.android.purebilibili.core.store.AutoExitFullscreenMode,
+    isFullscreen: Boolean,
+    playbackState: Int,
+    willContinueToNextItem: Boolean,
+): Boolean {
+    if (!isFullscreen || playbackState != Player.STATE_ENDED) return false
+    return when (mode) {
+        com.android.purebilibili.core.store.AutoExitFullscreenMode.OFF -> false
+        com.android.purebilibili.core.store.AutoExitFullscreenMode.CURRENT_PART -> true
+        com.android.purebilibili.core.store.AutoExitFullscreenMode.ALL_PARTS -> !willContinueToNextItem
+    }
+}
+
+/**
+ * 当前条目结束后是否还会自动切到下一段（分P / 合集 / 播放列表）。
+ */
+internal fun resolveWillContinuePlaybackAfterCurrentItem(
+    pageCount: Int,
+    currentPageIndex: Int,
+    hasUgcSeasonNext: Boolean,
+    hasPlaylistNext: Boolean,
+    completionAdvancesToNext: Boolean,
+): Boolean {
+    if (!completionAdvancesToNext) return false
+    val hasNextPage = pageCount > 1 &&
+        currentPageIndex >= 0 &&
+        currentPageIndex < pageCount - 1
+    return hasNextPage || hasUgcSeasonNext || hasPlaylistNext
 }
 
 internal fun resolveGestureIndicatorLabel(mode: VideoGestureMode): String {

@@ -51,8 +51,10 @@ import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-private const val FULLSCREEN_DANMAKU_PANEL_WIDTH_FRACTION = 0.25f
-private const val FULLSCREEN_DANMAKU_PANEL_MIN_WIDTH_DP = 220
+/** 横屏全屏侧栏：收窄，避免挡画面；用固定上限贴近系统设置面板。 */
+private const val FULLSCREEN_DANMAKU_PANEL_WIDTH_FRACTION = 0.20f
+private const val FULLSCREEN_DANMAKU_PANEL_MIN_WIDTH_DP = 176
+private const val FULLSCREEN_DANMAKU_PANEL_MAX_WIDTH_DP = 220
 private const val WIDE_INLINE_DANMAKU_PANEL_MAX_WIDTH_DP = 640
 private const val WIDE_INLINE_DANMAKU_PANEL_SCREEN_WIDTH_DP = 840
 
@@ -180,21 +182,26 @@ fun resolveDanmakuSettingsPanelLayoutPolicy(
     fullscreenWidthMode: DanmakuPanelWidthMode = DanmakuPanelWidthMode.THIRD
 ): DanmakuSettingsPanelLayoutPolicy {
     if (isFullscreen) {
-        val availableWidthDp = (screenWidthDp - 32).coerceAtLeast(0)
-        val resolvedMaxWidth = (
-            availableWidthDp *
-                FULLSCREEN_DANMAKU_PANEL_WIDTH_FRACTION
+        val availableWidthDp = (screenWidthDp - 24).coerceAtLeast(0)
+        // 模式保留入参兼容；横屏全屏统一收窄侧栏，不再铺半屏/全宽。
+        @Suppress("UNUSED_VARIABLE")
+        val ignoredMode = fullscreenWidthMode
+        val resolvedWidth = (
+            availableWidthDp * FULLSCREEN_DANMAKU_PANEL_WIDTH_FRACTION
             )
             .roundToInt()
-            .coerceAtLeast(FULLSCREEN_DANMAKU_PANEL_MIN_WIDTH_DP)
+            .coerceIn(
+                FULLSCREEN_DANMAKU_PANEL_MIN_WIDTH_DP,
+                FULLSCREEN_DANMAKU_PANEL_MAX_WIDTH_DP
+            )
         return DanmakuSettingsPanelLayoutPolicy(
             presentation = DanmakuSettingsPanelPresentation.CenteredDialog,
             anchor = DanmakuSettingsPanelAnchor.End,
-            horizontalPaddingDp = 16,
+            horizontalPaddingDp = 12,
             bottomPaddingDp = 0,
-            minWidthDp = FULLSCREEN_DANMAKU_PANEL_MIN_WIDTH_DP,
-            maxWidthDp = resolvedMaxWidth,
-            maxHeightDp = 480
+            minWidthDp = resolvedWidth,
+            maxWidthDp = resolvedWidth,
+            maxHeightDp = (screenHeightDp - 24).coerceIn(280, 420)
         )
     }
 
@@ -394,15 +401,26 @@ fun DanmakuSettingsPanel(
 
             Surface(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .then(
+                        if (
+                            isFullscreenStyle &&
+                            layoutPolicy.anchor == DanmakuSettingsPanelAnchor.End
+                        ) {
+                            // 横屏侧栏：固定窄宽，避免 fillMaxWidth 在部分机型上撑满半屏。
+                            Modifier.width(layoutPolicy.maxWidthDp.dp)
+                        } else {
+                            Modifier
+                                .fillMaxWidth()
+                                .widthIn(
+                                    min = layoutPolicy.minWidthDp.dp,
+                                    max = layoutPolicy.maxWidthDp.dp
+                                )
+                        }
+                    )
                     .padding(
                         start = layoutPolicy.horizontalPaddingDp.dp,
                         end = layoutPolicy.horizontalPaddingDp.dp,
                         bottom = layoutPolicy.bottomPaddingDp.dp
-                    )
-                    .widthIn(
-                        min = layoutPolicy.minWidthDp.dp,
-                        max = layoutPolicy.maxWidthDp.dp
                     )
                     .heightIn(max = layoutPolicy.maxHeightDp.dp)
                     .clickable(
@@ -410,9 +428,9 @@ fun DanmakuSettingsPanel(
                         interactionSource = remember { MutableInteractionSource() }
                     ) { },
                 color = panelColors.panelColor,
-                shape = RoundedCornerShape(20.dp),
-                tonalElevation = 16.dp,
-                shadowElevation = 24.dp
+                shape = RoundedCornerShape(if (isFullscreenStyle) 16.dp else 20.dp),
+                tonalElevation = if (isFullscreenStyle) 6.dp else 16.dp,
+                shadowElevation = if (isFullscreenStyle) 8.dp else 24.dp
             ) {
                 Column(
                     modifier = Modifier

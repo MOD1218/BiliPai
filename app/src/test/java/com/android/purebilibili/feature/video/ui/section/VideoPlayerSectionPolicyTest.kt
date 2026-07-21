@@ -1016,6 +1016,65 @@ class VideoPlayerSectionPolicyTest {
     }
 
     @Test
+    fun autoExitFullscreen_allPartsKeepsFullscreenWhenNextPartWillPlay() {
+        assertFalse(
+            shouldAutoExitFullscreenOnPlaybackEnded(
+                mode = com.android.purebilibili.core.store.AutoExitFullscreenMode.ALL_PARTS,
+                isFullscreen = true,
+                playbackState = Player.STATE_ENDED,
+                willContinueToNextItem = true,
+            )
+        )
+        assertTrue(
+            shouldAutoExitFullscreenOnPlaybackEnded(
+                mode = com.android.purebilibili.core.store.AutoExitFullscreenMode.ALL_PARTS,
+                isFullscreen = true,
+                playbackState = Player.STATE_ENDED,
+                willContinueToNextItem = false,
+            )
+        )
+        assertTrue(
+            shouldAutoExitFullscreenOnPlaybackEnded(
+                mode = com.android.purebilibili.core.store.AutoExitFullscreenMode.CURRENT_PART,
+                isFullscreen = true,
+                playbackState = Player.STATE_ENDED,
+                willContinueToNextItem = true,
+            )
+        )
+    }
+
+    @Test
+    fun willContinueAfterCurrentItem_detectsMultiPartAndSeason() {
+        assertTrue(
+            resolveWillContinuePlaybackAfterCurrentItem(
+                pageCount = 3,
+                currentPageIndex = 0,
+                hasUgcSeasonNext = false,
+                hasPlaylistNext = false,
+                completionAdvancesToNext = true,
+            )
+        )
+        assertFalse(
+            resolveWillContinuePlaybackAfterCurrentItem(
+                pageCount = 3,
+                currentPageIndex = 2,
+                hasUgcSeasonNext = false,
+                hasPlaylistNext = false,
+                completionAdvancesToNext = true,
+            )
+        )
+        assertTrue(
+            resolveWillContinuePlaybackAfterCurrentItem(
+                pageCount = 1,
+                currentPageIndex = 0,
+                hasUgcSeasonNext = true,
+                hasPlaylistNext = false,
+                completionAdvancesToNext = true,
+            )
+        )
+    }
+
+    @Test
     fun playbackStateAutoFullscreen_triggersWhenPlayWhenReadyTurnsTrueAfterReady() {
         assertTrue(
             shouldToggleAutoFullscreenForPlaybackEvent(

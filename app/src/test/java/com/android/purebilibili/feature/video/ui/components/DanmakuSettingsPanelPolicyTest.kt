@@ -44,7 +44,7 @@ class DanmakuSettingsPanelPolicyTest {
             policy.presentation
         )
         assertEquals(0, policy.bottomPaddingDp)
-        assertEquals(480, policy.maxHeightDp)
+        assertTrue(policy.maxHeightDp in 280..420)
         assertEquals(
             DanmakuSettingsPanelAnchor.End,
             policy.anchor
@@ -52,7 +52,7 @@ class DanmakuSettingsPanelPolicyTest {
     }
 
     @Test
-    fun fullscreenPanelWidthMode_isFixedToQuarterWidth() {
+    fun fullscreenPanelWidth_isNarrowSideRail() {
         val fullWidth = resolveDanmakuSettingsPanelLayoutPolicy(
             isFullscreen = true,
             screenWidthDp = 915,
@@ -72,9 +72,12 @@ class DanmakuSettingsPanelPolicyTest {
             fullscreenWidthMode = DanmakuPanelWidthMode.THIRD
         )
 
-        assertEquals(221, fullWidth.maxWidthDp)
-        assertEquals(221, halfWidth.maxWidthDp)
-        assertEquals(221, thirdWidth.maxWidthDp)
+        // 统一窄侧栏，避免挡横屏画面
+        assertEquals(fullWidth.maxWidthDp, halfWidth.maxWidthDp)
+        assertEquals(fullWidth.maxWidthDp, thirdWidth.maxWidthDp)
+        assertTrue(fullWidth.maxWidthDp in 176..220)
+        assertEquals(fullWidth.minWidthDp, fullWidth.maxWidthDp)
+        assertEquals(DanmakuSettingsPanelAnchor.End, fullWidth.anchor)
     }
 
     @Test
