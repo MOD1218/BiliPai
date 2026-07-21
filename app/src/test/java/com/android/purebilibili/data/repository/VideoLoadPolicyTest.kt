@@ -43,7 +43,7 @@ class VideoLoadPolicyTest {
     }
 
     @Test
-    fun `resolveInitialStartQuality keeps stable first request for vip auto highest`() {
+    fun `resolveInitialStartQuality requests HDR capable qn for vip auto highest`() {
         val quality = resolveInitialStartQuality(
             targetQuality = 127,
             isAutoHighestQuality = true,
@@ -52,7 +52,7 @@ class VideoLoadPolicyTest {
             auto1080pEnabled = true
         )
 
-        assertEquals(120, quality)
+        assertEquals(125, quality)
     }
 
     @Test
@@ -110,6 +110,13 @@ class VideoLoadPolicyTest {
         assertEquals(listOf(120, 116, 112, 80), buildDashAttemptQualities(120))
         assertEquals(listOf(116, 112, 80), buildDashAttemptQualities(116))
         assertEquals(listOf(112, 80), buildDashAttemptQualities(112))
+    }
+
+    @Test
+    fun `buildDashAttemptQualities leads with requested HDR Dolby and 8K targets`() {
+        assertEquals(listOf(125, 120, 116, 112, 80), buildDashAttemptQualities(125))
+        assertEquals(listOf(126, 125, 120, 116, 112, 80), buildDashAttemptQualities(126))
+        assertEquals(listOf(127, 126, 125, 120, 116, 112, 80), buildDashAttemptQualities(127))
     }
 
     @Test

@@ -66,7 +66,9 @@ internal fun resolveInitialStartQuality(
     auto1080pEnabled: Boolean
 ): Int {
     return when {
-        isAutoHighestQuality && isVip -> 120
+        // VIP auto-highest must request HDR-capable qn first; bilibili often omits
+        // 125 tracks when the first playurl call only asks for 4K (120).
+        isAutoHighestQuality && isVip -> 125
         isAutoHighestQuality && isLogin -> 80
         isAutoHighestQuality -> 64
         targetQuality != null -> targetQuality
@@ -92,13 +94,20 @@ internal fun shouldSkipPlayUrlCache(
     return audioLang != null || (isAutoHighestQuality && isVip)
 }
 
+/**
+ * Build the DASH playurl attempt chain for a target quality.
+ *
+ * The requested quality itself must lead the list. Premium tiers such as 8K (127),
+ * Dolby Vision (126), and HDR (125) are not always bundled into a lower-qn response
+ * (e.g. qn=120), so omitting the target causes QUALITY_SWITCH_FAILURE / no HDR tracks.
+ */
 internal fun buildDashAttemptQualities(targetQn: Int): List<Int> {
     if (targetQn <= 80) return listOf(targetQn)
 
-    val premiumFallbacks = listOf(120, 116, 112)
-        .filter { quality -> quality <= targetQn }
+    val premiumQualities = listOf(127, 126, 125, 120, 116, 112)
+    val lowerFallbacks = premiumQualities.filter { quality -> quality < targetQn }
 
-    return (premiumFallbacks + 80).distinct()
+    return (listOf(targetQn) + lowerFallbacks + 80).distinct()
 }
 
 internal fun resolveDashRetryDelays(targetQn: Int): List<Long> {
