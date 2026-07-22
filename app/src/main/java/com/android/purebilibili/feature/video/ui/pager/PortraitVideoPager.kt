@@ -143,6 +143,7 @@ import com.android.purebilibili.feature.video.ui.overlay.PlayerProgress
 import com.android.purebilibili.feature.video.ui.components.AspectRatioMenu
 import com.android.purebilibili.feature.video.ui.components.QualitySelectionMenu
 import com.android.purebilibili.feature.video.ui.components.SpeedSelectionMenuDialog
+import com.android.purebilibili.feature.video.ui.components.UpPreviewSheet
 import com.android.purebilibili.feature.video.ui.components.VideoAspectRatio
 import com.android.purebilibili.feature.video.ui.components.resolveSafeVideoAspectRatio
 import com.android.purebilibili.feature.video.ui.overlay.FullscreenDoubleTapAction
@@ -1711,7 +1712,7 @@ private fun VideoPageItem(
     // 互动状态
     var showCommentSheet by remember { mutableStateOf(false) }
     var showDetailSheet by remember { mutableStateOf(false) }
-    var detailSheetUpOnlyMode by remember { mutableStateOf(false) }
+    var showUpPreview by remember(bvid) { mutableStateOf(false) }
     var commentSheetVisibilityProgress by remember { mutableFloatStateOf(0f) }
     val subReplyState by commentViewModel.subReplyState.collectAsStateWithLifecycle()
     var portraitPageWidthPx by remember { mutableIntStateOf(0) }
@@ -2534,20 +2535,10 @@ private fun VideoPageItem(
             recommendationVideos = recommendationVideos
         )
     }
-    val upOnlyVideos = remember(detailVideoList.videos, authorMid, bvid) {
+    val upPreviewSeedVideos = remember(detailVideoList.videos, authorMid, bvid) {
         detailVideoList.videos.filter { candidate ->
             candidate.owner.mid == authorMid && candidate.bvid != bvid
         }
-    }
-    val detailSheetTitle = remember(detailSheetUpOnlyMode, recommendationVideos.size, upOnlyVideos.size) {
-        if (detailSheetUpOnlyMode) {
-            if (upOnlyVideos.isEmpty()) "该 UP 暂无可切换视频" else "UP 主视频"
-        } else {
-            detailVideoList.title
-        }
-    }
-    val detailSheetVideos = remember(detailSheetUpOnlyMode, upOnlyVideos, detailVideoList.videos) {
-        if (detailSheetUpOnlyMode) upOnlyVideos else detailVideoList.videos
     }
     val toggleDanmaku: () -> Unit = {
         val next = !danmakuEnabled
@@ -2634,20 +2625,17 @@ private fun VideoPageItem(
             
             onDetailClick = {
                 if (portraitDetailInfo != null) {
-                    detailSheetUpOnlyMode = false
                     showDetailSheet = true
                 }
             },
             onTitleClick = {
                 if (portraitDetailInfo != null) {
-                    detailSheetUpOnlyMode = false
                     showDetailSheet = true
                 }
             },
             onAuthorClick = {
-                if (portraitDetailInfo != null) {
-                    detailSheetUpOnlyMode = true
-                    showDetailSheet = true
+                if (isCurrentPage && (portraitDetailInfo?.owner?.mid ?: 0L) > 0L) {
+                    showUpPreview = true
                 }
             },
             onLikeClick = {
@@ -3021,31 +3009,49 @@ private fun VideoPageItem(
             visible = showDetailSheet,
             onDismiss = {
                 showDetailSheet = false
-                detailSheetUpOnlyMode = false
             },
             info = portraitDetailInfo,
             currentCid = currentPlayingCid.takeIf { isCurrentPage } ?: portraitDetailInfo?.cid ?: 0L,
-            recommendationTitle = detailSheetTitle,
-            recommendations = detailSheetVideos,
+            recommendationTitle = detailVideoList.title,
+            recommendations = detailVideoList.videos,
             onRecommendationClick = { targetBvid ->
                 showDetailSheet = false
-                detailSheetUpOnlyMode = false
                 onRequestVideoChange(targetBvid)
             },
             onCollectionItemClick = { targetBvid, targetCid ->
                 showDetailSheet = false
-                detailSheetUpOnlyMode = false
                 onRequestCollectionItem(targetBvid, targetCid)
             },
             onAuthorClick = { mid ->
                 showDetailSheet = false
-                detailSheetUpOnlyMode = false
                 onExitSnapshot(bvid, exoPlayer.currentPosition, snapshotCid)
                 onUserClick(mid)
             },
             danmakuEnabled = danmakuEnabled,
             onDanmakuToggle = toggleDanmaku
         )
+
+        portraitDetailInfo?.takeIf { it.owner.mid > 0L }?.let { info ->
+            UpPreviewSheet(
+                visible = showUpPreview,
+                owner = info.owner,
+                isFollowing = isFollowing,
+                followerCount = currentSuccess?.ownerFollowerCount,
+                videoCount = currentSuccess?.ownerVideoCount,
+                seedVideos = upPreviewSeedVideos,
+                onDismiss = { showUpPreview = false },
+                onFollowClick = { onToggleFollow(authorMid, isFollowing) },
+                onEnterSpace = { mid ->
+                    showUpPreview = false
+                    onExitSnapshot(bvid, exoPlayer.currentPosition, snapshotCid)
+                    onUserClick(mid)
+                },
+                onVideoClick = { targetBvid, _ ->
+                    showUpPreview = false
+                    onRequestVideoChange(targetBvid)
+                },
+            )
+        }
     }
 }
 
