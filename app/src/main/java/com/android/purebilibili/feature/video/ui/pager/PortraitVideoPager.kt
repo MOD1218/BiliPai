@@ -1290,15 +1290,18 @@ fun PortraitVideoPager(
     }
 
     var portraitCommentOverlayActive by remember { mutableStateOf(false) }
+    var portraitUpPreviewActive by remember { mutableStateOf(false) }
     LaunchedEffect(pagerState.currentPage) {
         portraitCommentOverlayActive = false
+        portraitUpPreviewActive = false
     }
 
     VerticalPager(
         state = pagerState,
         userScrollEnabled = shouldEnablePortraitPagerUserScroll(
             scale = currentPageScale,
-            commentOverlayActive = portraitCommentOverlayActive
+            commentOverlayActive = portraitCommentOverlayActive,
+            upPreviewActive = portraitUpPreviewActive
         ),
         modifier = Modifier
             .fillMaxSize()
@@ -1380,6 +1383,11 @@ fun PortraitVideoPager(
                 onCommentOverlayActiveChange = { active ->
                     if (page == pagerState.currentPage) {
                         portraitCommentOverlayActive = active
+                    }
+                },
+                onUpPreviewActiveChange = { active ->
+                    if (page == pagerState.currentPage) {
+                        portraitUpPreviewActive = active
                     }
                 },
                 portraitOverlayVisible = portraitOverlayVisible,
@@ -1490,6 +1498,7 @@ private fun VideoPageItem(
     initialProgressPositionMs: Long,
     onCurrentPageScaleChange: (Float) -> Unit,
     onCommentOverlayActiveChange: (Boolean) -> Unit = {},
+    onUpPreviewActiveChange: (Boolean) -> Unit,
     portraitOverlayVisible: Boolean,
     onPortraitOverlayVisibleChange: (Boolean) -> Unit,
     onRequestVideoChange: (String) -> Unit,
@@ -1752,12 +1761,14 @@ private fun VideoPageItem(
         if (!isCurrentPage) {
             showCommentSheet = false
             showDetailSheet = false
+            showUpPreview = false
             showSubtitlePanel = false
             showQualityMenu = false
             showRatioMenu = false
             showSpeedMenu = false
             commentSheetVisibilityProgress = 0f
             onCommentOverlayActiveChange(false)
+            onUpPreviewActiveChange(false)
         }
     }
 
@@ -1774,6 +1785,10 @@ private fun VideoPageItem(
                 commentVisibilityProgress = commentSheetVisibilityProgress
             )
         )
+    }
+
+    LaunchedEffect(isCurrentPage, showUpPreview) {
+        onUpPreviewActiveChange(isCurrentPage && showUpPreview)
     }
 
     // 进度状态 (从播放器获取)
