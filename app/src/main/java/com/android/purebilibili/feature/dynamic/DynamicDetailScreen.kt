@@ -86,7 +86,9 @@ fun DynamicDetailScreen(
     val gifImageLoader = context.imageLoader
     val likedDynamics by interactionViewModel.likedDynamics.collectAsStateWithLifecycle()
     var showRepostDialog by remember { mutableStateOf<String?>(null) }
-    var hasHandledRoutedComment by rememberSaveable(
+    // Open comments once when detail loads (or when route targets a specific reply).
+    // Do not re-open after the user dismisses the sheet.
+    var hasAutoOpenedComments by rememberSaveable(
         dynamicId,
         openCommentRootRpid,
         openCommentTargetRpid
@@ -144,13 +146,13 @@ fun DynamicDetailScreen(
                     openCommentRootRpid,
                     openCommentTargetRpid
                 ) {
-                    if (openCommentRootRpid > 0L && !hasHandledRoutedComment) {
+                    if (shouldAutoOpenCommentsOnDynamicDetailEntry(hasAutoOpenedComments)) {
                         interactionViewModel.openCommentSheet(
                             item = state.item,
                             rootReplyId = openCommentRootRpid,
                             targetReplyId = openCommentTargetRpid
                         )
-                        hasHandledRoutedComment = true
+                        hasAutoOpenedComments = true
                     }
                 }
 
