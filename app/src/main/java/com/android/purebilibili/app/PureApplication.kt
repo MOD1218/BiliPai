@@ -30,8 +30,10 @@ import com.android.purebilibili.core.store.SettingsManager
 import com.android.purebilibili.core.store.TokenManager
 import com.android.purebilibili.core.store.allManagedAppIconLauncherAliases
 import com.android.purebilibili.core.store.DEFAULT_APP_ICON_KEY
+import com.android.purebilibili.core.store.AppIconAppearance
 import com.android.purebilibili.core.store.normalizeAppIconKey
 import com.android.purebilibili.core.store.resolveAppIconLauncherAlias
+import com.android.purebilibili.core.store.supportsAppIconAppearance
 import com.android.purebilibili.core.util.AnalyticsHelper
 import com.android.purebilibili.core.util.CrashReporter
 import com.android.purebilibili.core.util.Logger
@@ -387,17 +389,22 @@ class PureApplication : Application(), ImageLoaderFactory, ComponentCallbacks2 {
             try {
                 val pm = packageManager
                 val packageName = this@PureApplication.packageName
-                val defaultLauncherAlias = resolveAppIconLauncherAlias(packageName, DEFAULT_APP_ICON_KEY)
-                
                 // 读取用户保存的图标偏好
                 val currentIcon = normalizeAppIconKey(
                     SettingsManager.getAppIcon(this@PureApplication).first()
+                )
+                val appearance = SettingsManager.getAppIconAppearance(this@PureApplication).first()
+                val defaultLauncherAlias = resolveAppIconLauncherAlias(
+                    packageName = packageName,
+                    rawKey = DEFAULT_APP_ICON_KEY,
+                    appearance = appearance
                 )
                 val splashIconVisible = SettingsManager.isSplashIconAnimationEnabledSync(this@PureApplication)
                 val cacheSynced = this@PureApplication
                     .getSharedPreferences("app_icon_cache", Context.MODE_PRIVATE)
                     .edit()
                     .putString("current_icon", currentIcon)
+                    .putInt("appearance", appearance.storedValue)
                     .commit()
                 Logger.d(PureApplicationRuntimeConfig.TAG, " Synced app icon cache from DataStore: $currentIcon (success=$cacheSynced)")
 
@@ -405,7 +412,8 @@ class PureApplication : Application(), ImageLoaderFactory, ComponentCallbacks2 {
                 val targetAlias = resolveAppIconLauncherAlias(
                     packageName = packageName,
                     rawKey = currentIcon,
-                    splashIconVisible = splashIconVisible
+                    splashIconVisible = splashIconVisible,
+                    appearance = appearance
                 )
                 
                 val targetAliasComponent = android.content.ComponentName(packageName, targetAlias)
@@ -472,12 +480,16 @@ class PureApplication : Application(), ImageLoaderFactory, ComponentCallbacks2 {
 
     private fun refreshActiveLauncherAliasForNightMode() {
         AppScope.ioScope.launch {
+            val appearance = SettingsManager.getAppIconAppearanceSync(this@PureApplication)
+            if (appearance != AppIconAppearance.FOLLOW_SYSTEM) return@launch
             val currentIcon = SettingsManager.getAppIconSync(this@PureApplication)
+            if (!supportsAppIconAppearance(currentIcon)) return@launch
             val splashIconVisible = SettingsManager.isSplashIconAnimationEnabledSync(this@PureApplication)
             val alias = resolveAppIconLauncherAlias(
                 packageName = packageName,
                 rawKey = currentIcon,
-                splashIconVisible = splashIconVisible
+                splashIconVisible = splashIconVisible,
+                appearance = appearance
             )
             val component = ComponentName(packageName, alias)
             val pm = packageManager

@@ -61,6 +61,58 @@ class AppIconAliasMappingTest {
     }
 
     @Test
+    fun resolveAppIconLauncherAlias_supportsFixedMaidAppearances() {
+        val packageName = "com.android.purebilibili"
+
+        assertEquals(
+            "$packageName.MainActivityAliasBlueSnowMaidLight",
+            resolveAppIconLauncherAlias(
+                packageName,
+                "icon_blue_snow_maid",
+                appearance = AppIconAppearance.LIGHT
+            )
+        )
+        assertEquals(
+            "$packageName.MainActivityAliasBlueSnowMaidDarkNoIcon",
+            resolveAppIconLauncherAlias(
+                packageName,
+                "icon_blue_snow_maid",
+                splashIconVisible = false,
+                appearance = AppIconAppearance.DARK
+            )
+        )
+        assertEquals(
+            "$packageName.MainActivityAliasBlueSnowMaidFrontDark",
+            resolveAppIconLauncherAlias(
+                packageName,
+                "icon_blue_snow_maid_front",
+                appearance = AppIconAppearance.DARK
+            )
+        )
+        assertEquals(
+            "$packageName.MainActivityAliasBlueSnowMaidFrontLightNoIcon",
+            resolveAppIconLauncherAlias(
+                packageName,
+                "icon_blue_snow_maid_front",
+                splashIconVisible = false,
+                appearance = AppIconAppearance.LIGHT
+            )
+        )
+    }
+
+    @Test
+    fun resolveAppIconLauncherAlias_ignoresAppearanceForNonMaidIcons() {
+        assertEquals(
+            "com.android.purebilibili.MainActivityAliasBiliPai",
+            resolveAppIconLauncherAlias(
+                "com.android.purebilibili",
+                "icon_bilipai",
+                appearance = AppIconAppearance.DARK
+            )
+        )
+    }
+
+    @Test
     fun resolveAppIconLauncherAlias_keepsStableComponentNamespaceForDebugBuilds() {
         assertEquals(
             "com.android.purebilibili.MainActivityAlias3DLauncher",
@@ -75,6 +127,10 @@ class AppIconAliasMappingTest {
         assertTrue(aliases.contains("com.android.purebilibili.MainActivityAliasBlueSnowMaidNoIcon"))
         assertTrue(aliases.contains("com.android.purebilibili.MainActivityAliasBlueSnowMaidFront"))
         assertTrue(aliases.contains("com.android.purebilibili.MainActivityAliasBlueSnowMaidFrontNoIcon"))
+        assertTrue(aliases.contains("com.android.purebilibili.MainActivityAliasBlueSnowMaidLight"))
+        assertTrue(aliases.contains("com.android.purebilibili.MainActivityAliasBlueSnowMaidDarkNoIcon"))
+        assertTrue(aliases.contains("com.android.purebilibili.MainActivityAliasBlueSnowMaidFrontLightNoIcon"))
+        assertTrue(aliases.contains("com.android.purebilibili.MainActivityAliasBlueSnowMaidFrontDark"))
         assertTrue(aliases.contains("com.android.purebilibili.MainActivityAliasBiliPai"))
         assertTrue(aliases.contains("com.android.purebilibili.MainActivityAliasBiliPaiPink"))
         assertTrue(aliases.contains("com.android.purebilibili.MainActivityAliasBiliPaiWhite"))

@@ -37,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.android.purebilibili.R
+import com.android.purebilibili.core.store.AppIconAppearance
+import com.android.purebilibili.core.store.SettingsManager
 import com.android.purebilibili.core.theme.*
 import com.android.purebilibili.feature.settings.ui.SettingsPageScaffold
 import com.android.purebilibili.core.ui.resolveBottomSafeAreaPadding
@@ -86,6 +88,26 @@ fun getIconGroups(): List<IconGroup> {
     )
 }
 
+internal fun resolveIconOptionPreviewRes(
+    iconKey: String,
+    appearance: AppIconAppearance
+): Int {
+    return when (iconKey to appearance) {
+        "icon_blue_snow_maid" to AppIconAppearance.LIGHT ->
+            R.mipmap.ic_launcher_blue_snow_maid_light_round
+        "icon_blue_snow_maid" to AppIconAppearance.DARK ->
+            R.mipmap.ic_launcher_blue_snow_maid_dark_round
+        "icon_blue_snow_maid_front" to AppIconAppearance.LIGHT ->
+            R.mipmap.ic_launcher_blue_snow_maid_front_light_round
+        "icon_blue_snow_maid_front" to AppIconAppearance.DARK ->
+            R.mipmap.ic_launcher_blue_snow_maid_front_dark_round
+        else -> getIconGroups()
+            .flatMap { it.icons }
+            .first { it.key == iconKey }
+            .iconRes
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IconSettingsScreen(
@@ -94,6 +116,8 @@ fun IconSettingsScreen(
 ) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val iconAppearance by SettingsManager.getAppIconAppearance(context)
+        .collectAsStateWithLifecycle(initialValue = AppIconAppearance.FOLLOW_SYSTEM)
     val screenTitle = stringResource(R.string.icon_settings_title)
     val backLabel = stringResource(R.string.common_back)
     
@@ -112,6 +136,7 @@ fun IconSettingsScreen(
             viewModel = viewModel,
             context = context,
             iconGroups = iconGroups,
+            iconAppearance = iconAppearance,
         )
     }
 }
@@ -130,7 +155,8 @@ fun IconSettingsContent(
     state: SettingsUiState,
     viewModel: SettingsViewModel,
     context: android.content.Context,
-    iconGroups: List<IconGroup>
+    iconGroups: List<IconGroup>,
+    iconAppearance: AppIconAppearance
 ) {
     var isVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { isVisible = true }
@@ -185,6 +211,27 @@ fun IconSettingsContent(
                 }
             }
 
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(AppShapes.container(ContainerLevel.Card))
+                        .background(AppSurfaceTokens.cardContainer())
+                ) {
+                    IOSSlidingSegmentedSetting(
+                        title = "女仆图标外观",
+                        subtitle = "可跟随系统，或在任意系统主题下固定明亮、暗黑外壳",
+                        options = listOf(
+                            PlaybackSegmentOption(AppIconAppearance.FOLLOW_SYSTEM, "跟随系统"),
+                            PlaybackSegmentOption(AppIconAppearance.LIGHT, "明亮"),
+                            PlaybackSegmentOption(AppIconAppearance.DARK, "暗黑")
+                        ),
+                        selectedValue = iconAppearance,
+                        onSelectionChange = viewModel::setAppIconAppearance
+                    )
+                }
+            }
+
             iconGroups.forEach { group ->
                 // 分组标题
                 item(span = { GridItemSpan(maxLineSpan) }) {
@@ -219,7 +266,7 @@ fun IconSettingsContent(
                             // iOS App Icon 形状: 连续曲率圆角 (Squircle)
                             val iconShape = AppShapes.container(ContainerLevel.Dialog)
                             AsyncImage(
-                                model = option.iconRes,
+                                model = resolveIconOptionPreviewRes(option.key, iconAppearance),
                                 contentDescription = option.name,
                                 modifier = Modifier
                                     .size(64.dp)

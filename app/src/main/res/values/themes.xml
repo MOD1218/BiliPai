@@ -25,6 +25,22 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_blue_snow_maid_front</item>
     </style>
 
+    <style name="Theme.PureBiliBili.Splash.BlueSnowMaidLight" parent="Theme.PureBiliBili">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_blue_snow_maid_light</item>
+    </style>
+
+    <style name="Theme.PureBiliBili.Splash.BlueSnowMaidDark" parent="Theme.PureBiliBili">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_blue_snow_maid_dark</item>
+    </style>
+
+    <style name="Theme.PureBiliBili.Splash.BlueSnowMaidFrontLight" parent="Theme.PureBiliBili">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_blue_snow_maid_front_light</item>
+    </style>
+
+    <style name="Theme.PureBiliBili.Splash.BlueSnowMaidFrontDark" parent="Theme.PureBiliBili">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_blue_snow_maid_front_dark</item>
+    </style>
+
     <style name="Theme.PureBiliBili.Splash.Icon3D" parent="Theme.PureBiliBili">
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_3d</item>
     </style>

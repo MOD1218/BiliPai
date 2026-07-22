@@ -255,12 +255,44 @@ class MainActivityAppCompatContractTest {
     }
 
     @Test
+    fun fixedMaidAppearanceResources_shouldMatchTheirLightAndDarkMasters() {
+        listOf("ic_launcher_blue_snow_maid", "ic_launcher_blue_snow_maid_front")
+            .forEach { stem ->
+                listOf("", "_round", "_foreground").forEach { suffix ->
+                    val lightMaster = loadResourceFile("mipmap-xxxhdpi/$stem$suffix.png")
+                    val fixedLight = loadResourceFile("mipmap-xxxhdpi/${stem}_light$suffix.png")
+                    val darkMaster = loadResourceFile("mipmap-night-xxxhdpi/$stem$suffix.png")
+                    val fixedDark = loadResourceFile("mipmap-xxxhdpi/${stem}_dark$suffix.png")
+                    assertTrue(lightMaster.readBytes().contentEquals(fixedLight.readBytes()))
+                    assertTrue(darkMaster.readBytes().contentEquals(fixedDark.readBytes()))
+                }
+            }
+
+        val lightAdaptive = loadResourceText("mipmap-anydpi-v26/ic_launcher_blue_snow_maid_light.xml")
+        val darkAdaptive = loadResourceText("mipmap-anydpi-v26/ic_launcher_blue_snow_maid_dark.xml")
+        assertTrue(lightAdaptive.contains("@drawable/ic_launcher_blue_snow_maid_background_light"))
+        assertTrue(darkAdaptive.contains("@drawable/ic_launcher_blue_snow_maid_background_dark"))
+        assertTrue(
+            loadResourceText("drawable/splash_icon_blue_snow_maid_light.xml")
+                .contains("#FFFFFFFF")
+        )
+        assertTrue(
+            loadResourceText("drawable/splash_icon_blue_snow_maid_dark.xml")
+                .contains("#FF090A0C")
+        )
+    }
+
+    @Test
     fun launcherAliases_shouldBindMatchingSplashThemesForSelectedIcons() {
         val manifest = loadResourceText("../AndroidManifest.xml")
 
         mapOf(
             "MainActivityAliasBlueSnowMaid" to SplashAliasContract("MainActivitySplashBlueSnowMaid", "Theme.PureBiliBili.Splash.BlueSnowMaid", "ic_launcher_blue_snow_maid"),
             "MainActivityAliasBlueSnowMaidFront" to SplashAliasContract("MainActivitySplashBlueSnowMaidFront", "Theme.PureBiliBili.Splash.BlueSnowMaidFront", "ic_launcher_blue_snow_maid_front"),
+            "MainActivityAliasBlueSnowMaidLight" to SplashAliasContract("MainActivitySplashBlueSnowMaidLight", "Theme.PureBiliBili.Splash.BlueSnowMaidLight", "ic_launcher_blue_snow_maid_light"),
+            "MainActivityAliasBlueSnowMaidDark" to SplashAliasContract("MainActivitySplashBlueSnowMaidDark", "Theme.PureBiliBili.Splash.BlueSnowMaidDark", "ic_launcher_blue_snow_maid_dark"),
+            "MainActivityAliasBlueSnowMaidFrontLight" to SplashAliasContract("MainActivitySplashBlueSnowMaidFrontLight", "Theme.PureBiliBili.Splash.BlueSnowMaidFrontLight", "ic_launcher_blue_snow_maid_front_light"),
+            "MainActivityAliasBlueSnowMaidFrontDark" to SplashAliasContract("MainActivitySplashBlueSnowMaidFrontDark", "Theme.PureBiliBili.Splash.BlueSnowMaidFrontDark", "ic_launcher_blue_snow_maid_front_dark"),
             "MainActivityAlias3DLauncher" to SplashAliasContract("MainActivitySplashIcon3D", "Theme.PureBiliBili.Splash.Icon3D", "ic_launcher_3d"),
             "MainActivityAlias3D" to SplashAliasContract("MainActivitySplashIcon3D", "Theme.PureBiliBili.Splash.Icon3D", "ic_launcher_3d"),
             "MainActivityAliasBiliPai" to SplashAliasContract("MainActivitySplashBiliPai", "Theme.PureBiliBili.Splash.BiliPai", "ic_launcher_bilipai"),
@@ -320,6 +352,10 @@ class MainActivityAppCompatContractTest {
         listOf(
             "MainActivityAliasBlueSnowMaidNoIcon" to "ic_launcher_blue_snow_maid",
             "MainActivityAliasBlueSnowMaidFrontNoIcon" to "ic_launcher_blue_snow_maid_front",
+            "MainActivityAliasBlueSnowMaidLightNoIcon" to "ic_launcher_blue_snow_maid_light",
+            "MainActivityAliasBlueSnowMaidDarkNoIcon" to "ic_launcher_blue_snow_maid_dark",
+            "MainActivityAliasBlueSnowMaidFrontLightNoIcon" to "ic_launcher_blue_snow_maid_front_light",
+            "MainActivityAliasBlueSnowMaidFrontDarkNoIcon" to "ic_launcher_blue_snow_maid_front_dark",
             "MainActivityAlias3DNoIcon" to "ic_launcher_3d",
             "MainActivityAliasBiliPaiNoIcon" to "ic_launcher_bilipai",
             "MainActivityAliasBiliPaiPinkNoIcon" to "ic_launcher_bilipai_pink",
@@ -354,6 +390,14 @@ class MainActivityAppCompatContractTest {
             "com.android.purebilibili.MainActivitySplashBlueSnowMaid" to R.drawable.splash_icon_blue_snow_maid,
             "com.android.purebilibili.MainActivityAliasBlueSnowMaidFront" to R.mipmap.ic_launcher_blue_snow_maid_front,
             "com.android.purebilibili.MainActivitySplashBlueSnowMaidFront" to R.drawable.splash_icon_blue_snow_maid_front,
+            "com.android.purebilibili.MainActivityAliasBlueSnowMaidLight" to R.mipmap.ic_launcher_blue_snow_maid_light,
+            "com.android.purebilibili.MainActivitySplashBlueSnowMaidLight" to R.drawable.splash_icon_blue_snow_maid_light,
+            "com.android.purebilibili.MainActivityAliasBlueSnowMaidDark" to R.mipmap.ic_launcher_blue_snow_maid_dark,
+            "com.android.purebilibili.MainActivitySplashBlueSnowMaidDark" to R.drawable.splash_icon_blue_snow_maid_dark,
+            "com.android.purebilibili.MainActivityAliasBlueSnowMaidFrontLight" to R.mipmap.ic_launcher_blue_snow_maid_front_light,
+            "com.android.purebilibili.MainActivitySplashBlueSnowMaidFrontLight" to R.drawable.splash_icon_blue_snow_maid_front_light,
+            "com.android.purebilibili.MainActivityAliasBlueSnowMaidFrontDark" to R.mipmap.ic_launcher_blue_snow_maid_front_dark,
+            "com.android.purebilibili.MainActivitySplashBlueSnowMaidFrontDark" to R.drawable.splash_icon_blue_snow_maid_front_dark,
             "com.android.purebilibili.MainActivityAlias3DLauncher" to R.mipmap.ic_launcher_3d,
             "com.android.purebilibili.MainActivitySplashIcon3D" to R.mipmap.ic_launcher_3d,
             "com.android.purebilibili.MainActivityAliasBiliPai" to R.mipmap.ic_launcher_bilipai,
@@ -406,7 +450,7 @@ class MainActivityAppCompatContractTest {
     fun appIconSwitch_shouldNotRequestAppRestartOrRecreate() {
         val settingsViewModelSource = loadSettingsViewModelSource()
         val launcherAliasSwitchBody = Regex(
-            """private suspend fun applyLauncherAliasForCurrentSplashIconSetting\(iconKey: String\) \{[\s\S]*?\n    \}"""
+            """private suspend fun applyLauncherAliasForCurrentSplashIconSetting\([\s\S]*?\n    \}"""
         ).find(settingsViewModelSource)?.value ?: Regex(
             """fun setAppIcon\(iconKey: String\) \{[\s\S]*?\n    \}"""
         ).find(settingsViewModelSource)?.value.orEmpty()
