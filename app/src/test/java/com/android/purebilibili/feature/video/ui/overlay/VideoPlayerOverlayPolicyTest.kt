@@ -582,6 +582,18 @@ class VideoPlayerOverlayPolicyTest {
     }
 
     @Test
+    fun playbackInsightPanel_isCompactInLandscapeAndBoundedInPortrait() {
+        assertEquals(
+            PlaybackInsightPanelLayoutPolicy(widthDp = 374, maxHeightDp = 360, edgePaddingDp = 16),
+            resolvePlaybackInsightPanelLayoutPolicy(screenWidthDp = 891, screenHeightDp = 411)
+        )
+        assertEquals(
+            PlaybackInsightPanelLayoutPolicy(widthDp = 361, maxHeightDp = 520, edgePaddingDp = 16),
+            resolvePlaybackInsightPanelLayoutPolicy(screenWidthDp = 393, screenHeightDp = 852)
+        )
+    }
+
+    @Test
     fun appendPlaybackDiagnosticEvent_keepsNewestEntriesWithinLimit() {
         val result = (1..4).fold(emptyList<String>()) { events, index ->
             appendPlaybackDiagnosticEvent(
@@ -975,6 +987,18 @@ class VideoPlayerOverlayPolicyTest {
         assertTrue(progressStateBlock.contains("bvid"))
         assertTrue(progressStateBlock.contains("cid"))
         assertTrue(progressStateBlock.contains("videoDuration"))
+    }
+
+    @Test
+    fun playbackInsightDetails_useInlineRealtimeGlassInsteadOfFullscreenSheet() {
+        val source = loadVideoPlayerOverlaySource()
+        val insightPanelBlock = source.substringAfter("private fun PlaybackInsightPanel(")
+            .substringBefore("// --- 11. 侧边栏抽屉")
+
+        assertTrue(insightPanelBlock.contains("Modifier.unifiedBlur("))
+        assertTrue(insightPanelBlock.contains("BlurSurfaceType.DRAWER_OR_SHEET"))
+        assertTrue(insightPanelBlock.contains("Icons.Outlined.Close"))
+        assertFalse(source.contains("ModalBottomSheet("))
     }
 
     private fun loadVideoPlayerOverlaySource(): String {

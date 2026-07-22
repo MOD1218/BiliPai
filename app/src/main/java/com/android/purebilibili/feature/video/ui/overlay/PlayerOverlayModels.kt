@@ -54,6 +54,12 @@ internal data class PlaybackInsightPresentation(
     val sections: Map<PlaybackInsightSection, List<DebugStatRow>>
 )
 
+internal data class PlaybackInsightPanelLayoutPolicy(
+    val widthDp: Int,
+    val maxHeightDp: Int,
+    val edgePaddingDp: Int
+)
+
 internal enum class CenterLoadingReason {
     QUALITY_SWITCH,
     SEEK_BUFFERING
@@ -199,6 +205,31 @@ internal fun shouldShowPlaybackInsightHud(
     return controlsVisible ||
         mode == PlayerSettingsStore.PlayerInsightMode.ALWAYS ||
         level == PlaybackInsightLevel.ATTENTION
+}
+
+internal fun resolvePlaybackInsightPanelLayoutPolicy(
+    screenWidthDp: Int,
+    screenHeightDp: Int
+): PlaybackInsightPanelLayoutPolicy {
+    val edgePaddingDp = 16
+    val availableWidthDp = (screenWidthDp - edgePaddingDp * 2).coerceAtLeast(0)
+    val availableHeightDp = (screenHeightDp - edgePaddingDp * 2).coerceAtLeast(0)
+    val isLandscape = screenWidthDp > screenHeightDp
+    val targetWidthDp = if (isLandscape) {
+        (screenWidthDp * 0.42f).toInt().coerceIn(320, 440)
+    } else {
+        availableWidthDp.coerceAtMost(440)
+    }
+    val targetMaxHeightDp = if (isLandscape) {
+        availableHeightDp.coerceAtMost(360)
+    } else {
+        (screenHeightDp * 0.68f).toInt().coerceAtMost(520)
+    }
+    return PlaybackInsightPanelLayoutPolicy(
+        widthDp = targetWidthDp.coerceAtMost(availableWidthDp),
+        maxHeightDp = targetMaxHeightDp.coerceAtMost(availableHeightDp),
+        edgePaddingDp = edgePaddingDp
+    )
 }
 
 internal fun appendPlaybackDiagnosticEvent(
