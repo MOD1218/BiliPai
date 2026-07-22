@@ -143,6 +143,8 @@ class MainActivityAppCompatContractTest {
         val iconNames = listOf(
             "ic_launcher_blue_snow_maid.png",
             "ic_launcher_blue_snow_maid_round.png",
+            "ic_launcher_blue_snow_maid_front.png",
+            "ic_launcher_blue_snow_maid_front_round.png",
             "ic_launcher_3d.png",
             "ic_launcher_3d_round.png",
             "ic_launcher_bilipai.png",
@@ -168,11 +170,50 @@ class MainActivityAppCompatContractTest {
     }
 
     @Test
+    fun blueSnowMaidAdaptiveForegrounds_shouldLeaveRoomForTheWhiteOuterShell() {
+        assertTrue(
+            loadResourceText("drawable/ic_launcher_blue_snow_maid_background.xml")
+                .contains("#FFFFFFFF"),
+            "Blue Snow Maid adaptive icons should use a pure white outer shell"
+        )
+
+        listOf(
+            "ic_launcher_blue_snow_maid_foreground.png",
+            "ic_launcher_blue_snow_maid_front_foreground.png"
+        ).forEach { fileName ->
+            val rows = readPngRgbaRows(loadResourceFile("mipmap-xxxhdpi/$fileName"))
+            val imageWidth = rows.first().size / 4
+            val opaqueXs = buildList {
+                rows.forEach { row ->
+                    for (x in 0 until imageWidth) {
+                        if (row[x * 4 + 3] != 0) add(x)
+                    }
+                }
+            }
+            val foregroundWidthRatio = (opaqueXs.max() - opaqueXs.min() + 1).toFloat() / imageWidth
+            assertTrue(
+                foregroundWidthRatio in 0.50f..0.54f,
+                "$fileName should occupy about 52% of the 108dp adaptive layer so Android's foreground zoom still reveals the white shell"
+            )
+        }
+
+        listOf(
+            "ic_launcher_blue_snow_maid_monochrome.png",
+            "ic_launcher_blue_snow_maid_front_monochrome.png"
+        ).forEach { fileName ->
+            val rows = readPngRgbaRows(loadResourceFile("mipmap-xxxhdpi/$fileName"))
+            val centerAlpha = rows[rows.size / 2][rows.first().size / 2 + 3]
+            assertTrue(centerAlpha == 0, "$fileName should keep facial negative space instead of becoming a solid block")
+        }
+    }
+
+    @Test
     fun launcherAliases_shouldBindMatchingSplashThemesForSelectedIcons() {
         val manifest = loadResourceText("../AndroidManifest.xml")
 
         mapOf(
             "MainActivityAliasBlueSnowMaid" to SplashAliasContract("MainActivitySplashBlueSnowMaid", "Theme.PureBiliBili.Splash.BlueSnowMaid", "ic_launcher_blue_snow_maid"),
+            "MainActivityAliasBlueSnowMaidFront" to SplashAliasContract("MainActivitySplashBlueSnowMaidFront", "Theme.PureBiliBili.Splash.BlueSnowMaidFront", "ic_launcher_blue_snow_maid_front"),
             "MainActivityAlias3DLauncher" to SplashAliasContract("MainActivitySplashIcon3D", "Theme.PureBiliBili.Splash.Icon3D", "ic_launcher_3d"),
             "MainActivityAlias3D" to SplashAliasContract("MainActivitySplashIcon3D", "Theme.PureBiliBili.Splash.Icon3D", "ic_launcher_3d"),
             "MainActivityAliasBiliPai" to SplashAliasContract("MainActivitySplashBiliPai", "Theme.PureBiliBili.Splash.BiliPai", "ic_launcher_bilipai"),
@@ -231,6 +272,7 @@ class MainActivityAppCompatContractTest {
 
         listOf(
             "MainActivityAliasBlueSnowMaidNoIcon" to "ic_launcher_blue_snow_maid",
+            "MainActivityAliasBlueSnowMaidFrontNoIcon" to "ic_launcher_blue_snow_maid_front",
             "MainActivityAlias3DNoIcon" to "ic_launcher_3d",
             "MainActivityAliasBiliPaiNoIcon" to "ic_launcher_bilipai",
             "MainActivityAliasBiliPaiPinkNoIcon" to "ic_launcher_bilipai_pink",
@@ -263,6 +305,8 @@ class MainActivityAppCompatContractTest {
         mapOf(
             "com.android.purebilibili.MainActivityAliasBlueSnowMaid" to R.mipmap.ic_launcher_blue_snow_maid,
             "com.android.purebilibili.MainActivitySplashBlueSnowMaid" to R.mipmap.ic_launcher_blue_snow_maid,
+            "com.android.purebilibili.MainActivityAliasBlueSnowMaidFront" to R.mipmap.ic_launcher_blue_snow_maid_front,
+            "com.android.purebilibili.MainActivitySplashBlueSnowMaidFront" to R.mipmap.ic_launcher_blue_snow_maid_front,
             "com.android.purebilibili.MainActivityAlias3DLauncher" to R.mipmap.ic_launcher_3d,
             "com.android.purebilibili.MainActivitySplashIcon3D" to R.mipmap.ic_launcher_3d,
             "com.android.purebilibili.MainActivityAliasBiliPai" to R.mipmap.ic_launcher_bilipai,
@@ -277,6 +321,7 @@ class MainActivityAppCompatContractTest {
             "com.android.purebilibili.MainActivityAliasAnime" to R.mipmap.ic_launcher_3d,
             "com.android.purebilibili.MainActivityAliasHeadphone" to R.mipmap.ic_launcher_3d,
             "com.android.purebilibili.MainActivityAliasBlueSnowMaidNoIcon" to R.mipmap.ic_launcher_blue_snow_maid,
+            "com.android.purebilibili.MainActivityAliasBlueSnowMaidFrontNoIcon" to R.mipmap.ic_launcher_blue_snow_maid_front,
             "com.android.purebilibili.MainActivityAlias3DNoIcon" to R.mipmap.ic_launcher_3d
         ).forEach { (className, iconResId) ->
             assertTrue(
@@ -405,6 +450,19 @@ class MainActivityAppCompatContractTest {
     }
 
     private fun readPngCornerAlphaValues(file: File): List<Int> {
+        val rows = readPngRgbaRows(file)
+        val width = rows.first().size / 4
+        val height = rows.size
+        fun alphaAt(x: Int, y: Int): Int = rows[y][x * 4 + 3]
+        return listOf(
+            alphaAt(0, 0),
+            alphaAt(width - 1, 0),
+            alphaAt(0, height - 1),
+            alphaAt(width - 1, height - 1)
+        )
+    }
+
+    private fun readPngRgbaRows(file: File): List<IntArray> {
         val bytes = file.readBytes()
         var offset = 8
         var width = 0
@@ -433,17 +491,10 @@ class MainActivityAppCompatContractTest {
         assertTrue(bitDepth == 8 && colorType == 6, "${file.name} should be an 8-bit RGBA PNG")
 
         val inflated = InflaterInputStream(idat.toByteArray().inputStream()).readBytes()
-        val rows = decodePngRgbaRows(
+        return decodePngRgbaRows(
             inflated = inflated,
             width = width,
             height = height
-        )
-        fun alphaAt(x: Int, y: Int): Int = rows[y][x * 4 + 3]
-        return listOf(
-            alphaAt(0, 0),
-            alphaAt(width - 1, 0),
-            alphaAt(0, height - 1),
-            alphaAt(width - 1, height - 1)
         )
     }
 

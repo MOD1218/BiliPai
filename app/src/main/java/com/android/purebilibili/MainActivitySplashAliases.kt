@@ -1,6 +1,7 @@
 package com.android.purebilibili
 
 class MainActivitySplashBlueSnowMaid : MainActivity()
+class MainActivitySplashBlueSnowMaidFront : MainActivity()
 class MainActivitySplashIcon3D : MainActivity()
 class MainActivitySplashBiliPai : MainActivity()
 class MainActivitySplashBiliPaiPink : MainActivity()

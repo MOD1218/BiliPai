@@ -423,6 +423,7 @@ internal fun resolveNotificationSmallIconRes(iconKey: String): Int {
     val normalizedKey = normalizeAppIconKey(iconKey)
     return when (normalizedKey) {
         "icon_blue_snow_maid" -> R.mipmap.ic_launcher_blue_snow_maid_monochrome
+        "icon_blue_snow_maid_front" -> R.mipmap.ic_launcher_blue_snow_maid_front_monochrome
         "icon_bilipai" -> R.mipmap.ic_launcher_bilipai
         "icon_bilipai_pink" -> R.mipmap.ic_launcher_bilipai_pink
         "icon_bilipai_white" -> R.mipmap.ic_launcher_bilipai_white

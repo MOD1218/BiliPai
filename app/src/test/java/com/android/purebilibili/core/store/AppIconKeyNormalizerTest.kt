@@ -8,6 +8,7 @@ class AppIconKeyNormalizerTest {
     @Test
     fun normalizeAppIconKey_mapsLegacyKeysToCanonicalKeys() {
         assertEquals("icon_blue_snow_maid", normalizeAppIconKey("蓝雪女仆"))
+        assertEquals("icon_blue_snow_maid_front", normalizeAppIconKey("蓝雪女仆·正面"))
         assertEquals("icon_bilipai", normalizeAppIconKey("BiliPai"))
         assertEquals("icon_bilipai_pink", normalizeAppIconKey("BiliPai Pink"))
         assertEquals("icon_bilipai_white", normalizeAppIconKey("BiliPai 白"))
@@ -37,6 +38,7 @@ class AppIconKeyNormalizerTest {
 
     @Test
     fun normalizeAppIconKey_preservesExistingCanonicalChoices() {
+        assertEquals("icon_blue_snow_maid_front", normalizeAppIconKey("icon_blue_snow_maid_front"))
         assertEquals("icon_3d", normalizeAppIconKey("icon_3d"))
         assertEquals("icon_bilipai", normalizeAppIconKey("icon_bilipai"))
         assertEquals("icon_bilipai_pink", normalizeAppIconKey("icon_bilipai_pink"))

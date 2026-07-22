@@ -1234,6 +1234,7 @@ fun AppearanceSettingsContent(
                         title = "应用图标",
                         value = when(state.appIcon) {
                             "Blue Snow Maid", "蓝雪女仆", "icon_blue_snow_maid" -> "蓝雪女仆"
+                            "Blue Snow Maid Front", "蓝雪女仆·正面", "icon_blue_snow_maid_front" -> "蓝雪女仆·正面"
                             // 🎀 二次元少女系列
                             "BiliPai", "icon_bilipai" -> "BiliPai"
                             "BiliPai Pink", "icon_bilipai_pink" -> "BiliPai 粉"

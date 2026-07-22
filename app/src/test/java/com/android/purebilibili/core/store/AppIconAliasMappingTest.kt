@@ -15,6 +15,10 @@ class AppIconAliasMappingTest {
             resolveAppIconLauncherAlias(packageName, "icon_blue_snow_maid")
         )
         assertEquals(
+            "com.android.purebilibili.MainActivityAliasBlueSnowMaidFront",
+            resolveAppIconLauncherAlias(packageName, "icon_blue_snow_maid_front")
+        )
+        assertEquals(
             "com.android.purebilibili.MainActivityAliasBiliPai",
             resolveAppIconLauncherAlias(packageName, "icon_bilipai")
         )
@@ -50,6 +54,10 @@ class AppIconAliasMappingTest {
             "com.android.purebilibili.MainActivityAliasBlueSnowMaidNoIcon",
             resolveAppIconLauncherAlias(packageName, "unknown", splashIconVisible = false)
         )
+        assertEquals(
+            "com.android.purebilibili.MainActivityAliasBlueSnowMaidFrontNoIcon",
+            resolveAppIconLauncherAlias(packageName, "icon_blue_snow_maid_front", splashIconVisible = false)
+        )
     }
 
     @Test
@@ -65,6 +73,8 @@ class AppIconAliasMappingTest {
         val aliases = allManagedAppIconLauncherAliases("com.android.purebilibili")
         assertTrue(aliases.contains("com.android.purebilibili.MainActivityAliasBlueSnowMaid"))
         assertTrue(aliases.contains("com.android.purebilibili.MainActivityAliasBlueSnowMaidNoIcon"))
+        assertTrue(aliases.contains("com.android.purebilibili.MainActivityAliasBlueSnowMaidFront"))
+        assertTrue(aliases.contains("com.android.purebilibili.MainActivityAliasBlueSnowMaidFrontNoIcon"))
         assertTrue(aliases.contains("com.android.purebilibili.MainActivityAliasBiliPai"))
         assertTrue(aliases.contains("com.android.purebilibili.MainActivityAliasBiliPaiPink"))
         assertTrue(aliases.contains("com.android.purebilibili.MainActivityAliasBiliPaiWhite"))

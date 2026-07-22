@@ -21,6 +21,10 @@
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_blue_snow_maid</item>
     </style>
 
+    <style name="Theme.PureBiliBili.Splash.BlueSnowMaidFront" parent="Theme.PureBiliBili">
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_blue_snow_maid_front</item>
+    </style>
+
     <style name="Theme.PureBiliBili.Splash.Icon3D" parent="Theme.PureBiliBili">
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_3d</item>
     </style>

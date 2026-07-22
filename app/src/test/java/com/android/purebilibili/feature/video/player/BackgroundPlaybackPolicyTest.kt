@@ -888,6 +888,7 @@ class BackgroundPlaybackPolicyTest {
     @Test
     fun notificationIconShouldFollowSelectedAppIconKey() {
         assertEquals(R.mipmap.ic_launcher_blue_snow_maid_monochrome, resolveNotificationSmallIconRes("icon_blue_snow_maid"))
+        assertEquals(R.mipmap.ic_launcher_blue_snow_maid_front_monochrome, resolveNotificationSmallIconRes("icon_blue_snow_maid_front"))
         assertEquals(R.mipmap.ic_launcher_blue_snow_maid_monochrome, resolveNotificationSmallIconRes("icon_telegram_blue"))
         assertEquals(R.mipmap.ic_launcher_blue_snow_maid_monochrome, resolveNotificationSmallIconRes("Dark"))
         assertEquals(R.mipmap.ic_launcher_bilipai, resolveNotificationSmallIconRes("icon_bilipai"))
